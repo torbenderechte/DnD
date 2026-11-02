@@ -1,0 +1,295 @@
+.dm-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.templates-vertical-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.creator-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.creator-header-row select {
+    max-width: 340px;
+}
+
+.npc-creator-grid {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.npc-combat-inputs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.npc-stats-inputs {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.npc-stats-inputs input, .npc-combat-inputs input {
+    text-align: center;
+    font-weight: bold;
+}
+
+.picker-three-cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.creators-three-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.library-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.dm-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dm-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.char-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.mini-avatar, .mini-avatar-placeholder {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0e0e11;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.sub-info {
+    font-size: 0.85rem;
+    color: #a1a1aa;
+}
+
+.dm-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.badge-hp {
+    background-color: #7f1d1d;
+    border: 1px solid #ef4444;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.badge-moral {
+    background-color: #27272a;
+    border: 1px solid #52525b;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.dm-moral-bar {
+    background-color: #121216;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    border: 1px dashed #52525b;
+}
+
+.dm-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.dm-mini-stats {
+    background-color: #121216;
+    padding: 0.55rem;
+    border-radius: 6px;
+    font-family: monospace;
+    text-align: center;
+    font-size: 0.88rem;
+    border: 1px solid #27272a;
+}
+
+.dm-quick-actions, .enemy-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.dm-assign-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+}
+
+.dm-attacks-editor {
+    background-color: #121216;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #27272a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dm-attack-row {
+    display: grid;
+    grid-template-columns: 110px 100px minmax(0, 1fr) 60px;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.atk-title {
+    font-weight: bold;
+    color: #f87171;
+    font-size: 0.9rem;
+}
+
+.npc-card, .lib-item-card {
+    background-color: #121216;
+    border: 1px solid #27272a;
+    padding: 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.npc-library-picker {
+    background-color: #121216;
+    border: 1px solid #27272a;
+    padding: 0.85rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.npc-inventory-box {
+    background-color: #0e0e11;
+    border: 1px solid #27272a;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.inline-item-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: #27272a;
+    border: 1px solid #3f3f46;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin: 0.1rem;
+    font-size: 0.8rem;
+}
+
+.inline-item-pill b {
+    color: #f87171;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.npc-desc-box {
+    background-color: #0e0e11;
+    border-left: 3px solid #dc2626;
+    padding: 0.45rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #d4d4d8;
+    white-space: pre-wrap;
+}
+
+.category-pills-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+
+.cat-pill {
+    background-color: #121216;
+    border: 1px solid #3f3f46;
+    color: #a1a1aa;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+}
+
+.cat-pill.active {
+    background-color: #991b1b;
+    border-color: #ef4444;
+    color: #ffffff;
+}
+
+.cat-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.2rem;
+}
+
+.cat-tag {
+    background-color: #27272a;
+    border: 1px solid #52525b;
+    color: #fde047;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}

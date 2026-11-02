@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afterlife RPG</title>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="header-left">
+        <h1>Afterlife</h1>
+
+        <!-- 3 Ordner-Reiter für SPIELER (Shortcuts: Tasten 1, 2, 3) -->
+        <nav id="player-header-tabs" class="folder-tabs hidden">
+            <button id="tab-btn-gameplay" class="tab-btn active" onclick="switchPlayerTab('gameplay')" title="Shortcut: Taste 1">1. Gameplay</button>
+            <button id="tab-btn-story" class="tab-btn" onclick="switchPlayerTab('story')" title="Shortcut: Taste 2">2. Story & Notizen</button>
+            <button id="tab-btn-equipment" class="tab-btn" onclick="switchPlayerTab('equipment')" title="Shortcut: Taste 3">3. Ausrüstung</button>
+        </nav>
+
+        <!-- 3 Ordner-Reiter für den DUNGEON MASTER (Shortcuts: Tasten 1, 2, 3) -->
+        <nav id="dm-header-tabs" class="folder-tabs hidden">
+            <button id="dm-tab-btn-gameplay" class="tab-btn active" onclick="switchDmTab('gameplay')" title="Shortcut: Taste 1">1. Gameplay</button>
+            <button id="dm-tab-btn-templates" class="tab-btn" onclick="switchDmTab('templates')" title="Shortcut: Taste 2">2. Vorlagen & Bibliothek</button>
+            <button id="dm-tab-btn-combat" class="tab-btn" onclick="switchDmTab('combat')" title="Shortcut: Taste 3">3. Kampfsystem</button>
+        </nav>
+    </div>
+
+    <!-- Speicher-Buttons & Raum-Info oben rechts -->
+    <div class="header-right-bar">
+        <button id="btn-dm-save-session" class="btn-secondary hidden" onclick="exportDmSessionToFile()">💾 Session speichern</button>
+        <button id="btn-player-save-char" class="btn-secondary hidden" onclick="exportPlayerCharToFile()">💾 Charakter speichern</button>
+        <div id="session-info">Nicht verbunden</div>
+    </div>
+</header>
+
+<!-- UNIVERSELLER WÜRFEL-RECHNER -->
+<section id="universal-dice-bar" class="dice-bar-container hidden">
+    <div class="dice-bar-inner">
+        <div class="dice-controls-row">
+            <div class="quick-dice-btns">
+                <button type="button" onclick="quickRollDie(4, this)">d4</button>
+                <button type="button" onclick="quickRollDie(6, this)">d6</button>
+                <button type="button" onclick="quickRollDie(8, this)">d8</button>
+                <button type="button" onclick="quickRollDie(10, this)">d10</button>
+                <button type="button" onclick="quickRollDie(12, this)">d12</button>
+                <button type="button" class="btn-d20" onclick="quickRollDie(20, this)">d20</button>
+                <button type="button" onclick="quickRollDie(100, this)">d100</button>
+            </div>
+
+            <div class="custom-formula-box">
+                <input type="text" id="dice-formula-input" placeholder="Formel (z.B. 2d6+3 oder 1d20+4)">
+                <select id="dice-roll-mode">
+                    <option value="normal">Normal</option>
+                    <option value="adv">Advantage (Vorteil)</option>
+                    <option value="dis">Disadvantage (Nachteil)</option>
+                </select>
+                <button type="button" class="btn-primary" onclick="rollFromFormulaInput(this)">Würfeln</button>
+            </div>
+
+            <label id="dm-secret-roll-wrap" class="dm-checkbox-label hidden">
+                <input type="checkbox" id="dice-secret-check">
+                Verdeckt (Nur DM)
+            </label>
+        </div>
+
+        <div id="dice-log-strip" class="dice-log-strip">
+            <span class="muted">Noch keine Würfe in dieser Session. Klicke auf einen Würfel oder ein Attribut!</span>
+        </div>
+    </div>
+</section>
+
+<!-- 1. LOBBY-ANSICHT (Mit Drag & Drop für Session-Datei & Charakter-Datei) -->
+<main id="lobby-view" class="view-section">
+    <div class="lobby-grid">
+
+        <!-- DM BOX: Neue Session starten ODER gespeicherte Session fortsetzen -->
+        <div class="card">
+            <h2>Dungeon Master</h2>
+            <p>Starte eine neue Session oder ziehe eine gespeicherte Session-Datei (<code>.json</code>) hinein, um mit allen Daten und exakt demselben Raum-Code fortzufahren.</p>
+            <button id="btn-host" class="btn-primary">Neue Session als DM starten</button>
+
+            <div class="lobby-divider"><span>ODER SESSION FORTSETZEN</span></div>
+
+            <div id="lobby-dm-dropzone" class="drop-zone drop-zone-small">
+                <div id="lobby-dm-drop-text" class="drop-zone-prompt">
+                    <strong>💾 Session-Datei (.json) hierher ziehen</strong>
+                    <span>oder klicken zum Auswählen</span>
+                </div>
+                <input type="file" id="lobby-dm-file" accept=".json,application/json" class="hidden">
+            </div>
+            <button id="btn-resume-session" class="btn-secondary" disabled>Session fortsetzen (Erst Datei einfügen)</button>
+        </div>
+
+        <!-- SPIELER BOX: Beitreten & optional Charakter-Datei per Drag & Drop laden -->
+        <div class="card">
+            <h2>Spieler beitreten</h2>
+            <p>Gib deinen Namen und den 4-stelligen Raum-Code ein – oder ziehe direkt deine gespeicherte Charakter-Datei hinein.</p>
+
+            <input type="text" id="input-player-name" placeholder="Charaktername (z.B. Musashi)">
+            <input type="text" id="input-room-code" placeholder="4-stelliger Raum-Code (z.B. 4829)">
+
+            <div id="lobby-player-dropzone" class="drop-zone drop-zone-small">
+                <div id="lobby-player-drop-text" class="drop-zone-prompt">
+                    <strong>📂 Gespeicherten Charakter (.json) hierher ziehen</strong>
+                    <span>Optional: Füllt alle Werte aus & ergänzt deine Items in der Session-Bibliothek</span>
+                </div>
+                <input type="file" id="lobby-player-file" accept=".json,application/json" class="hidden">
+            </div>
+
+            <button id="btn-join" class="btn-primary">Session beitreten</button>
+        </div>
+    </div>
+</main>
+
+<!-- 2. DM-ANSICHT -->
+<main id="dm-view" class="view-section hidden">
+    <div id="dm-view-content"></div>
+</main>
+
+<!-- 3. SPIELER-ANSICHT -->
+<main id="player-view" class="view-section hidden">
+    <div id="player-sheet-content">Lade Charakterbogen...</div>
+</main>
+
+<!-- ZENTRALES BESTÄTIGUNGS-MODAL ("Bist du dir sicher?") -->
+<div id="confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+        <h3>Bist du dir sicher?</h3>
+        <p id="confirm-modal-message" class="muted">Möchtest du diese Aktion wirklich durchführen?</p>
+        <div class="modal-actions">
+            <button type="button" id="btn-confirm-cancel">Abbrechen</button>
+            <button type="button" id="btn-confirm-yes" class="btn-del">Ja, bestätigen</button>
+        </div>
+    </div>
+</div>
+
+<!-- LIVE MESSAGE BOX (CHAT ZWISCHEN DM & SPIELERN) -->
+<aside id="chat-widget" class="chat-widget hidden">
+    <div class="chat-header" onclick="toggleChatWidget()">
+        <span>💬 Session-Chat</span>
+        <div class="chat-header-right">
+            <span id="chat-unread-badge" class="chat-unread-badge hidden">0</span>
+            <span id="chat-toggle-icon">▼</span>
+        </div>
+    </div>
+    <div id="chat-body" class="chat-body">
+        <div id="chat-messages-list" class="chat-messages-list">
+            <p class="muted">Noch keine Nachrichten.</p>
+        </div>
+        <div class="chat-controls">
+            <select id="chat-target-select">
+                <option value="ALL">An: Alle</option>
+            </select>
+            <div class="chat-input-row">
+                <input type="text" id="chat-message-input" placeholder="Nachricht schreiben...">
+                <button type="button" class="btn-primary" onclick="sendChatMessage()">Senden</button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<script src="js/state.js"></script>
+<script src="js/player-view.js"></script>
+<script src="js/dm-view.js"></script>
+<script src="js/network.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

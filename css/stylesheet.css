@@ -1,0 +1,275 @@
+/* Seelen-Waage (Moralzähler) */
+.morality-banner {
+    display: grid;
+    grid-template-columns: 160px 1fr 160px;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border: 1px solid #3f3f46;
+    background: radial-gradient(circle at center, #1f1f26 0%, #121216 100%);
+}
+
+.morality-banner.moral-is-demonic {
+    border-color: #991b1b;
+    background: radial-gradient(circle at center, rgba(153, 27, 27, 0.35) 0%, #121216 80%);
+}
+
+.morality-banner.moral-is-holy {
+    border-color: #ca8a04;
+    background: radial-gradient(circle at center, rgba(202, 138, 4, 0.3) 0%, #121216 80%);
+}
+
+.morality-emblem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.morality-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: #a1a1aa;
+}
+
+.morality-score-big {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.moral-is-demonic .morality-score-big { color: #f87171; }
+.moral-is-holy .morality-score-big { color: #fde047; }
+
+.morality-state-text {
+    font-size: 0.85rem;
+    color: #d4d4d8;
+}
+
+.demonic-text { color: #f87171; font-weight: bold; }
+.holy-text { color: #fde047; font-weight: bold; }
+
+/* REIHE 1: Die 6 D&D Attribute NEBENEINANDER */
+.abilities-row-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.ability-shield {
+    background-color: #18181c;
+    border: 2px solid #3f3f46;
+    border-radius: 12px;
+    padding: 0.75rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.ability-label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #a1a1aa;
+}
+
+.ability-mod-big {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #f87171;
+    margin: 0.2rem 0;
+}
+
+.ability-score-oval {
+    width: 68px !important;
+    text-align: center;
+    padding: 0.25rem !important;
+    border-radius: 999px !important;
+    font-weight: bold;
+    background-color: #0e0e11 !important;
+}
+
+/* REIHE 2: Links HP-Kasten, Rechts die 5 Kampf-Schilde NEBENEINANDER */
+.combat-dashboard-row {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: stretch;
+}
+
+.vitals-card {
+    margin-bottom: 0;
+    justify-content: space-between;
+}
+
+.hp-fraction-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.35rem 0;
+}
+
+.hp-big-input {
+    width: 85px !important;
+    text-align: center;
+    font-size: 1.35rem !important;
+    font-weight: 800;
+    color: #f87171 !important;
+}
+
+.hp-slash {
+    font-size: 1.4rem;
+    color: #71717a;
+}
+
+.hp-quick-btns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+}
+
+.compact-stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.stat-shield-box {
+    background-color: #18181c;
+    border: 2px solid #3f3f46;
+    border-radius: 10px;
+    padding: 0.85rem 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.stat-box-title {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+}
+
+.compact-num-input {
+    width: 72px !important;
+    text-align: center;
+    font-size: 1.35rem !important;
+    font-weight: 800;
+    padding: 0.35rem !important;
+    background-color: #0e0e11 !important;
+}
+
+/* Affinitäten 2-spaltig nebeneinander */
+.affinities-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+/* Story & Geldbeutel */
+.story-grid {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.avatar-drop-large {
+    height: 280px;
+}
+
+.currency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.currency-four-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.coin-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    background-color: #121216;
+    padding: 0.7rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #27272a;
+}
+
+.coin-box span { font-weight: 700; font-size: 0.85rem; }
+.coin-cp span { color: #f59e0b; }
+.coin-sp span { color: #e5e7eb; }
+.coin-gp span { color: #fde047; }
+.coin-pp span { color: #38bdf8; }
+
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item-badge {
+    background-color: #121216;
+    border: 1px solid #27272a;
+    padding: 0.7rem 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.item-badge-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.item-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #52525b;
+}
+
+.item-badge small {
+    display: block;
+    color: #a1a1aa;
+    margin-top: 0.2rem;
+}
+
+.tag {
+    background-color: #3f3f46;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    margin-right: 0.3rem;
+}
+
+.manual-add {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
