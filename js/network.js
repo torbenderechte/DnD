@@ -147,18 +147,8 @@ function hostGame(savedSessionPayload = null) {
     }
     gameState.roomCode = roomCode;
 
-    peer = new Peer(PEER_PREFIX + roomCode, {
-        host: '0.peerjs.com',
-        port: 443,
-        secure: true,
-        path: '/DnD',
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        }
-    });
+    peer = new Peer(PEER_PREFIX + roomCode);
+
 
 
 
@@ -292,27 +282,7 @@ function returnPlayerToMainMenu() {
 }
 
 // --- 2. ALS SPIELER BEITRETEN (Mit oder ohne geladene Charakter-Datei) ---
-function joinGame(roomCode, playerName, importedCharacter = null) {
-    const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
-    currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    peer = new Peer(PEER_PREFIX + roomCode, {
-        host: '0.peerjs.com',
-        port: 443,
-        secure: true,
-        path: '/DnD',
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        }
-    });
-
-
-
-
-
-
+peer = new Peer();
 
 
 
