@@ -1,10 +1,20 @@
-const PEER_PREFIX = "afterlife-rpg-";
+const RELAY_URL = "wss://afterlife-peer-server-1.onrender.com";
 let peer = null;
+let heartbeatInterval = null;
 let playerConnections = [];
 let hostConnection = null;
 let currentPlayerId = "";
 let chatCollapsed = false;
 let unreadChatCount = 0;
+
+function startHeartbeat(ws) {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ _relay: 'PING' }));
+        }
+    }, 25000);
+}
 
 function submitRollEntry(entry) {
     if (!currentPlayerId) {
@@ -137,7 +147,7 @@ function renderChatWidget() {
     list.scrollTop = list.scrollHeight;
 }
 
-// --- 1. ALS DM HOSTEN (Neu starten ODER gespeicherte Session mit altem Raum-Code fortsetzen) ---
+// --- 1. ALS DM HOSTEN ---
 function hostGame(savedSessionPayload = null) {
     let roomCode = Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -147,35 +157,53 @@ function hostGame(savedSessionPayload = null) {
     }
     gameState.roomCode = roomCode;
 
-    peer = new Peer(PEER_PREFIX + roomCode, {
-        host: 'afterlife-peer-server-1.onrender.com',
-        port: 443,
-        secure: true,
-        path: '/',
-        config: { 'iceServers': [] } // Deaktiviert die fehlerhafte STUN/ICE-Suche
-    });
+    if (peer) {
+        try { peer.close(); } catch (e) {}
+    }
 
+    const ws = new WebSocket(RELAY_URL);
+    peer = ws;
 
+    ws.onopen = () => {
+        startHeartbeat(ws);
+        ws.send(JSON.stringify({ _relay: 'HOST', roomCode: roomCode }));
+    };
 
+    ws.onmessage = (event) => {
+        let msg;
+        try {
+            msg = JSON.parse(event.data);
+        } catch (e) {
+            return;
+        }
 
-    peer.on('open', () => {
-        document.getElementById('session-info').textContent = `DM | Raum-Code: ${roomCode}`;
-        document.getElementById('lobby-view').classList.add('hidden');
-        document.getElementById('dm-view').classList.remove('hidden');
-        document.getElementById('dm-header-tabs').classList.remove('hidden');
-        document.getElementById('btn-dm-save-session').classList.remove('hidden');
-        document.getElementById('universal-dice-bar').classList.remove('hidden');
-        document.getElementById('dm-secret-roll-wrap').classList.remove('hidden');
-        document.getElementById('chat-widget').classList.remove('hidden');
-        renderDiceLogStrip();
-        renderChatWidget();
-        renderDmView();
-    });
+        if (msg._relay === 'HOST_READY') {
+            playerConnections = [{
+                open: true,
+                send: (payload) => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ _relay: 'PAYLOAD', data: payload }));
+                    }
+                }
+            }];
 
-    peer.on('connection', (conn) => {
-        playerConnections.push(conn);
+            document.getElementById('session-info').textContent = `DM | Raum-Code: ${roomCode}`;
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('dm-view').classList.remove('hidden');
+            document.getElementById('dm-header-tabs').classList.remove('hidden');
+            document.getElementById('btn-dm-save-session').classList.remove('hidden');
+            document.getElementById('universal-dice-bar').classList.remove('hidden');
+            document.getElementById('dm-secret-roll-wrap').classList.remove('hidden');
+            document.getElementById('chat-widget').classList.remove('hidden');
+            renderDiceLogStrip();
+            renderChatWidget();
+            renderDmView();
+            return;
+        }
 
-        conn.on('data', (data) => {
+        if (msg._relay === 'PAYLOAD' && msg.data) {
+            const data = msg.data;
+
             if (data.type === 'JOIN') {
                 if (data.importedCharacter) {
                     const imported = data.importedCharacter;
@@ -220,7 +248,6 @@ function hostGame(savedSessionPayload = null) {
                 broadcastState();
             }
 
-            // NEU: Spieler bewegt seinen eigenen Token auf dem Kampffeld
             if (data.type === 'MOVE_TOKEN') {
                 ensureBattlemapState();
                 const expectedKey = `player_${data.playerId}`;
@@ -233,8 +260,8 @@ function hostGame(savedSessionPayload = null) {
                     renderDmView();
                 }
             }
-        });
-    });
+        }
+    };
 }
 
 function broadcastState() {
@@ -260,12 +287,16 @@ function broadcastPlayerDeath(playerId) {
 }
 
 function returnPlayerToMainMenu() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
     if (hostConnection) {
         try { hostConnection.close(); } catch (e) {}
         hostConnection = null;
     }
     if (peer) {
-        try { peer.destroy(); } catch (e) {}
+        try { peer.close(); } catch (e) {}
         peer = null;
     }
     currentPlayerId = "";
@@ -280,27 +311,51 @@ function returnPlayerToMainMenu() {
     document.getElementById('session-info').textContent = 'Nicht verbunden';
 }
 
-// --- 2. ALS SPIELER BEITRETEN (Mit oder ohne geladene Charakter-Datei) ---
+// --- 2. ALS SPIELER BEITRETEN ---
 function joinGame(roomCode, playerName, importedCharacter = null) {
     const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
     currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
-    peer = new Peer({
-        host: 'afterlife-peer-server-1.onrender.com',
-        port: 443,
-        secure: true,
-        path: '/',
-        config: { 'iceServers': [] }
-    });
+    if (peer) {
+        try { peer.close(); } catch (e) {}
+    }
 
+    const ws = new WebSocket(RELAY_URL);
+    peer = ws;
 
+    hostConnection = {
+        open: false,
+        send: (payload) => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ _relay: 'PAYLOAD', data: payload }));
+            }
+        },
+        close: () => {
+            try { ws.close(); } catch (e) {}
+        }
+    };
 
+    ws.onopen = () => {
+        startHeartbeat(ws);
+        ws.send(JSON.stringify({ _relay: 'JOIN', roomCode: roomCode.trim() }));
+    };
 
+    ws.onmessage = (event) => {
+        let msg;
+        try {
+            msg = JSON.parse(event.data);
+        } catch (e) {
+            return;
+        }
 
-    peer.on('open', () => {
-        hostConnection = peer.connect(PEER_PREFIX + roomCode.trim());
+        if (msg._relay === 'ERROR') {
+            alert(msg.message);
+            returnPlayerToMainMenu();
+            return;
+        }
 
-        hostConnection.on('open', () => {
+        if (msg._relay === 'JOIN_READY') {
+            hostConnection.open = true;
             document.getElementById('session-info').textContent = `Verbunden (Raum ${roomCode})`;
             document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('player-view').classList.remove('hidden');
@@ -315,9 +370,12 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
                 name: baseName,
                 importedCharacter: importedCharacter
             });
-        });
+            return;
+        }
 
-        hostConnection.on('data', (data) => {
+        if (msg._relay === 'PAYLOAD' && msg.data) {
+            const data = msg.data;
+
             if (data.type === 'PLAYER_DIED' && data.targetId === currentPlayerId) {
                 returnPlayerToMainMenu();
                 alert("💀 Dein Charakter ist gestorben und wurde vom Dungeon Master aus der Session entfernt.");
@@ -337,6 +395,6 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
                 renderChatWidget();
                 renderPlayerView(currentPlayerId);
             }
-        });
-    });
+        }
+    };
 }
