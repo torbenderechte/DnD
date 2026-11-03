@@ -148,7 +148,7 @@ function hostGame(savedSessionPayload = null) {
     gameState.roomCode = roomCode;
 
     peer = new Peer(PEER_PREFIX + roomCode, {
-        host: 'dein-afterlife-server.onrender.com',
+        host: 'https://afterlife-peer-server-1.onrender.com',
         port: 443,
         secure: true
     });
@@ -281,8 +281,8 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
     const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
     currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
-    peer = new Peer(PEER_PREFIX + roomCode, {
-        host: 'dein-afterlife-server.onrender.com',
+    peer = new Peer({
+        host: 'https://afterlife-peer-server-1.onrender.com',
         port: 443,
         secure: true
     });
