@@ -275,7 +275,15 @@ function returnPlayerToMainMenu() {
 function joinGame(roomCode, playerName, importedCharacter = null) {
     const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
     currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    peer = new Peer();
+    peer = new Peer(PEER_PREFIX + roomCode, {
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    });
+
 
     peer.on('open', () => {
         hostConnection = peer.connect(PEER_PREFIX + roomCode.trim());
