@@ -288,6 +288,7 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
     });
 
 
+    
     peer.on('open', () => {
         hostConnection = peer.connect(PEER_PREFIX + roomCode.trim());
 
