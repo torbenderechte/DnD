@@ -151,6 +151,7 @@ function hostGame(savedSessionPayload = null) {
         host: '0.peerjs.com',
         port: 443,
         secure: true,
+        path: '/DnD',
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -158,6 +159,7 @@ function hostGame(savedSessionPayload = null) {
             ]
         }
     });
+
 
 
 
@@ -293,10 +295,11 @@ function returnPlayerToMainMenu() {
 function joinGame(roomCode, playerName, importedCharacter = null) {
     const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
     currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    peer = new Peer({
+    peer = new Peer(PEER_PREFIX + roomCode, {
         host: '0.peerjs.com',
         port: 443,
         secure: true,
+        path: '/DnD',
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -304,6 +307,7 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
             ]
         }
     });
+
 
 
 
