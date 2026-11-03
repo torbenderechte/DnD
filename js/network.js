@@ -147,17 +147,11 @@ function hostGame(savedSessionPayload = null) {
     }
     gameState.roomCode = roomCode;
 
-    peer = new Peer(PEER_PREFIX + roomCode);
-
-
-
-
-
-
-
-
-
-
+    peer = new Peer(PEER_PREFIX + roomCode, {
+        host: '0.peerjs.com',
+        port: 443,
+        secure: true
+    });
 
     peer.on('open', () => {
         document.getElementById('session-info').textContent = `DM | Raum-Code: ${roomCode}`;
@@ -282,10 +276,15 @@ function returnPlayerToMainMenu() {
 }
 
 // --- 2. ALS SPIELER BEITRETEN (Mit oder ohne geladene Charakter-Datei) ---
-peer = new Peer();
+function joinGame(roomCode, playerName, importedCharacter = null) {
+    const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
+    currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
-
-
+    peer = new Peer({
+        host: '0.peerjs.com',
+        port: 443,
+        secure: true
+    });
 
     peer.on('open', () => {
         hostConnection = peer.connect(PEER_PREFIX + roomCode.trim());
