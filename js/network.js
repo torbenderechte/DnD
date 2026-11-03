@@ -148,16 +148,14 @@ function hostGame(savedSessionPayload = null) {
     gameState.roomCode = roomCode;
 
     peer = new Peer(PEER_PREFIX + roomCode, {
-        host: 'peerjs-server.herokuapp.com', // oder den offiziellen Cloud-Server
-        port: 443,
         secure: true,
         config: {
             'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun.l.google.com:19302' }
             ]
         }
     });
+
 
 
 
@@ -288,16 +286,14 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
     const baseName = importedCharacter && importedCharacter.name ? importedCharacter.name : playerName;
     currentPlayerId = "player_" + baseName.toLowerCase().replace(/[^a-z0-9]/g, '_');
     peer = new Peer(PEER_PREFIX + roomCode, {
-        host: 'peerjs-server.herokuapp.com', // oder den offiziellen Cloud-Server
-        port: 443,
         secure: true,
         config: {
             'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun.l.google.com:19302' }
             ]
         }
     });
+
 
 
 
