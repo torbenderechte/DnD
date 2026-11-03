@@ -151,10 +151,16 @@ function hostGame(savedSessionPayload = null) {
         secure: true,
         config: {
             'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' }
+                { urls: 'stun:stun.l.google.com:19302' },
+                {
+                    urls: 'turn:global.relay.metered.ca:80',
+                    username: 'DEIN_USER',
+                    credential: 'DEIN_PASSWORD'
+                }
             ]
         }
     });
+
 
 
 
@@ -289,10 +295,16 @@ function joinGame(roomCode, playerName, importedCharacter = null) {
         secure: true,
         config: {
             'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' }
+                { urls: 'stun:stun.l.google.com:19302' },
+                {
+                    urls: 'turn:global.relay.metered.ca:80',
+                    username: 'DEIN_USER',
+                    credential: 'DEIN_PASSWORD'
+                }
             ]
         }
     });
+
 
 
 
