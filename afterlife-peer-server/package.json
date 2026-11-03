@@ -1,0 +1,12 @@
+{
+  "name": "afterlife-peer-server",
+  "version": "1.0.0",
+  "description": "Privater PeerJS Server für Afterlife RPG",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "peer": "^1.0.0"
+  }
+}
