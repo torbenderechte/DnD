@@ -2177,3 +2177,63 @@ button:disabled {
     filter: brightness(1.12);
     animation: tokenCarryWobble 0.28s ease-in-out infinite alternate;
 }
+
+/* =========================================================
+   ZAUBER-VORLAGEN (2x2 GRID) & DM-NOTIZBUCH
+   ========================================================= */
+.creators-four-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+    width: 100%;
+}
+
+.picker-four-cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    width: 100%;
+}
+
+.dm-spell-row {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dm-quick-notes-banner {
+    border-left: 4px solid #eab308;
+    margin-bottom: 1.25rem;
+}
+
+.dm-notes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.dm-custom-notes-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.dm-custom-note-card {
+    background-color: #121216;
+    border: 1px solid #3f3f46;
+    margin-bottom: 0;
+}
+
+@media (max-width: 960px) {
+    .creators-four-grid,
+    .picker-four-cols,
+    .dm-notes-grid,
+    .dm-custom-notes-list,
+    .dm-spell-row {
+        grid-template-columns: 1fr;
+    }
+}

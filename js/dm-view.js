@@ -9,15 +9,16 @@ let editingState = {
     npc: null,
     item: null,
     attack: null,
+    spell: null,
     affinity: null
 };
 
-let npcDraft = { avatar: '', items: [], attacks: [], affinities: [] };
+let npcDraft = { avatar: '', items: [], attacks: [], spells: [], affinities: [] };
 let itemDraftAvatar = '';
 let attackDraftAvatar = '';
+let spellDraftAvatar = '';
 let affinityDraftAvatar = '';
 
-// Temporärer State für den "+ Neuer Block"-Dialog rechts in der Palette
 let showNewBlockCreator = false;
 let newBlockDraftColor = '#ef4444';
 let newBlockDraftName = '';
@@ -28,6 +29,7 @@ function parseCategories(inputStr) {
 }
 
 function getAllCustomCategories() {
+    ensureSpellsAndDmNotesState();
     const set = new Set();
     const collect = (list) => {
         (list || []).forEach(entry => {
@@ -37,6 +39,7 @@ function getAllCustomCategories() {
     collect(gameState.npcTemplates);
     collect(gameState.customItems);
     collect(gameState.customAttacks);
+    collect(gameState.customSpells);
     collect(gameState.customAffinities);
     return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
@@ -51,9 +54,10 @@ function ensureEnemyUids() {
 
 function switchDmTab(tabName) {
     activeDmTab = tabName;
-    document.getElementById('dm-tab-btn-gameplay').classList.toggle('active', tabName === 'gameplay');
-    document.getElementById('dm-tab-btn-templates').classList.toggle('active', tabName === 'templates');
-    document.getElementById('dm-tab-btn-combat').classList.toggle('active', tabName === 'combat');
+    document.getElementById('dm-tab-btn-gameplay')?.classList.toggle('active', tabName === 'gameplay');
+    document.getElementById('dm-tab-btn-templates')?.classList.toggle('active', tabName === 'templates');
+    document.getElementById('dm-tab-btn-combat')?.classList.toggle('active', tabName === 'combat');
+    document.getElementById('dm-tab-btn-notes')?.classList.toggle('active', tabName === 'notes');
     renderDmView();
 }
 
@@ -62,6 +66,7 @@ function renderDmView() {
     if (!container) return;
     ensureEnemyUids();
     ensureBattlemapState();
+    ensureSpellsAndDmNotesState();
 
     if (activeDmTab === 'gameplay') {
         renderDmGameplayTab(container);
@@ -69,14 +74,29 @@ function renderDmView() {
         renderDmTemplatesTab(container);
     } else if (activeDmTab === 'combat') {
         renderDmCombatTab(container);
+    } else if (activeDmTab === 'notes') {
+        renderDmNotesTab(container);
     }
 }
 
 // ============================================================================
-// DM TAB 1: GAMEPLAY
+// DM TAB 1: GAMEPLAY (Inkl. Schnell-Notizblock & Zauber-Verwaltung)
 // ============================================================================
 function renderDmGameplayTab(container) {
+    ensureSpellsAndDmNotesState();
     container.innerHTML = `
+        <!-- Kompakte DM Schnell-Notizen direkt im Gameplay-Tab -->
+        <div class="card dm-quick-notes-banner">
+            <div class="creator-header-row">
+                <div>
+                    <h3>📝 DM Schnell-Notizen (Live-Session)</h3>
+                    <small class="muted">Wird automatisch mit deinem großen Notizbuch (Tab 4) und der Session-Datei gespeichert.</small>
+                </div>
+                <button type="button" class="btn-secondary" onclick="switchDmTab('notes')">📖 Großes DM-Notizbuch öffnen (Tab 4)</button>
+            </div>
+            <textarea id="dm-gameplay-quick-notes" rows="3" placeholder="Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)...">${gameState.dmNotes.quick || ''}</textarea>
+        </div>
+
         <div class="dm-layout">
             <section class="dm-column dm-stack">
                 <h2>Spieler im Spiel (Live)</h2>
@@ -99,6 +119,13 @@ function renderDmGameplayTab(container) {
         </div>
     `;
 
+    const quickNotesEl = document.getElementById('dm-gameplay-quick-notes');
+    if (quickNotesEl) {
+        quickNotesEl.addEventListener('input', (e) => {
+            gameState.dmNotes.quick = e.target.value;
+        });
+    }
+
     renderDmPlayers();
     renderDmEnemies();
 }
@@ -113,6 +140,7 @@ function dmSpawnNpcByIndex(templateIdx) {
     const template = gameState.npcTemplates[templateIdx];
     if (!template) return;
     const spawned = JSON.parse(JSON.stringify(template));
+    if (!Array.isArray(spawned.spells)) spawned.spells = [];
     spawned._uid = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
     gameState.enemies.push(spawned);
     broadcastState();
@@ -133,6 +161,7 @@ function renderDmPlayers() {
         const c = gameState.characters[id];
         if (!c.items) c.items = [];
         if (!c.attacks) c.attacks = [];
+        if (!c.spells) c.spells = [];
         if (!c.affinities) c.affinities = [];
 
         const bagUsed = getPlayerBagUsed(c);
@@ -211,10 +240,18 @@ function renderDmPlayers() {
 
                 <div class="dm-assign-row">
                     <select id="assign-atk-${c.id}">
-                        <option value="">-- Attacke/Zauber geben (${gameState.customAttacks.length}) --</option>
+                        <option value="">-- Attacke geben (${gameState.customAttacks.length}) --</option>
                         ${gameState.customAttacks.map((w, i) => `<option value="${i}">${w.name} (${w.action})</option>`).join('')}
                     </select>
                     <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customAttacks', 'attacks', 'assign-atk-${c.id}')">+ Attacke</button>
+                </div>
+
+                <div class="dm-assign-row">
+                    <select id="assign-spell-${c.id}">
+                        <option value="">-- Zauber geben (${gameState.customSpells.length}) --</option>
+                        ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name} (Anf: ${sp.requirement || 'Keine'} | ${sp.action})</option>`).join('')}
+                    </select>
+                    <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customSpells', 'spells', 'assign-spell-${c.id}')">+ Zauber</button>
                 </div>
 
                 <div class="dm-assign-row">
@@ -226,7 +263,7 @@ function renderDmPlayers() {
                 </div>
 
                 <div class="dm-attacks-editor">
-                    <strong>Attacken von ${c.name} (Aktion & Exhaustion live anpassen):</strong>
+                    <strong>⚔️ Attacken von ${c.name} (Aktion & Exhaustion live anpassen):</strong>
                     ${c.attacks.length === 0 ? '<p class="muted">Keine Attacken.</p>' : ''}
                     ${c.attacks.map((atk, idx) => `
                         <div class="dm-attack-row">
@@ -236,6 +273,25 @@ function renderDmPlayers() {
                             <label class="dm-checkbox-label" title="Verbraucht Exhaustion Point">
                                 <input type="checkbox" ${atk.usesExhaustion ? 'checked' : ''}
                                     onchange="dmUpdatePlayerAttack('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
+                                ⚡ Exh.
+                            </label>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="dm-attacks-editor">
+                    <strong>✨ Zauber von ${c.name} (Anforderung, Aktion & Exhaustion live anpassen):</strong>
+                    ${c.spells.length === 0 ? '<p class="muted">Keine Zauber.</p>' : ''}
+                    ${c.spells.map((sp, idx) => `
+                        <div class="dm-spell-row">
+                            <span class="atk-title">✨ ${sp.name}</span>
+                            <input type="text" value="${sp.requirement || ''}" placeholder="Anforderung"
+                                onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'requirement', this.value)">
+                            <input type="text" value="${sp.action || ''}" placeholder="Aktion (Schaden / Effekt)"
+                                onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'action', this.value)">
+                            <label class="dm-checkbox-label" title="Verbraucht Exhaustion Point">
+                                <input type="checkbox" ${sp.usesExhaustion ? 'checked' : ''}
+                                    onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
                                 ⚡ Exh.
                             </label>
                         </div>
@@ -339,6 +395,12 @@ function renderDmEnemies() {
     ).join(' ')}
                 </div>
                 <div>
+                    <strong>Zauber:</strong>
+                    ${(e.spells || []).length === 0 ? '<span class="muted">Keine</span>' : e.spells.map((sp, sIdx) =>
+        `<span class="inline-item-pill">✨ ${sp.name} [Anf: ${sp.requirement || 'Keine'}] (${sp.action || '-'}) ${sp.usesExhaustion ? '⚡' : ''} <b onclick="dmRemoveNpcItem(${idx}, 'spells', ${sIdx})">×</b></span>`
+    ).join(' ')}
+                </div>
+                <div>
                     <strong>Merkmale:</strong>
                     ${(e.affinities || []).length === 0 ? '<span class="muted">Keine</span>' : e.affinities.map((af, afIdx) =>
         `<span class="inline-item-pill">${af.name} (${af.effect || '-'}) <b onclick="dmRemoveNpcItem(${idx}, 'affinities', ${afIdx})">×</b></span>`
@@ -346,7 +408,7 @@ function renderDmEnemies() {
                 </div>
             </div>
 
-            <div class="picker-three-cols">
+            <div class="picker-four-cols">
                 <div class="dm-assign-row">
                     <select id="npc-add-item-${idx}">
                         <option value="">+ Gegenstand (${gameState.customItems.length})</option>
@@ -360,6 +422,13 @@ function renderDmEnemies() {
                         ${gameState.customAttacks.map((w, i) => `<option value="${i}">${w.name}</option>`).join('')}
                     </select>
                     <button onclick="dmGiveEnemyItem(${idx}, 'customAttacks', 'attacks', 'npc-add-atk-${idx}')">+ Attacke</button>
+                </div>
+                <div class="dm-assign-row">
+                    <select id="npc-add-spell-${idx}">
+                        <option value="">+ Zauber (${gameState.customSpells.length})</option>
+                        ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name}</option>`).join('')}
+                    </select>
+                    <button onclick="dmGiveEnemyItem(${idx}, 'customSpells', 'spells', 'npc-add-spell-${idx}')">+ Zauber</button>
                 </div>
                 <div class="dm-assign-row">
                     <select id="npc-add-aff-${idx}">
@@ -403,12 +472,14 @@ function dmRemoveNpcItem(enemyIdx, targetKey, itemIdx) {
 }
 
 // ============================================================================
-// DM TAB 2: STANDARDISIERTE VORLAGEN & BIBLIOTHEK
+// DM TAB 2: VORLAGEN & BIBLIOTHEK (Jetzt inkl. 4. Zauber-Kategorie)
 // ============================================================================
 function renderDmTemplatesTab(container) {
+    ensureSpellsAndDmNotesState();
     const eNpc = editingState.npc !== null ? gameState.npcTemplates[editingState.npc] : null;
     const eItem = editingState.item !== null ? gameState.customItems[editingState.item] : null;
     const eAtk = editingState.attack !== null ? gameState.customAttacks[editingState.attack] : null;
+    const eSpell = editingState.spell !== null ? gameState.customSpells[editingState.spell] : null;
     const eAff = editingState.affinity !== null ? gameState.customAffinities[editingState.affinity] : null;
 
     container.innerHTML = `
@@ -491,13 +562,13 @@ function renderDmTemplatesTab(container) {
                 </div>
 
                 <div class="npc-library-picker">
-                    <div class="picker-three-cols">
+                    <div class="picker-four-cols">
                         <div class="dm-assign-row">
                             <select id="draft-select-item">
                                 <option value="">-- Gegenstand (${gameState.customItems.length}) --</option>
                                 ${gameState.customItems.map((it, i) => `<option value="${i}">${it.name} (📦 ${clampPackmass(it.packmass)})</option>`).join('')}
                             </select>
-                            <button type="button" onclick="addToNpcDraft('customItems', 'items', 'draft-select-item')">+ Gegenstand</button>
+                            <button type="button" onclick="addToNpcDraft('customItems', 'items', 'draft-select-item')">+ Item</button>
                         </div>
 
                         <div class="dm-assign-row">
@@ -506,6 +577,14 @@ function renderDmTemplatesTab(container) {
                                 ${gameState.customAttacks.map((a, i) => `<option value="${i}">${a.name}</option>`).join('')}
                             </select>
                             <button type="button" onclick="addToNpcDraft('customAttacks', 'attacks', 'draft-select-atk')">+ Attacke</button>
+                        </div>
+
+                        <div class="dm-assign-row">
+                            <select id="draft-select-spell">
+                                <option value="">-- Zauber (${gameState.customSpells.length}) --</option>
+                                ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name}</option>`).join('')}
+                            </select>
+                            <button type="button" onclick="addToNpcDraft('customSpells', 'spells', 'draft-select-spell')">+ Zauber</button>
                         </div>
 
                         <div class="dm-assign-row">
@@ -528,8 +607,10 @@ function renderDmTemplatesTab(container) {
                 </div>
             </div>
 
-            <div class="creators-three-grid">
+            <!-- 2×2 Raster für Gegenstände, Attacken, Zauber & Merkmale -->
+            <div class="creators-four-grid">
                 
+                <!-- 2. GEGENSTÄNDE -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>2. Gegenstände</h3>
@@ -574,6 +655,7 @@ function renderDmTemplatesTab(container) {
                     </div>
                 </div>
 
+                <!-- 3. ATTACKEN -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>3. Attacken</h3>
@@ -593,13 +675,13 @@ function renderDmTemplatesTab(container) {
                     </div>
 
                     <label class="field-label">NAME
-                        <input type="text" id="dm-atk-name" placeholder="z.B. Höllenfeuer / Lichtspeer" value="${eAtk ? eAtk.name : ''}">
+                        <input type="text" id="dm-atk-name" placeholder="z.B. Schwerthieb / Sturmangriff" value="${eAtk ? eAtk.name : ''}">
                     </label>
                     <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
-                        <input type="text" id="dm-atk-cats" placeholder="z.B. Zauber, Heilig, Dämonisch" value="${eAtk ? (eAtk.categories || []).join(', ') : ''}">
+                        <input type="text" id="dm-atk-cats" placeholder="z.B. Nahkampf, Physisch" value="${eAtk ? (eAtk.categories || []).join(', ') : ''}">
                     </label>
                     <label class="field-label">AKTION
-                        <input type="text" id="dm-atk-action" placeholder="z.B. 2d6+3 Feuerschaden (kostet 2 Moral)" value="${eAtk ? (eAtk.action || '') : ''}">
+                        <input type="text" id="dm-atk-action" placeholder="z.B. 2d6+3 Schaden" value="${eAtk ? (eAtk.action || '') : ''}">
                     </label>
                     <label class="checkbox-inline-row">
                         <input type="checkbox" id="dm-atk-exh" ${eAtk && eAtk.usesExhaustion ? 'checked' : ''}>
@@ -614,9 +696,54 @@ function renderDmTemplatesTab(container) {
                     </div>
                 </div>
 
+                <!-- 4. ZAUBER (NEU) -->
                 <div class="card">
                     <div class="creator-header-row">
-                        <h3>4. Merkmale</h3>
+                        <h3>4. Zauber</h3>
+                        <select onchange="selectTemplateToEdit('spell', this.value)">
+                            <option value="">-- Neu / Bearbeiten --</option>
+                            ${gameState.customSpells.map((sp, i) => `<option value="${i}" ${editingState.spell === i ? 'selected' : ''}>Bearbeiten: ${sp.name}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div id="dm-spell-dropzone" class="drop-zone drop-zone-small">
+                        ${spellDraftAvatar
+        ? `<img src="${spellDraftAvatar}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('spell', event)">X</button>`
+        : `<div class="drop-zone-prompt"><strong>Bild (Zauber)</strong><span>Drag & Drop oder Klick</span></div>`
+    }
+                        <input type="file" id="dm-spell-file" accept="image/*" class="hidden">
+                    </div>
+
+                    <label class="field-label">NAME
+                        <input type="text" id="dm-spell-name" placeholder="z.B. Höllenfeuer / Lichtspeer" value="${eSpell ? eSpell.name : ''}">
+                    </label>
+                    <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
+                        <input type="text" id="dm-spell-cats" placeholder="z.B. Feuer, Heilig, Dämonisch" value="${eSpell ? (eSpell.categories || []).join(', ') : ''}">
+                    </label>
+                    <label class="field-label">ANFORDERUNG
+                        <input type="text" id="dm-spell-req" placeholder="z.B. INT 14, Moral -3" value="${eSpell ? (eSpell.requirement || '') : ''}">
+                    </label>
+                    <label class="field-label">AKTION
+                        <input type="text" id="dm-spell-action" placeholder="z.B. 3d6 Feuerschaden / +4 Heilung" value="${eSpell ? (eSpell.action || '') : ''}">
+                    </label>
+                    <label class="checkbox-inline-row">
+                        <input type="checkbox" id="dm-spell-exh" ${eSpell && eSpell.usesExhaustion ? 'checked' : ''}>
+                        Verbraucht Exhaustion Point
+                    </label>
+
+                    <div class="form-row">
+                        <button class="btn-primary" onclick="saveCustomSpell()">
+                            ${editingState.spell !== null ? 'Änderungen speichern' : 'Zauber speichern'}
+                        </button>
+                        ${editingState.spell !== null ? `<button onclick="selectTemplateToEdit('spell', '')">Neu</button>` : ''}
+                    </div>
+                </div>
+
+                <!-- 5. MERKMALE -->
+                <div class="card">
+                    <div class="creator-header-row">
+                        <h3>5. Merkmale</h3>
                         <select onchange="selectTemplateToEdit('affinity', this.value)">
                             <option value="">-- Neu / Bearbeiten --</option>
                             ${gameState.customAffinities.map((af, i) => `<option value="${i}" ${editingState.affinity === i ? 'selected' : ''}>Bearbeiten: ${af.name}</option>`).join('')}
@@ -661,6 +788,7 @@ function renderDmTemplatesTab(container) {
                         <option value="npc" ${libSelectedType === 'npc' ? 'selected' : ''}>Monster & NPCs</option>
                         <option value="item" ${libSelectedType === 'item' ? 'selected' : ''}>Gegenstände</option>
                         <option value="attack" ${libSelectedType === 'attack' ? 'selected' : ''}>Attacken</option>
+                        <option value="spell" ${libSelectedType === 'spell' ? 'selected' : ''}>Zauber</option>
                         <option value="affinity" ${libSelectedType === 'affinity' ? 'selected' : ''}>Merkmale</option>
                     </select>
                     <select id="lib-sort-select">
@@ -684,6 +812,7 @@ function renderDmTemplatesTab(container) {
     bindImageDropZone('dm-npc-dropzone', 'dm-npc-file', (b64) => { npcDraft.avatar = b64; renderDmView(); });
     bindImageDropZone('dm-item-dropzone', 'dm-item-file', (b64) => { itemDraftAvatar = b64; renderDmView(); });
     bindImageDropZone('dm-atk-dropzone', 'dm-atk-file', (b64) => { attackDraftAvatar = b64; renderDmView(); });
+    bindImageDropZone('dm-spell-dropzone', 'dm-spell-file', (b64) => { spellDraftAvatar = b64; renderDmView(); });
     bindImageDropZone('dm-aff-dropzone', 'dm-aff-file', (b64) => { affinityDraftAvatar = b64; renderDmView(); });
 
     document.getElementById('lib-search-input').addEventListener('input', (e) => {
@@ -710,6 +839,7 @@ function clearDraftAvatar(type, e) {
         if (type === 'npc') npcDraft.avatar = '';
         if (type === 'item') itemDraftAvatar = '';
         if (type === 'attack') attackDraftAvatar = '';
+        if (type === 'spell') spellDraftAvatar = '';
         if (type === 'affinity') affinityDraftAvatar = '';
         renderDmView();
     });
@@ -726,15 +856,18 @@ function selectTemplateToEdit(type, idxStr) {
                 avatar: t.avatar || '',
                 items: JSON.parse(JSON.stringify(t.items || [])),
                 attacks: JSON.parse(JSON.stringify(t.attacks || [])),
+                spells: JSON.parse(JSON.stringify(t.spells || [])),
                 affinities: JSON.parse(JSON.stringify(t.affinities || []))
             };
         } else {
-            npcDraft = { avatar: '', items: [], attacks: [], affinities: [] };
+            npcDraft = { avatar: '', items: [], attacks: [], spells: [], affinities: [] };
         }
     } else if (type === 'item') {
         itemDraftAvatar = idx !== null ? (gameState.customItems[idx].avatar || '') : '';
     } else if (type === 'attack') {
         attackDraftAvatar = idx !== null ? (gameState.customAttacks[idx].avatar || '') : '';
+    } else if (type === 'spell') {
+        spellDraftAvatar = idx !== null ? (gameState.customSpells[idx].avatar || '') : '';
     } else if (type === 'affinity') {
         affinityDraftAvatar = idx !== null ? (gameState.customAffinities[idx].avatar || '') : '';
     }
@@ -746,9 +879,10 @@ function renderNpcDraftPreview() {
     const itemsBox = document.getElementById('npc-draft-items-list');
     if (!itemsBox) return;
     itemsBox.innerHTML = `
-        <div><strong>Gegenstände:</strong> ${npcDraft.items.map((it, i) => `<span class="inline-item-pill">${it.name} [📦 ${clampPackmass(it.packmass)}] <b onclick="removeFromNpcDraft('items', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
-        <div><strong>Attacken:</strong> ${npcDraft.attacks.map((a, i) => `<span class="inline-item-pill">${a.name} <b onclick="removeFromNpcDraft('attacks', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
-        <div><strong>Merkmale:</strong> ${npcDraft.affinities.map((af, i) => `<span class="inline-item-pill">${af.name} <b onclick="removeFromNpcDraft('affinities', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Gegenstände:</strong> ${(npcDraft.items || []).map((it, i) => `<span class="inline-item-pill">${it.name} [📦 ${clampPackmass(it.packmass)}] <b onclick="removeFromNpcDraft('items', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Attacken:</strong> ${(npcDraft.attacks || []).map((a, i) => `<span class="inline-item-pill">${a.name} <b onclick="removeFromNpcDraft('attacks', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Zauber:</strong> ${(npcDraft.spells || []).map((sp, i) => `<span class="inline-item-pill">✨ ${sp.name} <b onclick="removeFromNpcDraft('spells', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Merkmale:</strong> ${(npcDraft.affinities || []).map((af, i) => `<span class="inline-item-pill">${af.name} <b onclick="removeFromNpcDraft('affinities', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
     `;
 }
 
@@ -756,6 +890,7 @@ function addToNpcDraft(sourceKey, targetKey, selectId) {
     const select = document.getElementById(selectId);
     if (!select || select.value === "") return;
     const item = gameState[sourceKey][parseInt(select.value)];
+    if (!npcDraft[targetKey]) npcDraft[targetKey] = [];
     npcDraft[targetKey].push({ ...item });
     renderNpcDraftPreview();
 }
@@ -793,9 +928,10 @@ function saveNpcTemplate(spawnImmediately) {
             wis: parseInt(document.getElementById('dm-npc-wis').value) || 10,
             cha: parseInt(document.getElementById('dm-npc-cha').value) || 10
         },
-        items: JSON.parse(JSON.stringify(npcDraft.items)),
-        attacks: JSON.parse(JSON.stringify(npcDraft.attacks)),
-        affinities: JSON.parse(JSON.stringify(npcDraft.affinities))
+        items: JSON.parse(JSON.stringify(npcDraft.items || [])),
+        attacks: JSON.parse(JSON.stringify(npcDraft.attacks || [])),
+        spells: JSON.parse(JSON.stringify(npcDraft.spells || [])),
+        affinities: JSON.parse(JSON.stringify(npcDraft.affinities || []))
     };
 
     if (editingState.npc !== null) {
@@ -811,7 +947,7 @@ function saveNpcTemplate(spawnImmediately) {
         gameState.enemies.push(spawned);
     }
 
-    npcDraft = { avatar: '', items: [], attacks: [], affinities: [] };
+    npcDraft = { avatar: '', items: [], attacks: [], spells: [], affinities: [] };
     broadcastState();
     renderDmView();
 }
@@ -867,6 +1003,31 @@ function saveCustomAttack() {
     renderDmView();
 }
 
+function saveCustomSpell() {
+    ensureSpellsAndDmNotesState();
+    const name = document.getElementById('dm-spell-name').value.trim();
+    if (!name) return alert("Bitte Namen für den Zauber eingeben!");
+
+    const obj = {
+        avatar: spellDraftAvatar,
+        name: name,
+        categories: parseCategories(document.getElementById('dm-spell-cats').value),
+        requirement: document.getElementById('dm-spell-req').value.trim(),
+        action: document.getElementById('dm-spell-action').value.trim() || '1d8',
+        usesExhaustion: document.getElementById('dm-spell-exh').checked
+    };
+
+    if (editingState.spell !== null) {
+        gameState.customSpells[editingState.spell] = obj;
+        editingState.spell = null;
+    } else {
+        gameState.customSpells.push(obj);
+    }
+    spellDraftAvatar = '';
+    broadcastState();
+    renderDmView();
+}
+
 function saveCustomAffinity() {
     const name = document.getElementById('dm-aff-name').value.trim();
     if (!name) return alert("Bitte Namen für das Merkmal eingeben!");
@@ -910,6 +1071,7 @@ function selectLibCategory(cat) {
 }
 
 function renderLibraryResults() {
+    ensureSpellsAndDmNotesState();
     const listEl = document.getElementById('library-results-list');
     if (!listEl) return;
 
@@ -917,6 +1079,7 @@ function renderLibraryResults() {
     gameState.npcTemplates.forEach((item, idx) => combined.push({ ...item, _libType: 'npc', _typeLabel: 'Monster / NPC', _idx: idx }));
     gameState.customItems.forEach((item, idx) => combined.push({ ...item, _libType: 'item', _typeLabel: 'Gegenstand', _idx: idx }));
     gameState.customAttacks.forEach((item, idx) => combined.push({ ...item, _libType: 'attack', _typeLabel: 'Attacke', _idx: idx }));
+    gameState.customSpells.forEach((item, idx) => combined.push({ ...item, _libType: 'spell', _typeLabel: 'Zauber', _idx: idx }));
     gameState.customAffinities.forEach((item, idx) => combined.push({ ...item, _libType: 'affinity', _typeLabel: 'Merkmal', _idx: idx }));
 
     if (libSelectedType !== 'ALL') {
@@ -958,7 +1121,7 @@ function renderLibraryResults() {
                         <span class="tag">${item._typeLabel}</span>
                         <strong>${item.name}</strong>
                         ${item._libType === 'item' ? `<span class="packmass-pill">📦 Packmaß: ${clampPackmass(item.packmass)}</span>` : ''}
-                        ${item._libType === 'attack' && item.usesExhaustion ? `<span class="exh-badge">⚡ Exhaustion</span>` : ''}
+                        ${(item._libType === 'attack' || item._libType === 'spell') && item.usesExhaustion ? `<span class="exh-badge">⚡ Exhaustion</span>` : ''}
                         <div class="cat-badge-row">
                             ${(item.categories || []).map(cat => `<span class="cat-tag">${cat}</span>`).join('')}
                         </div>
@@ -987,6 +1150,10 @@ function renderLibraryResults() {
                 <small class="muted"><strong>Aktion:</strong> ${item.action || '-'}</small>
             ` : ''}
 
+            ${item._libType === 'spell' ? `
+                <small class="muted"><strong>Anforderung:</strong> ${item.requirement || 'Keine'} | <strong>Aktion:</strong> ${item.action || '-'}</small>
+            ` : ''}
+
             ${item._libType === 'affinity' ? `
                 <small class="muted"><strong>Effekt:</strong> ${item.effect || '-'}</small>
             ` : ''}
@@ -999,12 +1166,14 @@ function deleteLibraryItem(libType, idx) {
     if (libType === 'npc') itemName = gameState.npcTemplates[idx]?.name;
     if (libType === 'item') itemName = gameState.customItems[idx]?.name;
     if (libType === 'attack') itemName = gameState.customAttacks[idx]?.name;
+    if (libType === 'spell') itemName = gameState.customSpells[idx]?.name;
     if (libType === 'affinity') itemName = gameState.customAffinities[idx]?.name;
 
     openConfirmModal(`Möchtest du "${itemName}" wirklich dauerhaft aus der Bibliothek löschen?`, () => {
         if (libType === 'npc') gameState.npcTemplates.splice(idx, 1);
         if (libType === 'item') gameState.customItems.splice(idx, 1);
         if (libType === 'attack') gameState.customAttacks.splice(idx, 1);
+        if (libType === 'spell') gameState.customSpells.splice(idx, 1);
         if (libType === 'affinity') gameState.customAffinities.splice(idx, 1);
         editingState[libType] = null;
         broadcastState();
@@ -1013,249 +1182,7 @@ function deleteLibraryItem(libType, idx) {
 }
 
 // ============================================================================
-// DM TAB 3: NEUES TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
-// ============================================================================
-function resolveCombatant(entry) {
-    return resolveCombatantShared(entry);
-}
-
-function cleanStaleCombatants() {
-    ensureEnemyUids();
-    ensureBattlemapState();
-    gameState.combat.order = (gameState.combat.order || []).filter(entry => {
-        return resolveCombatant(entry) !== null;
-    });
-    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
-        gameState.combat.turnIndex = 0;
-    }
-}
-
-function syncPlayersOnlyIntoCombat() {
-    ensureEnemyUids();
-    cleanStaleCombatants();
-
-    const teamNames = Object.keys(gameState.combat.teams);
-    const defaultPlayerTeam = teamNames.includes("Helden") ? "Helden" : teamNames[0];
-
-    Object.keys(gameState.characters).forEach(pid => {
-        const c = gameState.characters[pid];
-        const key = `player_${pid}`;
-        const alreadyInCombat = gameState.combat.order.some(e => e.key === key);
-        if (!alreadyInCombat) {
-            const free = findFirstFreeGridCell(key);
-            gameState.combat.order.push({
-                key: key,
-                kind: 'player',
-                id: pid,
-                initiative: c.initiative || 10,
-                teamName: defaultPlayerTeam,
-                conditions: [],
-                row: free.row,
-                col: free.col
-            });
-        }
-    });
-
-    gameState.combat.active = true;
-    if (!gameState.combat.round) gameState.combat.round = 1;
-    sortCombatOrder();
-    broadcastState();
-    renderDmView();
-}
-
-function addSelectedParticipantToCombat() {
-    ensureBattlemapState();
-    const partSelect = document.getElementById('combat-add-participant-select');
-    const teamSelect = document.getElementById('combat-add-team-select');
-    if (!partSelect || !partSelect.value) {
-        return alert("Bitte zuerst einen Spieler oder ein Monster/NPC aus der Liste auswählen!");
-    }
-
-    const val = partSelect.value;
-    const teamName = teamSelect ? teamSelect.value : "Helden";
-
-    if (val.startsWith('player:')) {
-        const pid = val.replace('player:', '');
-        const c = gameState.characters[pid];
-        if (!c) return;
-        const key = `player_${pid}`;
-        const free = findFirstFreeGridCell(key);
-        gameState.combat.order.push({
-            key: key,
-            kind: 'player',
-            id: pid,
-            initiative: c.initiative || 10,
-            teamName: teamName,
-            conditions: [],
-            row: free.row,
-            col: free.col
-        });
-    } else if (val.startsWith('enemy:')) {
-        const uid = val.replace('enemy:', '');
-        const idx = gameState.enemies.findIndex(e => e._uid === uid);
-        if (idx === -1) return;
-        const enemy = gameState.enemies[idx];
-        const free = findFirstFreeGridCell(uid);
-        gameState.combat.order.push({
-            key: uid,
-            kind: 'enemy',
-            idx: idx,
-            initiative: enemy.initiative || 10,
-            teamName: teamName,
-            conditions: [],
-            row: free.row,
-            col: free.col
-        });
-    }
-
-    gameState.combat.active = true;
-    sortCombatOrder();
-    broadcastState();
-    renderDmView();
-}
-
-function removeCombatantFromCombat(orderIdx) {
-    const entry = gameState.combat.order[orderIdx];
-    const actor = resolveCombatant(entry);
-    const name = actor ? actor.name : 'diesen Teilnehmer';
-
-    openConfirmModal(`Möchtest du "${name}" wirklich aus dem laufenden Kampf und vom Spielfeld entfernen?`, () => {
-        gameState.combat.order.splice(orderIdx, 1);
-        if (gameState.combat.turnIndex >= gameState.combat.order.length) {
-            gameState.combat.turnIndex = 0;
-        }
-        broadcastState();
-        renderDmView();
-    });
-}
-
-function sortCombatOrder() {
-    gameState.combat.order.sort((a, b) => b.initiative - a.initiative);
-    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
-        gameState.combat.turnIndex = 0;
-    }
-}
-
-function rollInitiativeFor(mode, btnEl) {
-    cleanStaleCombatants();
-    if (gameState.combat.order.length === 0) {
-        return alert("Es sind noch keine Kämpfer im Kampf! Nutze '🔄 Spieler-Sync' oder füge links Teilnehmer hinzu.");
-    }
-    gameState.combat.active = true;
-
-    gameState.combat.order.forEach(entry => {
-        if (mode === 'enemies' && entry.kind !== 'enemy') return;
-        const actor = resolveCombatant(entry);
-        if (!actor) return;
-
-        const initBonus = parseInt(actor.initiative) || Math.floor(((actor.stats?.dex || 10) - 10) / 2);
-        const modStr = initBonus >= 0 ? `+${initBonus}` : `${initBonus}`;
-        const roll = triggerUniversalRoll(`1d20${modStr}`, 'Initiative', actor.name, btnEl);
-        entry.initiative = roll.total;
-    });
-
-    sortCombatOrder();
-    broadcastState();
-    renderDmView();
-}
-
-function changeCombatTurn(delta) {
-    const len = gameState.combat.order.length;
-    if (len === 0) return;
-
-    let next = gameState.combat.turnIndex + delta;
-    if (next >= len) {
-        next = 0;
-        gameState.combat.round += 1;
-    } else if (next < 0) {
-        next = len - 1;
-        gameState.combat.round = Math.max(1, gameState.combat.round - 1);
-    }
-
-    gameState.combat.turnIndex = next;
-    broadcastState();
-    renderDmView();
-}
-
-function endCombatSession() {
-    openConfirmModal("Möchtest du den aktuellen Kampf wirklich beenden und alle Kämpfer vom Spielfeld entfernen?", () => {
-        gameState.combat.active = false;
-        gameState.combat.round = 1;
-        gameState.combat.turnIndex = 0;
-        gameState.combat.order = [];
-        broadcastState();
-        renderDmView();
-    });
-}
-
-function updateCombatantInit(idx, newVal) {
-    gameState.combat.order[idx].initiative = parseInt(newVal) || 0;
-    sortCombatOrder();
-    broadcastState();
-    renderDmView();
-}
-
-function setCombatantTeam(orderIdx, teamName) {
-    gameState.combat.order[orderIdx].teamName = teamName;
-    broadcastState();
-    renderDmView();
-}
-
-function addNewTeamByDm() {
-    const nameInput = document.getElementById('new-team-name-input');
-    const colorInput = document.getElementById('new-team-color-input');
-    const name = nameInput ? nameInput.value.trim() : '';
-    const color = colorInput ? colorInput.value : '#a855f7';
-
-    if (!name) return alert("Bitte einen Team-Namen eingeben!");
-    if (!gameState.combat.teams) gameState.combat.teams = {};
-
-    gameState.combat.teams[name] = color;
-    nameInput.value = '';
-    broadcastState();
-    renderDmView();
-}
-
-function applyCombatHpDelta(orderIdx, delta) {
-    const entry = gameState.combat.order[orderIdx];
-    const actor = resolveCombatant(entry);
-    if (!actor) return;
-    actor.hp += delta;
-    broadcastState();
-    renderDmView();
-}
-
-function applyCustomCombatHp(orderIdx, sign) {
-    const input = document.getElementById(`combat-hp-input-${orderIdx}`);
-    if (!input) return;
-    const val = parseInt(input.value) || 0;
-    if (val === 0) return;
-    applyCombatHpDelta(orderIdx, val * sign);
-}
-
-function addCombatCondition(orderIdx) {
-    const select = document.getElementById(`cond-select-${orderIdx}`);
-    if (!select || !select.value) return;
-    const cond = select.value;
-    const entry = gameState.combat.order[orderIdx];
-    if (!entry.conditions.includes(cond)) {
-        entry.conditions.push(cond);
-    }
-    broadcastState();
-    renderDmView();
-}
-
-function removeCombatCondition(orderIdx, condIdx) {
-    const condName = gameState.combat.order[orderIdx]?.conditions?.[condIdx] || 'diesen Zustand';
-    openConfirmModal(`Zustand "${condName}" wirklich entfernen?`, () => {
-        gameState.combat.order[orderIdx].conditions.splice(condIdx, 1);
-        broadcastState();
-        renderDmView();
-    });
-}
-
-// ============================================================================
-// DM TAB 3: NEUES TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
+// DM TAB 3: TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
 // ============================================================================
 function resolveCombatant(entry) {
     return resolveCombatantShared(entry);
@@ -1557,7 +1484,6 @@ function dmResizeBattlemap(dRows, dCols) {
     renderDmView();
 }
 
-// Klick auf einen Block aktiviert den Baumodus; erneuter Klick auf denselben Block verlässt den Baumodus!
 function dmSelectPaletteBlock(blockId) {
     ensureBattlemapState();
     if (gameState.combat.map.selectedBlockId === blockId) {
@@ -1589,7 +1515,7 @@ function dmCreatePaletteBlock() {
     };
 
     gameState.combat.map.palette.push(newBlock);
-    gameState.combat.map.selectedBlockId = newBlock.id; // Aktiviert direkt den Baumodus mit dem neuen Block
+    gameState.combat.map.selectedBlockId = newBlock.id;
     newBlockDraftName = '';
     showNewBlockCreator = false;
     broadcastState();
@@ -1609,12 +1535,11 @@ function dmRemoveSelectedBlock() {
                 delete map.cells[cellKey];
             }
         });
-        map.selectedBlockId = null; // Zurück in den Bewegungsmodus
+        map.selectedBlockId = null;
         broadcastState();
         renderDmView();
     });
 }
-
 
 function dmHandleBlockDragStart(e, blockId) {
     e.dataTransfer.setData('text/plain', `block:${blockId}`);
@@ -1692,6 +1617,30 @@ function dmLoadBattlemapTemplate() {
     centerBattlemapInViewport();
 }
 
+function dmDeleteBattlemapTemplate() {
+    ensureBattlemapState();
+    const select = document.getElementById('dm-map-template-select');
+    if (!select || select.value === "") return alert("Bitte wähle zuerst eine Vorlage zum Löschen aus!");
+    const idx = parseInt(select.value);
+    const tpl = gameState.mapTemplates[idx];
+    if (!tpl) return;
+
+    openConfirmModal(`Möchtest du die Spielfeld-Vorlage "${tpl.name}" wirklich löschen?`, () => {
+        gameState.mapTemplates.splice(idx, 1);
+        broadcastState();
+        renderDmView();
+    });
+}
+
+function dmClearBattlemapCells() {
+    openConfirmModal("Möchtest du wirklich alle Blöcke auf dem Spielfeld auf Pures Grau zurücksetzen?", () => {
+        ensureBattlemapState();
+        gameState.combat.map.cells = {};
+        broadcastState();
+        renderDmView();
+    });
+}
+
 function renderDmCombatTab(container) {
     cleanStaleCombatants();
     ensureBattlemapState();
@@ -1735,13 +1684,10 @@ function renderDmCombatTab(container) {
     container.innerHTML = `
         <div class="combat-master-wrapper">
             
-            <!-- A) OBERE SCHMALE ZUG-LEISTE -->
             ${buildTopTurnBarHtml(true)}
 
-            <!-- B) 3-SPALTEN-COCKPIT DARUNTER -->
             <div class="combat-three-col-cockpit">
                 
-                <!-- 1. LINKE SCHMALE SPALTE: Teilnehmer & Teams -->
                 <aside class="combat-left-col">
                     
                     <div class="card combat-side-card">
@@ -1873,7 +1819,6 @@ function renderDmCombatTab(container) {
 
                 </aside>
 
-                <!-- 2. MITTLERE GROSSE BOX: Das interaktive Spielfeld mit 2 Zeiger-Modi -->
                 <section class="card battlemap-board-card">
                     <div class="battlemap-board-header">
                         <div>
@@ -1902,7 +1847,6 @@ function renderDmCombatTab(container) {
                         </div>
                     </div>
 
-                    <!-- Spielfeld-Vorlagen Speichern & Laden -->
                     <div class="battlemap-template-bar">
                         <div class="dm-assign-row">
                             <input type="text" id="dm-map-template-name" placeholder="Vorlagenname (z.B. Thronsaal)...">
@@ -1918,7 +1862,6 @@ function renderDmCombatTab(container) {
                         </div>
                     </div>
 
-                    <!-- Freies 2D-Kamerafeld (Pan & Cursor-Zoom) -->
                     <div id="battlemap-stage-wrapper"
                          class="battlemap-stage-wrapper ${isBuildMode ? 'stage-mode-build' : 'stage-mode-move'}"
                          onpointerdown="handleBattlemapStagePointerDown(event, true)"
@@ -1935,7 +1878,6 @@ function renderDmCombatTab(container) {
                     </div>
                 </section>
 
-                <!-- 3. RECHTE SCHMALE SPALTE: Block-Palette -->
                 <aside class="card battlemap-palette-card">
                     <div class="palette-top-header">
                         <h3>🧱 Block-Arten</h3>
@@ -1993,7 +1935,117 @@ function renderDmCombatTab(container) {
     initBattlemapViewport();
 }
 
+// ============================================================================
+// DM TAB 4: GROSSES DM-NOTIZBUCH (Story, Geheimnisse, Welt & eigene Karten)
+// ============================================================================
+function renderDmNotesTab(container) {
+    ensureSpellsAndDmNotesState();
+    const notes = gameState.dmNotes;
 
+    container.innerHTML = `
+        <div class="templates-vertical-stack">
+            <div class="creator-header-row">
+                <div>
+                    <h2>📖 Dungeon Master Notizbuch</h2>
+                    <small class="muted">Alle Notizen hier sind nur für dich als DM sichtbar und werden beim Klick auf „💾 Session speichern“ in deiner Session-Datei mitgesichert.</small>
+                </div>
+            </div>
+
+            <div class="dm-notes-grid">
+                <div class="card">
+                    <h3>⚡ Schnell-Notizen & Aktuelle Session</h3>
+                    <small class="muted">Synchronisiert mit dem Schnell-Notizfeld oben im Gameplay-Tab.</small>
+                    <textarea id="dm-notes-quick" rows="7" placeholder="Was passiert gerade? Laufende Effekte, Versprechen an Spieler, spontane Einfälle...">${notes.quick || ''}</textarea>
+                </div>
+
+                <div class="card">
+                    <h3>📜 Kampagnen-Story & Roter Faden</h3>
+                    <small class="muted">Hauptquest, Akte, wichtige Meilensteine und Hintergrundgeschichte.</small>
+                    <textarea id="dm-notes-story" rows="7" placeholder="Wie geht die Geschichte weiter? Welche Entscheidungen haben die Spieler getroffen?">${notes.story || ''}</textarea>
+                </div>
+
+                <div class="card">
+                    <h3>🕵️ Geheimnisse, Plots & Twists (Geheim)</h3>
+                    <small class="muted">Verräter, versteckte Hinweise, Fallen, wahre Motive von NPCs.</small>
+                    <textarea id="dm-notes-secrets" rows="7" placeholder="Was wissen die Spieler noch nicht? Welche Überraschungen lauern?">${notes.secrets || ''}</textarea>
+                </div>
+
+                <div class="card">
+                    <h3>🏰 Orte, Fraktionen & Wichtige NPCs</h3>
+                    <small class="muted">Städte, Tavernen, Höllen-/Himmels-Ebenen, Anführer und Belohnungen.</small>
+                    <textarea id="dm-notes-world" rows="7" placeholder="Ortsbeschreibungen, Fraktions-Beziehungen, Händler-Inventare...">${notes.world || ''}</textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📌 Eigene Notiz-Karten (Rätsel, Boss-Phasen, Loot-Listen, Quests)</h3>
+                <div class="dm-assign-row">
+                    <input type="text" id="dm-new-note-title" placeholder="Titel der neuen Notiz-Karte (z.B. Rätsel im Thronsaal / Boss-Mechanik)...">
+                    <button type="button" class="btn-primary" onclick="dmAddCustomNoteCard()">+ Neue Notiz-Karte anlegen</button>
+                </div>
+
+                <div class="dm-custom-notes-list">
+                    ${notes.entries.length === 0 ? '<p class="muted">Noch keine eigenen Notiz-Karten angelegt.</p>' : ''}
+                    ${notes.entries.map((entry, idx) => `
+                        <div class="card dm-custom-note-card">
+                            <div class="creator-header-row">
+                                <input type="text" value="${entry.title || ''}" placeholder="Titel..."
+                                    onchange="dmUpdateCustomNoteCard(${idx}, 'title', this.value)"
+                                    style="font-weight: 800; font-size: 1rem;">
+                                <button type="button" class="btn-del" onclick="dmDeleteCustomNoteCard(${idx})">🗑️ Karte löschen</button>
+                            </div>
+                            <textarea rows="5" placeholder="Inhalt dieser Notiz-Karte..."
+                                oninput="dmUpdateCustomNoteCard(${idx}, 'content', this.value)">${entry.content || ''}</textarea>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const bindArea = (id, key) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', (e) => {
+                gameState.dmNotes[key] = e.target.value;
+            });
+        }
+    };
+
+    bindArea('dm-notes-quick', 'quick');
+    bindArea('dm-notes-story', 'story');
+    bindArea('dm-notes-secrets', 'secrets');
+    bindArea('dm-notes-world', 'world');
+}
+
+function dmAddCustomNoteCard() {
+    ensureSpellsAndDmNotesState();
+    const titleInput = document.getElementById('dm-new-note-title');
+    const title = titleInput && titleInput.value.trim() ? titleInput.value.trim() : `Notiz #${gameState.dmNotes.entries.length + 1}`;
+    gameState.dmNotes.entries.unshift({
+        id: 'note_' + Date.now(),
+        title: title,
+        content: ''
+    });
+    if (titleInput) titleInput.value = '';
+    renderDmView();
+}
+
+function dmUpdateCustomNoteCard(idx, field, val) {
+    ensureSpellsAndDmNotesState();
+    if (!gameState.dmNotes.entries[idx]) return;
+    gameState.dmNotes.entries[idx][field] = val;
+}
+
+function dmDeleteCustomNoteCard(idx) {
+    ensureSpellsAndDmNotesState();
+    const entry = gameState.dmNotes.entries[idx];
+    const title = entry && entry.title ? `"${entry.title}"` : 'diese Notiz-Karte';
+    openConfirmModal(`Möchtest du ${title} wirklich löschen?`, () => {
+        gameState.dmNotes.entries.splice(idx, 1);
+        renderDmView();
+    });
+}
 
 function dmModifyStat(playerId, prop, delta) {
     const char = gameState.characters[playerId];
@@ -2039,6 +2091,14 @@ function dmUpdatePlayerAttack(playerId, atkIdx, field, val) {
     const char = gameState.characters[playerId];
     if (!char || !char.attacks[atkIdx]) return;
     char.attacks[atkIdx][field] = val;
+    broadcastState();
+    renderDmView();
+}
+
+function dmUpdatePlayerSpell(playerId, spellIdx, field, val) {
+    const char = gameState.characters[playerId];
+    if (!char || !char.spells || !char.spells[spellIdx]) return;
+    char.spells[spellIdx][field] = val;
     broadcastState();
     renderDmView();
 }

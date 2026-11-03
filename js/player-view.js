@@ -2,6 +2,7 @@ let activePlayerTab = 'gameplay';
 
 let playerItemDraftAvatar = '';
 let playerAttackDraftAvatar = '';
+let playerSpellDraftAvatar = '';
 let playerAffinityDraftAvatar = '';
 
 function getMod(score) {
@@ -40,10 +41,11 @@ function applyImportedPlayerCharacter(parsedJson) {
         return alert("Ungültige Charakter-Datei! Bitte wähle eine gespeicherte Charakter-Datei (.json).");
     }
 
-    openConfirmModal(`Möchtest du deinen Charakterbogen mit "${imported.name}" aus der Datei ausfüllen und alle gespeicherten Gegenstände, Attacken und Merkmale zur Session-Bibliothek hinzufügen?`, () => {
+    openConfirmModal(`Möchtest du deinen Charakterbogen mit "${imported.name}" aus der Datei ausfüllen und alle gespeicherten Gegenstände, Attacken, Zauber und Merkmale zur Session-Bibliothek hinzufügen?`, () => {
         imported.id = char.id;
         if (imported.bagInfinite === undefined) imported.bagInfinite = false;
         if (imported.bagCustomMax === undefined) imported.bagCustomMax = null;
+        if (!Array.isArray(imported.spells)) imported.spells = [];
         (imported.items || []).forEach(it => {
             it.packmass = clampPackmass(it.packmass);
         });
@@ -81,10 +83,12 @@ function switchPlayerTab(tabName) {
 }
 
 function renderPlayerView(playerId) {
+    ensureSpellsAndDmNotesState();
     const char = gameState.characters[playerId];
     if (!char) return;
     if (!char.items) char.items = [];
     if (!char.attacks) char.attacks = [];
+    if (!char.spells) char.spells = [];
     if (!char.affinities) char.affinities = [];
     if (char.notes === undefined) char.notes = "";
 
@@ -193,59 +197,62 @@ function renderGameplayTab(char, tabBody) {
             </div>
         </div>
 
-        <div class="card">
-            <h3>Merkmale (Affinitäten, Mutationen & Psychosen)</h3>
-            <div class="affinities-grid">
-                ${char.affinities.length === 0 ? '<p class="muted">Keine Merkmale aktiv.</p>' : ''}
-                ${char.affinities.map((a, idx) => `
-                    <div class="item-badge">
-                        <div class="item-badge-left">
-                            ${a.avatar ? `<img src="${a.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">M</div>`}
-                            <div>
-                                <strong>${a.name}</strong>
-                                <div class="cat-badge-row">
-                                    ${(a.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+        <!-- Merkmale & Charakter-Datei nebeneinander -->
+        <div class="bottom-grid">
+            <div class="card" style="margin-bottom: 0;">
+                <h3>Merkmale (Affinitäten, Mutationen & Psychosen)</h3>
+                <div class="item-list">
+                    ${char.affinities.length === 0 ? '<p class="muted">Keine Merkmale aktiv.</p>' : ''}
+                    ${char.affinities.map((a, idx) => `
+                        <div class="item-badge">
+                            <div class="item-badge-left">
+                                ${a.avatar ? `<img src="${a.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">M</div>`}
+                                <div>
+                                    <strong>${a.name}</strong>
+                                    <div class="cat-badge-row">
+                                        ${(a.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                    </div>
+                                    <small><strong>Effekt:</strong> ${a.effect || a.desc || '-'}</small>
                                 </div>
-                                <small><strong>Effekt:</strong> ${a.effect || a.desc || '-'}</small>
                             </div>
+                            <button class="btn-del" onclick="removePlayerItem('affinities', ${idx})">X</button>
                         </div>
-                        <button class="btn-del" onclick="removePlayerItem('affinities', ${idx})">X</button>
-                    </div>
-                `).join('')}
-            </div>
+                    `).join('')}
+                </div>
 
-            <div class="player-creator-box">
-                <small class="muted">Eigenes Merkmal hinzufügen:</small>
-                <div class="form-row">
+                <div class="player-creator-box">
+                    <small class="muted">Eigenes Merkmal hinzufügen:</small>
                     <div id="p-aff-dropzone" class="drop-zone drop-zone-mini">
                         ${playerAffinityDraftAvatar
         ? `<img src="${playerAffinityDraftAvatar}" class="drop-preview-img">`
-        : `<div class="drop-zone-prompt"><strong>Bild</strong><span>Drag & Drop</span></div>`
+        : `<div class="drop-zone-prompt"><strong>Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="p-aff-file" accept="image/*" class="hidden">
                     </div>
-                    <input type="text" id="p-new-a-name" placeholder="Name">
-                    <input type="text" id="p-new-a-cats" placeholder="Kategorien (Komma)">
+                    <div class="form-row">
+                        <input type="text" id="p-new-a-name" placeholder="Name">
+                        <input type="text" id="p-new-a-cats" placeholder="Kategorien (Komma)">
+                    </div>
                     <input type="text" id="p-new-a-effect" placeholder="Effekt">
                     <button id="btn-p-add-aff" class="btn-primary">+ Merkmal</button>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="creator-header-row">
-                <div>
-                    <h3>Charakter-Datei (.json) speichern & laden</h3>
-                    <small class="muted">Speichere deinen kompletten Charakter auf deinem Gerät oder ziehe eine gespeicherte Datei hier hinein.</small>
+            <div class="card" style="margin-bottom: 0; justify-content: space-between;">
+                <div class="creator-header-row" style="flex-wrap: wrap;">
+                    <div>
+                        <h3>Charakter-Datei (.json) speichern & laden</h3>
+                        <small class="muted">Speichere deinen kompletten Charakter auf deinem Gerät oder ziehe eine gespeicherte Datei hier hinein.</small>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">💾 Charakter als Datei speichern</button>
                 </div>
-                <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">💾 Charakter als Datei speichern</button>
-            </div>
-            <div id="p-gameplay-json-dropzone" class="drop-zone drop-zone-mini">
-                <div class="drop-zone-prompt">
-                    <strong>📂 Gespeicherte Charakter-Datei (.json) hierher ziehen (Drag & Drop)</strong>
-                    <span>Füllt alle Werte, Bilder & Notizen aus und fügt deine Items zur Session-Bibliothek hinzu</span>
+                <div id="p-gameplay-json-dropzone" class="drop-zone" style="flex: 1; min-height: 150px;">
+                    <div class="drop-zone-prompt">
+                        <strong>📂 Gespeicherte Charakter-Datei (.json) hierher ziehen (Drag & Drop)</strong>
+                        <span>Füllt alle Werte, Bilder & Notizen aus und fügt deine Items, Attacken & Zauber zur Session-Bibliothek hinzu</span>
+                    </div>
+                    <input type="file" id="p-gameplay-json-file" accept=".json,application/json" class="hidden">
                 </div>
-                <input type="file" id="p-gameplay-json-file" accept=".json,application/json" class="hidden">
             </div>
         </div>
     `;
@@ -437,7 +444,7 @@ function removePlayerAvatar(e) {
 }
 
 // ==========================================
-// TAB 3: AUSRÜSTUNG (Mit Packmaß 1-10 & Beutel-Kapazität)
+// TAB 3: AUSRÜSTUNG (Gegenstände, Attacken & eigene Zauber-Kategorie)
 // ==========================================
 function renderEquipmentTab(char, tabBody) {
     const totalInCopper =
@@ -481,80 +488,84 @@ function renderEquipmentTab(char, tabBody) {
             </div>
         </div>
 
-        <div class="bottom-grid">
-            <div class="card">
-                <div class="creator-header-row">
-                    <h3>Gegenstände & Beutel</h3>
-                    <span class="packmass-badge ${isFull ? 'packmass-full' : ''}">
-                        🎒 Beutelplatz: <strong>${bagUsed} / ${isInf ? '∞ (Unendlich)' : bagMax}</strong> Packmaß
-                    </span>
-                </div>
+        <!-- 1. GEGENSTÄNDE & BEUTEL -->
+        <div class="card">
+            <div class="creator-header-row">
+                <h3>🎒 Gegenstände & Beutel</h3>
+                <span class="packmass-badge ${isFull ? 'packmass-full' : ''}">
+                    🎒 Beutelplatz: <strong>${bagUsed} / ${isInf ? '∞ (Unendlich)' : bagMax}</strong> Packmaß
+                </span>
+            </div>
 
-                <div class="bag-capacity-box">
-                    <div class="bag-progress-track">
-                        <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
-                    </div>
-                    <small class="muted">
-                        ${isInf
+            <div class="bag-capacity-box">
+                <div class="bag-progress-track">
+                    <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
+                </div>
+                <small class="muted">
+                    ${isInf
         ? 'Dein Beutel hat unendliche Kapazität (vom DM freigeschaltet).'
         : `Freier Platz: ${Math.max(0, bagMax - bagUsed)} Packmaß (Standard: 15 + STR = ${15 + (parseInt(char.stats?.str) || 10)} · Nur vom DM änderbar)`
     }
-                    </small>
-                </div>
+                </small>
+            </div>
 
-                <div class="item-list">
-                    ${char.items.length === 0 ? '<p class="muted">Keine Gegenstände im Beutel.</p>' : ''}
-                    ${char.items.map((item, idx) => `
-                        <div class="item-badge">
-                            <div class="item-badge-left">
-                                ${item.avatar ? `<img src="${item.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">I</div>`}
-                                <div>
-                                    <div class="combat-name-line">
-                                        <strong>${item.name}</strong>
-                                        <span class="packmass-pill">📦 Packmaß: ${clampPackmass(item.packmass)}</span>
-                                    </div>
-                                    <div class="cat-badge-row">
-                                        ${(item.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
-                                    </div>
-                                    <small><strong>Anforderung:</strong> ${item.requirement || 'Keine'}</small>
-                                    <small><strong>Aktion:</strong> ${item.action || '-'}</small>
+            <div class="item-list">
+                ${char.items.length === 0 ? '<p class="muted">Keine Gegenstände im Beutel.</p>' : ''}
+                ${char.items.map((item, idx) => `
+                    <div class="item-badge">
+                        <div class="item-badge-left">
+                            ${item.avatar ? `<img src="${item.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">I</div>`}
+                            <div>
+                                <div class="combat-name-line">
+                                    <strong>${item.name}</strong>
+                                    <span class="packmass-pill">📦 Packmaß: ${clampPackmass(item.packmass)}</span>
                                 </div>
+                                <div class="cat-badge-row">
+                                    ${(item.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                </div>
+                                <small><strong>Anforderung:</strong> ${item.requirement || 'Keine'}</small>
+                                <small><strong>Aktion:</strong> ${item.action || '-'}</small>
                             </div>
-                            <button class="btn-del" onclick="removePlayerItem('items', ${idx})">X</button>
                         </div>
-                    `).join('')}
-                </div>
+                        <button class="btn-del" onclick="removePlayerItem('items', ${idx})">X</button>
+                    </div>
+                `).join('')}
+            </div>
 
-                <div class="player-creator-box">
-                    <small class="muted">Gegenstand hinzufügen (Bild, Name, Packmaß 1–10, Kategorien, Anforderung, Aktion):</small>
-                    <div id="p-item-dropzone" class="drop-zone drop-zone-mini">
-                        ${playerItemDraftAvatar
+            <div class="player-creator-box">
+                <small class="muted">Gegenstand hinzufügen (Bild, Name, Packmaß 1–10, Kategorien, Anforderung, Aktion):</small>
+                <div id="p-item-dropzone" class="drop-zone drop-zone-mini">
+                    ${playerItemDraftAvatar
         ? `<img src="${playerItemDraftAvatar}" class="drop-preview-img">`
         : `<div class="drop-zone-prompt"><strong>Gegenstands-Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
-                        <input type="file" id="p-item-file" accept="image/*" class="hidden">
-                    </div>
-                    <div class="form-row">
-                        <label class="field-label">NAME
-                            <input type="text" id="p-new-item-name" placeholder="z.B. Katana">
-                        </label>
-                        <label class="field-label">PACKMASS (1–10)
-                            <input type="number" id="p-new-item-packmass" min="1" max="10" value="1">
-                        </label>
-                    </div>
-                    <input type="text" id="p-new-item-cats" placeholder="Kategorien (mit Komma trennen)">
-                    <div class="form-row">
-                        <input type="text" id="p-new-item-req" placeholder="Anforderung (z.B. STR 14)">
-                        <input type="text" id="p-new-item-action" placeholder="Aktion (z.B. +2 AC / 1d8 Schnitt)">
-                    </div>
-                    <button id="btn-p-add-item" class="btn-primary">+ Gegenstand in Beutel legen</button>
+                    <input type="file" id="p-item-file" accept="image/*" class="hidden">
                 </div>
+                <div class="form-row">
+                    <label class="field-label">NAME
+                        <input type="text" id="p-new-item-name" placeholder="z.B. Katana">
+                    </label>
+                    <label class="field-label">PACKMASS (1–10)
+                        <input type="number" id="p-new-item-packmass" min="1" max="10" value="1">
+                    </label>
+                </div>
+                <input type="text" id="p-new-item-cats" placeholder="Kategorien (mit Komma trennen)">
+                <div class="form-row">
+                    <input type="text" id="p-new-item-req" placeholder="Anforderung (z.B. STR 14)">
+                    <input type="text" id="p-new-item-action" placeholder="Aktion (z.B. +2 AC / 1d8 Schnitt)">
+                </div>
+                <button id="btn-p-add-item" class="btn-primary">+ Gegenstand in Beutel legen</button>
             </div>
+        </div>
 
+        <!-- 2. ATTACKEN & 3. ZAUBER NEBENEINANDER -->
+        <div class="bottom-grid">
+            
+            <!-- ATTACKEN -->
             <div class="card">
-                <h3>Attacken & Zauber</h3>
+                <h3>⚔️ Attacken</h3>
                 <div class="item-list">
-                    ${char.attacks.length === 0 ? '<p class="muted">Noch keine Attacken oder Zauber.</p>' : ''}
+                    ${char.attacks.length === 0 ? '<p class="muted">Noch keine Attacken.</p>' : ''}
                     ${char.attacks.map((atk, idx) => `
                         <div class="item-badge">
                             <div class="item-badge-left">
@@ -597,6 +608,59 @@ function renderEquipmentTab(char, tabBody) {
                     <button id="btn-p-add-atk" class="btn-primary">+ Attacke hinzufügen</button>
                 </div>
             </div>
+
+            <!-- ZAUBER (NEU) -->
+            <div class="card">
+                <h3>✨ Zauber</h3>
+                <div class="item-list">
+                    ${char.spells.length === 0 ? '<p class="muted">Noch keine Zauber gelernt.</p>' : ''}
+                    ${char.spells.map((sp, idx) => `
+                        <div class="item-badge">
+                            <div class="item-badge-left">
+                                ${sp.avatar ? `<img src="${sp.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">✨</div>`}
+                                <div>
+                                    <strong>${sp.name}</strong>
+                                    ${sp.usesExhaustion ? `<span class="exh-badge">⚡ Verbraucht 1 Exhaustion</span>` : ''}
+                                    <div class="cat-badge-row">
+                                        ${(sp.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                    </div>
+                                    <small><strong>Anforderung:</strong> ${sp.requirement || 'Keine'}</small>
+                                    <small><strong>Aktion:</strong> ${sp.action || 'Wartet auf DM...'}</small>
+                                </div>
+                            </div>
+                            <div class="dm-badges">
+                                <button type="button" onclick="usePlayerSpell(${idx}, this)">🎲 Wirken</button>
+                                <button class="btn-del" onclick="removePlayerItem('spells', ${idx})">X</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="player-creator-box">
+                    <small class="muted">Zauber hinzufügen (Bild, Name, Kategorien, Anforderung, Aktion, Exhaustion-Box):</small>
+                    <div id="p-spell-dropzone" class="drop-zone drop-zone-mini">
+                        ${playerSpellDraftAvatar
+        ? `<img src="${playerSpellDraftAvatar}" class="drop-preview-img">`
+        : `<div class="drop-zone-prompt"><strong>Zauber-Bild</strong><span>Drag & Drop oder Klick</span></div>`
+    }
+                        <input type="file" id="p-spell-file" accept="image/*" class="hidden">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" id="p-new-spell-name" placeholder="Name (z.B. Seelenfeuer)">
+                        <input type="text" id="p-new-spell-cats" placeholder="Kategorien (Komma)">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" id="p-new-spell-req" placeholder="Anforderung (z.B. INT 14 / Moral +2)">
+                        <input type="text" id="p-new-spell-action" placeholder="Aktion (z.B. 3d6 Feuerschaden)">
+                    </div>
+                    <label class="checkbox-inline-row">
+                        <input type="checkbox" id="p-new-spell-exh">
+                        Verbraucht Exhaustion Point
+                    </label>
+                    <button id="btn-p-add-spell" class="btn-primary">+ Zauber hinzufügen</button>
+                </div>
+            </div>
+
         </div>
     `;
 
@@ -607,6 +671,11 @@ function renderEquipmentTab(char, tabBody) {
 
     bindImageDropZone('p-atk-dropzone', 'p-atk-file', (b64) => {
         playerAttackDraftAvatar = b64;
+        renderPlayerView(char.id);
+    });
+
+    bindImageDropZone('p-spell-dropzone', 'p-spell-file', (b64) => {
+        playerSpellDraftAvatar = b64;
         renderPlayerView(char.id);
     });
 
@@ -685,11 +754,28 @@ function renderEquipmentTab(char, tabBody) {
         renderPlayerView(char.id);
         syncMyCharacter(char);
     });
+
+    document.getElementById('btn-p-add-spell').addEventListener('click', () => {
+        const name = document.getElementById('p-new-spell-name').value.trim();
+        const cats = parsePlayerCategories(document.getElementById('p-new-spell-cats').value);
+        const requirement = document.getElementById('p-new-spell-req').value.trim();
+        const action = document.getElementById('p-new-spell-action').value.trim();
+        const usesExhaustion = document.getElementById('p-new-spell-exh').checked;
+        if (!name) return alert("Bitte einen Namen für den Zauber eingeben!");
+        char.spells.push({
+            avatar: playerSpellDraftAvatar,
+            name: name,
+            categories: cats,
+            requirement: requirement,
+            action: action || 'Wartet auf DM',
+            usesExhaustion: usesExhaustion
+        });
+        playerSpellDraftAvatar = '';
+        renderPlayerView(char.id);
+        syncMyCharacter(char);
+    });
 }
 
-// ==========================================
-// TAB 4: SPIELER-KAMPFFELD (Top-Leiste + Zoom & Scroll-Grid)
-// ==========================================
 // ==========================================
 // TAB 4: SPIELER-KAMPFFELD (Nur Bewegungsmodus: Freies Schieben & Cursor-Zoom)
 // ==========================================
@@ -720,12 +806,8 @@ function renderPlayerCombatTab(char, tabBody) {
                      class="battlemap-stage-wrapper stage-mode-move"
                      onpointerdown="handleBattlemapStagePointerDown(event, false)"
                      onwheel="handleBattlemapWheel(event)">
-                    <div id="battlemap-pan-zoom-plane"
-                         class="battlemap-pan-zoom-plane"
-                         style="transform: translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom});">
-                        <div id="active-battlemap-grid"
-                             class="battlemap-grid"
-                             style="grid-template-columns: repeat(${map.cols}, 74px); grid-template-rows: repeat(${map.rows}, 74px);">
+                    <div id="battlemap-pan-zoom-plane" class="battlemap-pan-zoom-plane">
+                        <div id="active-battlemap-grid" class="battlemap-grid">
                             ${buildBattlemapGridCellsHtml(false)}
                         </div>
                     </div>
@@ -736,7 +818,6 @@ function renderPlayerCombatTab(char, tabBody) {
 
     initBattlemapViewport();
 }
-
 
 function usePlayerAttack(idx, btnEl) {
     const char = gameState.characters[currentPlayerId];
@@ -751,6 +832,22 @@ function usePlayerAttack(idx, btnEl) {
     const formulaMatch = (atk.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
     const formula = formulaMatch ? formulaMatch[1] : '1d20';
     triggerUniversalRoll(formula, `${atk.name}`, char.name, btnEl);
+    renderPlayerView(char.id);
+}
+
+function usePlayerSpell(idx, btnEl) {
+    const char = gameState.characters[currentPlayerId];
+    if (!char || !char.spells || !char.spells[idx]) return;
+    const sp = char.spells[idx];
+
+    if (sp.usesExhaustion) {
+        char.exhaustion = Math.min(6, (char.exhaustion || 0) + 1);
+        syncMyCharacter(char);
+    }
+
+    const formulaMatch = (sp.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
+    const formula = formulaMatch ? formulaMatch[1] : '1d20';
+    triggerUniversalRoll(formula, `✨ ${sp.name}`, char.name, btnEl);
     renderPlayerView(char.id);
 }
 

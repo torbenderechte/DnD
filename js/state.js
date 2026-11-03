@@ -577,14 +577,21 @@ function resolveCombatantShared(entry) {
 // =========================================================
 function applyBattlemapTransformToDom() {
     const planeEl = document.getElementById('battlemap-pan-zoom-plane');
+    const gridEl = document.getElementById('active-battlemap-grid');
     const labelEl = document.getElementById('battlemap-zoom-label');
+
     if (planeEl) {
         planeEl.style.transform = `translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom})`;
+    }
+    if (gridEl && gameState.combat && gameState.combat.map) {
+        gridEl.style.gridTemplateColumns = `repeat(${gameState.combat.map.cols}, 74px)`;
+        gridEl.style.gridTemplateRows = `repeat(${gameState.combat.map.rows}, 74px)`;
     }
     if (labelEl) {
         labelEl.textContent = `🔍 ${Math.round(battlemapZoom * 100)}%`;
     }
 }
+
 
 function centerBattlemapInViewport() {
     const wrapper = document.getElementById('battlemap-stage-wrapper');
@@ -1012,3 +1019,50 @@ function onTokenCarryEnd(e) {
         }
     }
 }
+// =========================================================
+// ZAUBER (SPELLS) & DM-NOTIZEN INITIALISIERUNG
+// =========================================================
+function ensureSpellsAndDmNotesState() {
+    if (!Array.isArray(gameState.customSpells)) {
+        gameState.customSpells = [];
+    }
+    if (!gameState.dmNotes || typeof gameState.dmNotes !== 'object') {
+        gameState.dmNotes = {
+            quick: "",
+            story: "",
+            secrets: "",
+            world: "",
+            entries: []
+        };
+    }
+    if (!Array.isArray(gameState.dmNotes.entries)) {
+        gameState.dmNotes.entries = [];
+    }
+
+    // Sicherstellen, dass alle Spieler & Monster ein spells-Array besitzen
+    Object.values(gameState.characters || {}).forEach(c => {
+        if (!Array.isArray(c.spells)) c.spells = [];
+    });
+    (gameState.enemies || []).forEach(e => {
+        if (!Array.isArray(e.spells)) e.spells = [];
+    });
+    (gameState.npcTemplates || []).forEach(t => {
+        if (!Array.isArray(t.spells)) t.spells = [];
+    });
+}
+
+// Erweitert den Bibliotheks-Abgleich beim Charakter-Import automatisch um Zauber
+const _origMergeCharLib = typeof mergeCharacterIntoSessionLibrary === 'function' ? mergeCharacterIntoSessionLibrary : null;
+mergeCharacterIntoSessionLibrary = function(char) {
+    ensureSpellsAndDmNotesState();
+    if (_origMergeCharLib) {
+        _origMergeCharLib(char);
+    }
+    (char.spells || []).forEach(sp => {
+        if (!sp || !sp.name) return;
+        const exists = gameState.customSpells.some(existing => existing.name.toLowerCase() === sp.name.toLowerCase());
+        if (!exists) {
+            gameState.customSpells.push(JSON.parse(JSON.stringify(sp)));
+        }
+    });
+};

@@ -85,32 +85,55 @@ document.getElementById('dice-formula-input')?.addEventListener('keydown', (e) =
     }
 });
 
-// Globale Tastatur-Shortcuts (1, 2, 3) für Tab-Wechsel & Escape für Modal
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeConfirmModal();
+// Tastatur-Shortcuts: 1–4, A/D und Pfeiltasten (Links/Rechts) für Spieler & DM
+window.addEventListener('keydown', (e) => {
+    // Ignorieren, wenn gerade in einem Textfeld, einer Notiz oder einem Dropdown getippt wird
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) || document.activeElement?.isContentEditable) {
         return;
     }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    const tag = document.activeElement ? document.activeElement.tagName : '';
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable) {
-        return;
-    }
+    // Nur ausführen, wenn man nicht mehr in der Start-Lobby ist
+    const lobbyEl = document.getElementById('lobby-view');
+    if (lobbyEl && !lobbyEl.classList.contains('hidden')) return;
 
-    const isDmVisible = !document.getElementById('dm-view').classList.contains('hidden');
-    const isPlayerVisible = !document.getElementById('player-view').classList.contains('hidden');
+    const key = e.key.toLowerCase();
+    const isPrev = key === 'a' || e.key === 'ArrowLeft';
+    const isNext = key === 'd' || e.key === 'ArrowRight';
 
-    if (isPlayerVisible) {
-        if (e.key === '1') switchPlayerTab('gameplay');
-        if (e.key === '2') switchPlayerTab('story');
-        if (e.key === '3') switchPlayerTab('equipment');
-        if (e.key === '4' && gameState.combat && gameState.combat.battlemapVisibleToPlayers) {
-            switchPlayerTab('combat');
-        }
+    if (!currentPlayerId) {
+        // --- DM TABS ---
+        const dmTabs = ['gameplay', 'templates', 'combat', 'notes'];
 
-    } else if (isDmVisible) {
         if (e.key === '1') switchDmTab('gameplay');
-        if (e.key === '2') switchDmTab('templates');
-        if (e.key === '3') switchDmTab('combat');
+        else if (e.key === '2') switchDmTab('templates');
+        else if (e.key === '3') switchDmTab('combat');
+        else if (e.key === '4') switchDmTab('notes');
+        else if (isPrev || isNext) {
+            e.preventDefault();
+            const currentIdx = Math.max(0, dmTabs.indexOf(activeDmTab));
+            const delta = isNext ? 1 : -1;
+            const nextIdx = (currentIdx + delta + dmTabs.length) % dmTabs.length;
+            switchDmTab(dmTabs[nextIdx]);
+        }
+    } else {
+        // --- SPIELER TABS (Tab 4 nur, wenn vom DM sichtbar geschaltet) ---
+        const canSeeCombat = Boolean(gameState.combat && gameState.combat.battlemapVisibleToPlayers);
+        const playerTabs = canSeeCombat
+            ? ['gameplay', 'story', 'equipment', 'combat']
+            : ['gameplay', 'story', 'equipment'];
+
+        if (e.key === '1') switchPlayerTab('gameplay');
+        else if (e.key === '2') switchPlayerTab('story');
+        else if (e.key === '3') switchPlayerTab('equipment');
+        else if (e.key === '4' && canSeeCombat) switchPlayerTab('combat');
+        else if (isPrev || isNext) {
+            e.preventDefault();
+            const currentIdx = Math.max(0, playerTabs.indexOf(activePlayerTab));
+            const delta = isNext ? 1 : -1;
+            const nextIdx = (currentIdx + delta + playerTabs.length) % playerTabs.length;
+            switchPlayerTab(playerTabs[nextIdx]);
+        }
     }
 });
