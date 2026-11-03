@@ -456,3 +456,559 @@ function bindImageDropZone(dropZoneId, fileInputId, onImageReady) {
         }
     });
 }
+// =========================================================
+// BATTLEMAP: 2 ZEIGER-MODI (BEWEGEN & BAUEN), PAN & CURSOR-ZOOM
+// =========================================================
+let battlemapZoom = 1.0;
+let battlemapPanX = 0;
+let battlemapPanY = 0;
+let battlemapViewInitialized = false;
+
+let isPanningBattlemap = false;
+let panStartMouseX = 0;
+let panStartMouseY = 0;
+let panStartOffsetX = 0;
+let panStartOffsetY = 0;
+
+let isPaintingBattlemap = false;
+let didPaintChange = false;
+
+function ensureBattlemapState() {
+    if (!gameState.combat) {
+        gameState.combat = { active: false, round: 1, turnIndex: 0, order: [], teams: {}, battlemapVisibleToPlayers: false };
+    }
+    if (gameState.combat.battlemapVisibleToPlayers === undefined) {
+        gameState.combat.battlemapVisibleToPlayers = false;
+    }
+    if (!gameState.combat.teams || Object.keys(gameState.combat.teams).length === 0) {
+        gameState.combat.teams = { "Helden": "#38bdf8", "Monster / Feinde": "#ef4444" };
+    }
+    if (!Array.isArray(gameState.mapTemplates)) {
+        gameState.mapTemplates = [];
+    }
+    if (!gameState.combat.map) {
+        gameState.combat.map = {
+            rows: 6,
+            cols: 6,
+            cells: {},
+            palette: [
+                { id: 'block_gray', name: 'Pures Grau', color: '#3f3f46', isDefault: true }
+            ],
+            selectedBlockId: null // Startet im Bewegungsmodus (kein Block aktiv)
+        };
+    }
+    const map = gameState.combat.map;
+    if (!Array.isArray(map.palette) || map.palette.length === 0) {
+        map.palette = [{ id: 'block_gray', name: 'Pures Grau', color: '#3f3f46', isDefault: true }];
+    }
+    if (!map.palette.some(b => b.id === 'block_gray')) {
+        map.palette.unshift({ id: 'block_gray', name: 'Pures Grau', color: '#3f3f46', isDefault: true });
+    }
+    // Falls ein gelöschter Block noch ausgewählt war -> zurück in Bewegungsmodus (null)
+    if (map.selectedBlockId && !map.palette.some(b => b.id === map.selectedBlockId)) {
+        map.selectedBlockId = null;
+    }
+    if (!map.cells || typeof map.cells !== 'object') {
+        map.cells = {};
+    }
+
+    (gameState.combat.order || []).forEach(entry => {
+        const outOfBounds =
+            typeof entry.row !== 'number' ||
+            typeof entry.col !== 'number' ||
+            entry.row < 0 || entry.row >= map.rows ||
+            entry.col < 0 || entry.col >= map.cols;
+
+        if (outOfBounds) {
+            const free = findFirstFreeGridCell(entry.key);
+            entry.row = free.row;
+            entry.col = free.col;
+        }
+    });
+}
+
+function isDmInBuildMode() {
+    ensureBattlemapState();
+    return Boolean(!currentPlayerId && gameState.combat.map.selectedBlockId);
+}
+
+function findFirstFreeGridCell(ignoreKey = null) {
+    const map = gameState.combat?.map || { rows: 6, cols: 6 };
+    const occupied = new Set();
+    (gameState.combat?.order || []).forEach(e => {
+        if (e.key !== ignoreKey && typeof e.row === 'number' && typeof e.col === 'number') {
+            occupied.add(`${e.row}_${e.col}`);
+        }
+    });
+
+    for (let r = 0; r < map.rows; r++) {
+        for (let c = 0; c < map.cols; c++) {
+            if (!occupied.has(`${r}_${c}`)) {
+                return { row: r, col: c };
+            }
+        }
+    }
+    return { row: 0, col: 0 };
+}
+
+function getBlockForCell(r, c) {
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const blockId = map.cells[`${r}_${c}`] || 'block_gray';
+    return map.palette.find(b => b.id === blockId) || map.palette[0];
+}
+
+function resolveCombatantShared(entry) {
+    if (!entry) return null;
+    if (entry.kind === 'player') {
+        return gameState.characters[entry.id] || null;
+    } else {
+        const byUid = (gameState.enemies || []).findIndex(e => e._uid === entry.key);
+        if (byUid !== -1) {
+            entry.idx = byUid;
+            return gameState.enemies[byUid];
+        }
+        return null;
+    }
+}
+
+// =========================================================
+// KAMERA-PAN & ZOOM ZUM MAUSZEIGER
+// =========================================================
+function applyBattlemapTransformToDom() {
+    const planeEl = document.getElementById('battlemap-pan-zoom-plane');
+    const labelEl = document.getElementById('battlemap-zoom-label');
+    if (planeEl) {
+        planeEl.style.transform = `translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom})`;
+    }
+    if (labelEl) {
+        labelEl.textContent = `🔍 ${Math.round(battlemapZoom * 100)}%`;
+    }
+}
+
+function centerBattlemapInViewport() {
+    const wrapper = document.getElementById('battlemap-stage-wrapper');
+    const map = gameState.combat?.map || { rows: 6, cols: 6 };
+    if (!wrapper) return;
+
+    const rect = wrapper.getBoundingClientRect();
+    const gridW = map.cols * 74 + (map.cols - 1) * 5;
+    const gridH = map.rows * 74 + (map.rows - 1) * 5;
+
+    battlemapPanX = Math.round((rect.width - gridW * battlemapZoom) / 2);
+    battlemapPanY = Math.round((rect.height - gridH * battlemapZoom) / 2);
+    battlemapViewInitialized = true;
+    applyBattlemapTransformToDom();
+}
+
+function initBattlemapViewport() {
+    if (!battlemapViewInitialized) {
+        requestAnimationFrame(() => centerBattlemapInViewport());
+    } else {
+        applyBattlemapTransformToDom();
+    }
+}
+
+function zoomBattlemapAtPoint(newZoom, focalX, focalY) {
+    const clampedZoom = Math.max(0.35, Math.min(2.6, Math.round(newZoom * 100) / 100));
+    if (clampedZoom === battlemapZoom) return;
+
+    // Punkt im unskalierten Spielfeld unter dem Mauszeiger festhalten
+    const worldX = (focalX - battlemapPanX) / battlemapZoom;
+    const worldY = (focalY - battlemapPanY) / battlemapZoom;
+
+    battlemapZoom = clampedZoom;
+    battlemapPanX = Math.round(focalX - worldX * battlemapZoom);
+    battlemapPanY = Math.round(focalY - worldY * battlemapZoom);
+    battlemapViewInitialized = true;
+
+    applyBattlemapTransformToDom();
+}
+
+function changeBattlemapZoom(delta) {
+    const wrapper = document.getElementById('battlemap-stage-wrapper');
+    if (wrapper) {
+        const rect = wrapper.getBoundingClientRect();
+        zoomBattlemapAtPoint(battlemapZoom + delta, rect.width / 2, rect.height / 2);
+    } else {
+        zoomBattlemapAtPoint(battlemapZoom + delta, 300, 300);
+    }
+}
+
+function resetBattlemapZoom() {
+    battlemapZoom = 1.0;
+    centerBattlemapInViewport();
+}
+
+function handleBattlemapWheel(e) {
+    e.preventDefault();
+    const wrapper = e.currentTarget;
+    const rect = wrapper.getBoundingClientRect();
+
+    // Position des Mauszeigers innerhalb des Spielfeld-Fensters
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    zoomBattlemapAtPoint(battlemapZoom * factor, mouseX, mouseY);
+}
+
+// =========================================================
+// MODUS 1: VERSCHIEBEN (PANNING) & MODUS 2: BAUMODUS (MALEN)
+// =========================================================
+function handleBattlemapStagePointerDown(e, isDmView) {
+    if (e.button !== 0) return;
+
+    // Wenn ein Token angeklickt wurde, übernimmt das Token-Drag-System
+    if (e.target && e.target.closest('.battlemap-token')) return;
+
+    const buildMode = isDmView && Boolean(gameState.combat?.map?.selectedBlockId);
+    const clickedCell = e.target ? e.target.closest('.battlemap-cell') : null;
+
+    // DM im Baumodus + Klick auf eine Zelle -> Malen!
+    if (buildMode && clickedCell) {
+        e.preventDefault();
+        isPaintingBattlemap = true;
+        didPaintChange = false;
+        paintCellFromElement(clickedCell);
+
+        window.addEventListener('pointermove', onBattlemapPaintMove);
+        window.addEventListener('pointerup', onBattlemapPaintEnd);
+        return;
+    }
+
+    // Sonst: Verschieben- & Bewegungsmodus (Kamera frei in jede Richtung ziehen)
+    e.preventDefault();
+    isPanningBattlemap = true;
+    battlemapViewInitialized = true;
+    panStartMouseX = e.clientX;
+    panStartMouseY = e.clientY;
+    panStartOffsetX = battlemapPanX;
+    panStartOffsetY = battlemapPanY;
+
+    const wrapper = document.getElementById('battlemap-stage-wrapper');
+    if (wrapper) wrapper.classList.add('is-panning');
+
+    window.addEventListener('pointermove', onBattlemapPanMove);
+    window.addEventListener('pointerup', onBattlemapPanEnd);
+}
+
+function onBattlemapPanMove(e) {
+    if (!isPanningBattlemap) return;
+    battlemapPanX = Math.round(panStartOffsetX + (e.clientX - panStartMouseX));
+    battlemapPanY = Math.round(panStartOffsetY + (e.clientY - panStartMouseY));
+    applyBattlemapTransformToDom();
+}
+
+function onBattlemapPanEnd() {
+    if (!isPanningBattlemap) return;
+    isPanningBattlemap = false;
+    const wrapper = document.getElementById('battlemap-stage-wrapper');
+    if (wrapper) wrapper.classList.remove('is-panning');
+
+    window.removeEventListener('pointermove', onBattlemapPanMove);
+    window.removeEventListener('pointerup', onBattlemapPanEnd);
+}
+
+function paintCellFromElement(cellEl) {
+    if (!cellEl) return;
+    const r = parseInt(cellEl.getAttribute('data-row'));
+    const c = parseInt(cellEl.getAttribute('data-col'));
+    if (isNaN(r) || isNaN(c)) return;
+
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const selectedId = map.selectedBlockId;
+    if (!selectedId) return;
+
+    const currentId = map.cells[`${r}_${c}`] || 'block_gray';
+    if (currentId !== selectedId) {
+        map.cells[`${r}_${c}`] = selectedId;
+        didPaintChange = true;
+    }
+
+    const block = map.palette.find(b => b.id === selectedId) || map.palette[0];
+    if (block) {
+        cellEl.style.backgroundColor = block.color;
+        cellEl.title = `${block.name} (${r + 1}, ${c + 1})`;
+    }
+}
+
+function onBattlemapPaintMove(e) {
+    if (!isPaintingBattlemap) return;
+    const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+    const cellEl = elUnder ? elUnder.closest('.battlemap-cell') : null;
+    if (cellEl) {
+        paintCellFromElement(cellEl);
+    }
+}
+
+function onBattlemapPaintEnd() {
+    if (!isPaintingBattlemap) return;
+    isPaintingBattlemap = false;
+    window.removeEventListener('pointermove', onBattlemapPaintMove);
+    window.removeEventListener('pointerup', onBattlemapPaintEnd);
+
+    if (didPaintChange) {
+        didPaintChange = false;
+        broadcastState();
+    }
+}
+
+// =========================================================
+// GEMEINSAME OBERE ZUG-LEISTE & GRID-RENDERER
+// =========================================================
+function buildTopTurnBarHtml(isDmView) {
+    ensureBattlemapState();
+    const order = gameState.combat.order || [];
+    const turnIdx = gameState.combat.turnIndex || 0;
+    const activeEntry = order[turnIdx] || null;
+    const activeActor = resolveCombatantShared(activeEntry);
+    const activeTeamColor = activeEntry ? (gameState.combat.teams[activeEntry.teamName] || '#38bdf8') : '#3f3f46';
+
+    const upcoming = [];
+    if (order.length > 1) {
+        const count = Math.min(3, order.length - 1);
+        for (let step = 1; step <= count; step++) {
+            const idx = (turnIdx + step) % order.length;
+            const entry = order[idx];
+            const actor = resolveCombatantShared(entry);
+            if (actor) {
+                upcoming.push({
+                    entry,
+                    actor,
+                    color: gameState.combat.teams[entry.teamName] || '#3f3f46'
+                });
+            }
+        }
+    }
+    const hasMoreEllipsis = order.length > 4;
+    const visibleToPlayers = Boolean(gameState.combat.battlemapVisibleToPlayers);
+
+    return `
+        <div class="card combat-top-strip">
+            <div class="turn-strip-sequence">
+                ${activeActor ? `
+                    <div class="turn-active-card" style="border-color: ${activeTeamColor}; box-shadow: 0 0 14px ${activeTeamColor}40;">
+                        ${activeActor.avatar
+        ? `<img src="${activeActor.avatar}" class="turn-active-avatar" style="border-color: ${activeTeamColor};">`
+        : `<div class="turn-active-avatar turn-avatar-placeholder" style="border-color: ${activeTeamColor};">${activeActor.name[0]}</div>`
+    }
+                        <div class="turn-active-info">
+                            <span class="turn-indicator-pill">▶ AM ZUG</span>
+                            <strong>${activeActor.name}</strong>
+                            <small class="muted">${activeEntry.teamName} · Init ${activeEntry.initiative}</small>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="turn-empty-pill">Noch kein aktiver Kämpfer im Zug</div>
+                `}
+
+                ${upcoming.length > 0 ? `<span class="turn-arrow-sep">➔</span>` : ''}
+
+                <div class="turn-upcoming-list">
+                    ${upcoming.map(u => `
+                        <div class="turn-next-card" style="border-left: 4px solid ${u.color};">
+                            ${u.actor.avatar
+        ? `<img src="${u.actor.avatar}" class="turn-next-avatar" style="border-color: ${u.color};">`
+        : `<div class="turn-next-avatar turn-avatar-placeholder" style="border-color: ${u.color};">${u.actor.name[0]}</div>`
+    }
+                            <div class="turn-next-meta">
+                                <strong>${u.actor.name}</strong>
+                                <small>Init ${u.entry.initiative}</small>
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${hasMoreEllipsis ? `<div class="turn-ellipsis-badge" title="Weitere Kämpfer in der Reihenfolge">…</div>` : ''}
+                </div>
+            </div>
+
+            <div class="turn-strip-controls">
+                <div class="round-badge">
+                    <span>RUNDE</span>
+                    <strong>${gameState.combat.round || 1}</strong>
+                </div>
+                ${isDmView ? `
+                    <label class="dm-checkbox-label battlemap-vis-toggle ${visibleToPlayers ? 'vis-on' : 'vis-off'}" title="Schaltet den 4. Tab (Kampffeld) für alle Spieler ein oder aus">
+                        <input type="checkbox" ${visibleToPlayers ? 'checked' : ''} onchange="dmToggleBattlemapVisibility(this.checked)">
+                        👁️ Für Spieler ${visibleToPlayers ? 'sichtbar' : 'ausgeblendet'}
+                    </label>
+                    <button type="button" onclick="changeCombatTurn(-1)">◀ Vorheriger</button>
+                    <button type="button" class="btn-primary btn-next-turn" onclick="changeCombatTurn(1)">Nächster Zug ▶</button>
+                    <button type="button" class="btn-secondary" onclick="syncPlayersOnlyIntoCombat()" title="Alle verbundenen Spieler in den Kampf holen">🔄 Spieler-Sync</button>
+                    <button type="button" onclick="rollInitiativeFor('enemies', this)">🎲 Monster-Init</button>
+                    <button type="button" onclick="rollInitiativeFor('all', this)">🎲 Alle Init</button>
+                    ${order.length > 0 || gameState.combat.active ? `<button type="button" class="btn-del" onclick="endCombatSession()">Kampf beenden</button>` : ''}
+                ` : `
+                    <span class="mode-status-pill mode-pill-move">🖐️ Verschieben- & Bewegungsmodus</span>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function buildBattlemapZoomControlsHtml() {
+    const pct = Math.round(battlemapZoom * 100);
+    return `
+        <div class="battlemap-zoom-bar">
+            <button type="button" onclick="changeBattlemapZoom(-0.15)" title="Rauszoomen">🔍 −</button>
+            <button type="button" id="battlemap-zoom-label" onclick="resetBattlemapZoom()" title="Auf 100% & Mitte zentrieren">🔍 ${pct}%</button>
+            <button type="button" onclick="changeBattlemapZoom(0.15)" title="Reinzoomen">🔍 +</button>
+        </div>
+    `;
+}
+
+function buildBattlemapGridCellsHtml(isDmView) {
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const order = gameState.combat.order || [];
+    const activeKey = order[gameState.combat.turnIndex]?.key || null;
+    const buildMode = isDmView && Boolean(map.selectedBlockId);
+
+    let html = '';
+    for (let r = 0; r < map.rows; r++) {
+        for (let c = 0; c < map.cols; c++) {
+            const block = getBlockForCell(r, c);
+            const tokensHere = order.filter(e => e.row === r && e.col === c);
+
+            html += `
+                <div class="battlemap-cell"
+                     data-row="${r}"
+                     data-col="${c}"
+                     style="background-color: ${block.color};"
+                     title="${block.name} (${r + 1}, ${c + 1})"
+                     ${isDmView ? `
+                         ondragover="dmHandleCellDragOver(event)"
+                         ondragleave="dmHandleCellDragLeave(event)"
+                         ondrop="dmHandleCellDrop(event, ${r}, ${c})"
+                     ` : ''}>
+                    <span class="cell-coord-hint">${r + 1},${c + 1}</span>
+                    ${tokensHere.map(entry => {
+                const actor = resolveCombatantShared(entry);
+                if (!actor) return '';
+                const teamColor = gameState.combat.teams[entry.teamName] || '#38bdf8';
+                const isActiveTurn = entry.key === activeKey;
+                // Im Baumodus lassen Tokens den Pinsel durch; im Bewegungsmodus sind sie ziehbar
+                const canDrag = !buildMode && (isDmView || (entry.kind === 'player' && entry.id === currentPlayerId));
+                const isDown = actor.hp <= 0;
+
+                return `
+                            <div class="battlemap-token ${isActiveTurn ? 'token-active-turn' : ''} ${canDrag ? 'token-can-drag' : 'token-locked'} ${buildMode ? 'token-passthrough' : ''} ${isDown ? 'token-down' : ''}"
+                                 data-token-key="${entry.key}"
+                                 style="border-color: ${teamColor};"
+                                 ${canDrag ? `onpointerdown="startTokenCarryDrag(event, '${entry.key}', ${isDmView})"` : ''}
+                                 title="${actor.name} (${entry.teamName}) | HP: ${actor.hp}/${actor.maxHp}">
+                                ${actor.avatar
+                    ? `<img src="${actor.avatar}" class="token-avatar-img" draggable="false">`
+                    : `<div class="token-initials">${actor.name.substring(0, 2).toUpperCase()}</div>`
+                }
+                                <div class="token-label-bar">
+                                    <span class="token-name-text">${actor.name}</span>
+                                    <span class="token-hp-text">${actor.hp}/${actor.maxHp}</span>
+                                </div>
+                            </div>
+                        `;
+            }).join('')}
+                </div>
+            `;
+        }
+    }
+    return html;
+}
+
+// Live Pointer-Trage-System für Tokens mit Links-Rechts-Schwank-Animation
+let activeTokenDrag = null;
+
+function startTokenCarryDrag(e, tokenKey, isDmView) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    const tokenEl = e.currentTarget;
+    const rect = tokenEl.getBoundingClientRect();
+
+    const ghost = tokenEl.cloneNode(true);
+    ghost.classList.add('token-drag-floating-ghost');
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.height = `${rect.height}px`;
+    ghost.style.left = `${e.clientX - rect.width / 2}px`;
+    ghost.style.top = `${e.clientY - rect.height / 2}px`;
+    document.body.appendChild(ghost);
+
+    tokenEl.classList.add('token-source-picked-up');
+
+    activeTokenDrag = {
+        tokenKey,
+        isDmView,
+        ghost,
+        sourceEl: tokenEl,
+        width: rect.width,
+        height: rect.height,
+        lastHoverCell: null
+    };
+
+    window.addEventListener('pointermove', onTokenCarryMove);
+    window.addEventListener('pointerup', onTokenCarryEnd);
+}
+
+function onTokenCarryMove(e) {
+    if (!activeTokenDrag) return;
+    const { ghost, width, height } = activeTokenDrag;
+    ghost.style.left = `${e.clientX - width / 2}px`;
+    ghost.style.top = `${e.clientY - height / 2}px`;
+
+    const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = elUnder ? elUnder.closest('.battlemap-cell') : null;
+
+    if (activeTokenDrag.lastHoverCell && activeTokenDrag.lastHoverCell !== cell) {
+        activeTokenDrag.lastHoverCell.classList.remove('cell-drop-hover');
+    }
+    if (cell) {
+        cell.classList.add('cell-drop-hover');
+        activeTokenDrag.lastHoverCell = cell;
+    }
+}
+
+function onTokenCarryEnd(e) {
+    if (!activeTokenDrag) return;
+    const { tokenKey, isDmView, ghost, sourceEl, lastHoverCell } = activeTokenDrag;
+
+    window.removeEventListener('pointermove', onTokenCarryMove);
+    window.removeEventListener('pointerup', onTokenCarryEnd);
+
+    if (lastHoverCell) lastHoverCell.classList.remove('cell-drop-hover');
+    if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    if (sourceEl) sourceEl.classList.remove('token-source-picked-up');
+
+    const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+    const targetCell = elUnder ? elUnder.closest('.battlemap-cell') : null;
+
+    activeTokenDrag = null;
+
+    if (!targetCell) return;
+    const newRow = parseInt(targetCell.getAttribute('data-row'));
+    const newCol = parseInt(targetCell.getAttribute('data-col'));
+    if (isNaN(newRow) || isNaN(newCol)) return;
+
+    const entry = (gameState.combat?.order || []).find(en => en.key === tokenKey);
+    if (!entry) return;
+
+    entry.row = newRow;
+    entry.col = newCol;
+
+    if (isDmView) {
+        broadcastState();
+        renderDmView();
+    } else {
+        renderPlayerView(currentPlayerId);
+        if (hostConnection && hostConnection.open) {
+            hostConnection.send({
+                type: 'MOVE_TOKEN',
+                key: tokenKey,
+                playerId: currentPlayerId,
+                row: newRow,
+                col: newCol
+            });
+        }
+    }
+}

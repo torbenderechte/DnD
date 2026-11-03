@@ -104,6 +104,10 @@ document.addEventListener('keydown', (e) => {
         if (e.key === '1') switchPlayerTab('gameplay');
         if (e.key === '2') switchPlayerTab('story');
         if (e.key === '3') switchPlayerTab('equipment');
+        if (e.key === '4' && gameState.combat && gameState.combat.battlemapVisibleToPlayers) {
+            switchPlayerTab('combat');
+        }
+
     } else if (isDmVisible) {
         if (e.key === '1') switchDmTab('gameplay');
         if (e.key === '2') switchDmTab('templates');

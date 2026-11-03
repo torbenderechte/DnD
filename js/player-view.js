@@ -55,11 +55,28 @@ function applyImportedPlayerCharacter(parsedJson) {
     });
 }
 
+function updatePlayerCombatTabVisibility() {
+    const isVisible = Boolean(gameState.combat && gameState.combat.battlemapVisibleToPlayers);
+    const combatTabBtn = document.getElementById('tab-btn-combat');
+    if (combatTabBtn) {
+        combatTabBtn.classList.toggle('hidden', !isVisible);
+    }
+    if (!isVisible && activePlayerTab === 'combat') {
+        activePlayerTab = 'gameplay';
+        document.getElementById('tab-btn-gameplay')?.classList.add('active');
+        document.getElementById('tab-btn-combat')?.classList.remove('active');
+    }
+}
+
 function switchPlayerTab(tabName) {
+    if (tabName === 'combat' && !(gameState.combat && gameState.combat.battlemapVisibleToPlayers)) {
+        return;
+    }
     activePlayerTab = tabName;
-    document.getElementById('tab-btn-gameplay').classList.toggle('active', tabName === 'gameplay');
-    document.getElementById('tab-btn-story').classList.toggle('active', tabName === 'story');
-    document.getElementById('tab-btn-equipment').classList.toggle('active', tabName === 'equipment');
+    document.getElementById('tab-btn-gameplay')?.classList.toggle('active', tabName === 'gameplay');
+    document.getElementById('tab-btn-story')?.classList.toggle('active', tabName === 'story');
+    document.getElementById('tab-btn-equipment')?.classList.toggle('active', tabName === 'equipment');
+    document.getElementById('tab-btn-combat')?.classList.toggle('active', tabName === 'combat');
     renderPlayerView(currentPlayerId);
 }
 
@@ -70,6 +87,8 @@ function renderPlayerView(playerId) {
     if (!char.attacks) char.attacks = [];
     if (!char.affinities) char.affinities = [];
     if (char.notes === undefined) char.notes = "";
+
+    updatePlayerCombatTabVisibility();
 
     const activeEl = document.activeElement;
     const activeId = activeEl && activeEl.id ? activeEl.id : null;
@@ -86,6 +105,8 @@ function renderPlayerView(playerId) {
         renderStoryTab(char, tabBody);
     } else if (activePlayerTab === 'equipment') {
         renderEquipmentTab(char, tabBody);
+    } else if (activePlayerTab === 'combat') {
+        renderPlayerCombatTab(char, tabBody);
     }
 
     if (activeId) {
@@ -99,6 +120,9 @@ function renderPlayerView(playerId) {
     }
 }
 
+// ==========================================
+// TAB 1: GAMEPLAY
+// ==========================================
 function renderGameplayTab(char, tabBody) {
     const moralClass = char.morality < 0 ? 'moral-is-demonic' : char.morality > 0 ? 'moral-is-holy' : 'moral-is-neutral';
 
@@ -466,7 +490,6 @@ function renderEquipmentTab(char, tabBody) {
                     </span>
                 </div>
 
-                <!-- Visuelle Beutel-Kapazitätsanzeige (Maximalplatz nur durch DM änderbar) -->
                 <div class="bag-capacity-box">
                     <div class="bag-progress-track">
                         <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
@@ -663,6 +686,57 @@ function renderEquipmentTab(char, tabBody) {
         syncMyCharacter(char);
     });
 }
+
+// ==========================================
+// TAB 4: SPIELER-KAMPFFELD (Top-Leiste + Zoom & Scroll-Grid)
+// ==========================================
+// ==========================================
+// TAB 4: SPIELER-KAMPFFELD (Nur Bewegungsmodus: Freies Schieben & Cursor-Zoom)
+// ==========================================
+function renderPlayerCombatTab(char, tabBody) {
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const isMyCharInCombat = (gameState.combat.order || []).some(e => e.kind === 'player' && e.id === char.id);
+
+    tabBody.innerHTML = `
+        <div class="player-combat-layout">
+            ${buildTopTurnBarHtml(false)}
+
+            <div class="card battlemap-board-card player-battlemap-card">
+                <div class="battlemap-board-header">
+                    <div>
+                        <h3>🗺️ Taktisches Kampffeld (${map.rows} × ${map.cols})</h3>
+                        <small class="muted">
+                            ${isMyCharInCombat
+        ? 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · Ziehe deinen eigenen Token.'
+        : 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger.'
+    }
+                        </small>
+                    </div>
+                    ${buildBattlemapZoomControlsHtml()}
+                </div>
+
+                <div id="battlemap-stage-wrapper"
+                     class="battlemap-stage-wrapper stage-mode-move"
+                     onpointerdown="handleBattlemapStagePointerDown(event, false)"
+                     onwheel="handleBattlemapWheel(event)">
+                    <div id="battlemap-pan-zoom-plane"
+                         class="battlemap-pan-zoom-plane"
+                         style="transform: translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom});">
+                        <div id="active-battlemap-grid"
+                             class="battlemap-grid"
+                             style="grid-template-columns: repeat(${map.cols}, 74px); grid-template-rows: repeat(${map.rows}, 74px);">
+                            ${buildBattlemapGridCellsHtml(false)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    initBattlemapViewport();
+}
+
 
 function usePlayerAttack(idx, btnEl) {
     const char = gameState.characters[currentPlayerId];

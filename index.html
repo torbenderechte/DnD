@@ -13,12 +13,16 @@
     <div class="header-left">
         <h1>Afterlife</h1>
 
-        <!-- 3 Ordner-Reiter für SPIELER (Shortcuts: Tasten 1, 2, 3) -->
-        <nav id="player-header-tabs" class="folder-tabs hidden">
-            <button id="tab-btn-gameplay" class="tab-btn active" onclick="switchPlayerTab('gameplay')" title="Shortcut: Taste 1">1. Gameplay</button>
-            <button id="tab-btn-story" class="tab-btn" onclick="switchPlayerTab('story')" title="Shortcut: Taste 2">2. Story & Notizen</button>
-            <button id="tab-btn-equipment" class="tab-btn" onclick="switchPlayerTab('equipment')" title="Shortcut: Taste 3">3. Ausrüstung</button>
-        </nav>
+        <!-- 3 Ordner-Reiter für SPIELER (Shortcuts: Tasten 1, 2, 3,4) -->
+        <!-- Navigation für Spieler (Exakt gleiches Layout & Effekte wie beim DM, Tab 4 startet ausgeblendet) -->
+        <div id="player-header-tabs" class="folder-tabs hidden">
+            <button id="tab-btn-gameplay" class="tab-btn active" onclick="switchPlayerTab('gameplay')">1. Gameplay</button>
+            <button id="tab-btn-story" class="tab-btn" onclick="switchPlayerTab('story')">2. Story & Notizen</button>
+            <button id="tab-btn-equipment" class="tab-btn" onclick="switchPlayerTab('equipment')">3. Ausrüstung</button>
+            <button id="tab-btn-combat" class="tab-btn hidden" onclick="switchPlayerTab('combat')">4. Kampffeld</button>
+        </div>
+
+
 
         <!-- 3 Ordner-Reiter für den DUNGEON MASTER (Shortcuts: Tasten 1, 2, 3) -->
         <nav id="dm-header-tabs" class="folder-tabs hidden">

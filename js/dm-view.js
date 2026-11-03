@@ -17,6 +17,11 @@ let itemDraftAvatar = '';
 let attackDraftAvatar = '';
 let affinityDraftAvatar = '';
 
+// Temporärer State für den "+ Neuer Block"-Dialog rechts in der Palette
+let showNewBlockCreator = false;
+let newBlockDraftColor = '#ef4444';
+let newBlockDraftName = '';
+
 function parseCategories(inputStr) {
     if (!inputStr) return [];
     return inputStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
@@ -56,6 +61,7 @@ function renderDmView() {
     const container = document.getElementById('dm-view-content');
     if (!container) return;
     ensureEnemyUids();
+    ensureBattlemapState();
 
     if (activeDmTab === 'gameplay') {
         renderDmGameplayTab(container);
@@ -67,7 +73,7 @@ function renderDmView() {
 }
 
 // ============================================================================
-// DM TAB 1: GAMEPLAY (Inkl. Beutel-Kapazitätssteuerung & Packmaß-Prüfung)
+// DM TAB 1: GAMEPLAY
 // ============================================================================
 function renderDmGameplayTab(container) {
     container.innerHTML = `
@@ -159,7 +165,6 @@ function renderDmPlayers() {
                     </label>
                 </div>
 
-                <!-- DM-Steuerung für Beutel-Kapazität (Packmaß) -->
                 <div class="dm-bag-control-row">
                     <div>
                         <strong>🎒 Beutel: ${bagUsed} / ${isInf ? '∞' : bagMax} Packmaß</strong>
@@ -241,7 +246,6 @@ function renderDmPlayers() {
     }).join('');
 }
 
-// DM Funktionen für die Beutel-Kapazität der Spieler
 function dmSetPlayerBagMax(playerId, newVal) {
     const char = gameState.characters[playerId];
     if (!char) return;
@@ -399,7 +403,7 @@ function dmRemoveNpcItem(enemyIdx, targetKey, itemIdx) {
 }
 
 // ============================================================================
-// DM TAB 2: STANDARDISIERTE VORLAGEN & BIBLIOTHEK (Mit Packmaß 1-10)
+// DM TAB 2: STANDARDISIERTE VORLAGEN & BIBLIOTHEK
 // ============================================================================
 function renderDmTemplatesTab(container) {
     const eNpc = editingState.npc !== null ? gameState.npcTemplates[editingState.npc] : null;
@@ -526,7 +530,6 @@ function renderDmTemplatesTab(container) {
 
             <div class="creators-three-grid">
                 
-                <!-- 2. GEGENSTÄNDE (Mit Packmaß 1-10) -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>2. Gegenstände</h3>
@@ -571,7 +574,6 @@ function renderDmTemplatesTab(container) {
                     </div>
                 </div>
 
-                <!-- 3. ATTACKEN -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>3. Attacken</h3>
@@ -612,7 +614,6 @@ function renderDmTemplatesTab(container) {
                     </div>
                 </div>
 
-                <!-- 4. MERKMALE -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>4. Merkmale</h3>
@@ -1012,10 +1013,15 @@ function deleteLibraryItem(libType, idx) {
 }
 
 // ============================================================================
-// DM TAB 3: KAMPFSYSTEM
+// DM TAB 3: NEUES TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
 // ============================================================================
+function resolveCombatant(entry) {
+    return resolveCombatantShared(entry);
+}
+
 function cleanStaleCombatants() {
     ensureEnemyUids();
+    ensureBattlemapState();
     gameState.combat.order = (gameState.combat.order || []).filter(entry => {
         return resolveCombatant(entry) !== null;
     });
@@ -1028,9 +1034,6 @@ function syncPlayersOnlyIntoCombat() {
     ensureEnemyUids();
     cleanStaleCombatants();
 
-    if (!gameState.combat.teams) {
-        gameState.combat.teams = { "Helden": "#38bdf8", "Monster / Feinde": "#ef4444" };
-    }
     const teamNames = Object.keys(gameState.combat.teams);
     const defaultPlayerTeam = teamNames.includes("Helden") ? "Helden" : teamNames[0];
 
@@ -1039,13 +1042,16 @@ function syncPlayersOnlyIntoCombat() {
         const key = `player_${pid}`;
         const alreadyInCombat = gameState.combat.order.some(e => e.key === key);
         if (!alreadyInCombat) {
+            const free = findFirstFreeGridCell(key);
             gameState.combat.order.push({
                 key: key,
                 kind: 'player',
                 id: pid,
                 initiative: c.initiative || 10,
                 teamName: defaultPlayerTeam,
-                conditions: []
+                conditions: [],
+                row: free.row,
+                col: free.col
             });
         }
     });
@@ -1058,6 +1064,7 @@ function syncPlayersOnlyIntoCombat() {
 }
 
 function addSelectedParticipantToCombat() {
+    ensureBattlemapState();
     const partSelect = document.getElementById('combat-add-participant-select');
     const teamSelect = document.getElementById('combat-add-team-select');
     if (!partSelect || !partSelect.value) {
@@ -1071,26 +1078,33 @@ function addSelectedParticipantToCombat() {
         const pid = val.replace('player:', '');
         const c = gameState.characters[pid];
         if (!c) return;
+        const key = `player_${pid}`;
+        const free = findFirstFreeGridCell(key);
         gameState.combat.order.push({
-            key: `player_${pid}`,
+            key: key,
             kind: 'player',
             id: pid,
             initiative: c.initiative || 10,
             teamName: teamName,
-            conditions: []
+            conditions: [],
+            row: free.row,
+            col: free.col
         });
     } else if (val.startsWith('enemy:')) {
         const uid = val.replace('enemy:', '');
         const idx = gameState.enemies.findIndex(e => e._uid === uid);
         if (idx === -1) return;
         const enemy = gameState.enemies[idx];
+        const free = findFirstFreeGridCell(uid);
         gameState.combat.order.push({
             key: uid,
             kind: 'enemy',
             idx: idx,
             initiative: enemy.initiative || 10,
             teamName: teamName,
-            conditions: []
+            conditions: [],
+            row: free.row,
+            col: free.col
         });
     }
 
@@ -1105,7 +1119,7 @@ function removeCombatantFromCombat(orderIdx) {
     const actor = resolveCombatant(entry);
     const name = actor ? actor.name : 'diesen Teilnehmer';
 
-    openConfirmModal(`Möchtest du "${name}" wirklich aus dem laufenden Kampf entfernen?`, () => {
+    openConfirmModal(`Möchtest du "${name}" wirklich aus dem laufenden Kampf und vom Spielfeld entfernen?`, () => {
         gameState.combat.order.splice(orderIdx, 1);
         if (gameState.combat.turnIndex >= gameState.combat.order.length) {
             gameState.combat.turnIndex = 0;
@@ -1113,20 +1127,6 @@ function removeCombatantFromCombat(orderIdx) {
         broadcastState();
         renderDmView();
     });
-}
-
-function resolveCombatant(entry) {
-    if (!entry) return null;
-    if (entry.kind === 'player') {
-        return gameState.characters[entry.id] || null;
-    } else {
-        const byUid = gameState.enemies.findIndex(e => e._uid === entry.key);
-        if (byUid !== -1) {
-            entry.idx = byUid;
-            return gameState.enemies[byUid];
-        }
-        return null;
-    }
 }
 
 function sortCombatOrder() {
@@ -1139,7 +1139,7 @@ function sortCombatOrder() {
 function rollInitiativeFor(mode, btnEl) {
     cleanStaleCombatants();
     if (gameState.combat.order.length === 0) {
-        return alert("Es sind noch keine Kämpfer im Kampf! Nutze '🔄 Spieler-Sync' oder füge unten gezielt Teilnehmer hinzu.");
+        return alert("Es sind noch keine Kämpfer im Kampf! Nutze '🔄 Spieler-Sync' oder füge links Teilnehmer hinzu.");
     }
     gameState.combat.active = true;
 
@@ -1178,7 +1178,7 @@ function changeCombatTurn(delta) {
 }
 
 function endCombatSession() {
-    openConfirmModal("Möchtest du den aktuellen Kampf wirklich beenden und die Initiative-Liste leeren?", () => {
+    openConfirmModal("Möchtest du den aktuellen Kampf wirklich beenden und alle Kämpfer vom Spielfeld entfernen?", () => {
         gameState.combat.active = false;
         gameState.combat.round = 1;
         gameState.combat.turnIndex = 0;
@@ -1205,7 +1205,7 @@ function addNewTeamByDm() {
     const nameInput = document.getElementById('new-team-name-input');
     const colorInput = document.getElementById('new-team-color-input');
     const name = nameInput ? nameInput.value.trim() : '';
-    const color = colorInput ? colorInput.value : '#ffffff';
+    const color = colorInput ? colorInput.value : '#a855f7';
 
     if (!name) return alert("Bitte einen Team-Namen eingeben!");
     if (!gameState.combat.teams) gameState.combat.teams = {};
@@ -1254,268 +1254,746 @@ function removeCombatCondition(orderIdx, condIdx) {
     });
 }
 
-function renderDmCombatTab(container) {
+// ============================================================================
+// DM TAB 3: NEUES TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
+// ============================================================================
+function resolveCombatant(entry) {
+    return resolveCombatantShared(entry);
+}
+
+function cleanStaleCombatants() {
+    ensureEnemyUids();
+    ensureBattlemapState();
+    gameState.combat.order = (gameState.combat.order || []).filter(entry => {
+        return resolveCombatant(entry) !== null;
+    });
+    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
+        gameState.combat.turnIndex = 0;
+    }
+}
+
+function dmToggleBattlemapVisibility(isVisible) {
+    ensureBattlemapState();
+    gameState.combat.battlemapVisibleToPlayers = Boolean(isVisible);
+    broadcastState();
+    renderDmView();
+}
+
+function syncPlayersOnlyIntoCombat() {
+    ensureEnemyUids();
     cleanStaleCombatants();
 
-    const order = gameState.combat.order || [];
-    if (!gameState.combat.teams) {
-        gameState.combat.teams = { "Helden": "#38bdf8", "Monster / Feinde": "#ef4444" };
-    }
     const teamNames = Object.keys(gameState.combat.teams);
-    const activeEntry = order[gameState.combat.turnIndex] || null;
-    const activeActor = resolveCombatant(activeEntry);
+    const defaultPlayerTeam = teamNames.includes("Helden") ? "Helden" : teamNames[0];
+
+    Object.keys(gameState.characters).forEach(pid => {
+        const c = gameState.characters[pid];
+        const key = `player_${pid}`;
+        const alreadyInCombat = gameState.combat.order.some(e => e.key === key);
+        if (!alreadyInCombat) {
+            const free = findFirstFreeGridCell(key);
+            gameState.combat.order.push({
+                key: key,
+                kind: 'player',
+                id: pid,
+                initiative: c.initiative || 10,
+                teamName: defaultPlayerTeam,
+                conditions: [],
+                row: free.row,
+                col: free.col
+            });
+        }
+    });
+
+    gameState.combat.active = true;
+    if (!gameState.combat.round) gameState.combat.round = 1;
+    sortCombatOrder();
+    broadcastState();
+    renderDmView();
+}
+
+function addParticipantToSpecificTeam(val, teamName) {
+    ensureEnemyUids();
+    ensureBattlemapState();
+    if (!val) return;
+
+    if (val.startsWith('player:')) {
+        const pid = val.replace('player:', '');
+        const c = gameState.characters[pid];
+        if (!c) return;
+        const key = `player_${pid}`;
+        const existing = gameState.combat.order.find(e => e.key === key);
+        if (existing) {
+            existing.teamName = teamName;
+        } else {
+            const free = findFirstFreeGridCell(key);
+            gameState.combat.order.push({
+                key: key,
+                kind: 'player',
+                id: pid,
+                initiative: c.initiative || 10,
+                teamName: teamName,
+                conditions: [],
+                row: free.row,
+                col: free.col
+            });
+        }
+    } else if (val.startsWith('enemy:')) {
+        const uid = val.replace('enemy:', '');
+        const idx = gameState.enemies.findIndex(e => e._uid === uid);
+        if (idx === -1) return;
+        const enemy = gameState.enemies[idx];
+        const existing = gameState.combat.order.find(e => e.key === uid);
+        if (existing) {
+            existing.teamName = teamName;
+        } else {
+            const free = findFirstFreeGridCell(uid);
+            gameState.combat.order.push({
+                key: uid,
+                kind: 'enemy',
+                idx: idx,
+                initiative: enemy.initiative || 10,
+                teamName: teamName,
+                conditions: [],
+                row: free.row,
+                col: free.col
+            });
+        }
+    }
+
+    gameState.combat.active = true;
+    sortCombatOrder();
+    broadcastState();
+    renderDmView();
+}
+
+function addSelectedParticipantToCombat() {
+    const partSelect = document.getElementById('combat-add-participant-select');
+    const teamSelect = document.getElementById('combat-add-team-select');
+    if (!partSelect || !partSelect.value) {
+        return alert("Bitte zuerst einen Spieler oder ein Monster/NPC aus der Liste auswählen!");
+    }
+    const teamName = teamSelect ? teamSelect.value : "Helden";
+    addParticipantToSpecificTeam(partSelect.value, teamName);
+}
+
+function quickAddIntoTeamCard(selectEl, teamName) {
+    if (!selectEl || !selectEl.value) return;
+    addParticipantToSpecificTeam(selectEl.value, teamName);
+}
+
+function removeCombatantFromCombat(orderIdx) {
+    const entry = gameState.combat.order[orderIdx];
+    const actor = resolveCombatant(entry);
+    const name = actor ? actor.name : 'diesen Teilnehmer';
+
+    openConfirmModal(`Möchtest du "${name}" wirklich aus dem laufenden Kampf und vom Spielfeld entfernen?`, () => {
+        gameState.combat.order.splice(orderIdx, 1);
+        if (gameState.combat.turnIndex >= gameState.combat.order.length) {
+            gameState.combat.turnIndex = 0;
+        }
+        broadcastState();
+        renderDmView();
+    });
+}
+
+function sortCombatOrder() {
+    gameState.combat.order.sort((a, b) => b.initiative - a.initiative);
+    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
+        gameState.combat.turnIndex = 0;
+    }
+}
+
+function rollInitiativeFor(mode, btnEl) {
+    cleanStaleCombatants();
+    if (gameState.combat.order.length === 0) {
+        return alert("Es sind noch keine Kämpfer im Kampf! Nutze '🔄 Spieler-Sync' oder füge links Teilnehmer hinzu.");
+    }
+    gameState.combat.active = true;
+
+    gameState.combat.order.forEach(entry => {
+        if (mode === 'enemies' && entry.kind !== 'enemy') return;
+        const actor = resolveCombatant(entry);
+        if (!actor) return;
+
+        const initBonus = parseInt(actor.initiative) || Math.floor(((actor.stats?.dex || 10) - 10) / 2);
+        const modStr = initBonus >= 0 ? `+${initBonus}` : `${initBonus}`;
+        const roll = triggerUniversalRoll(`1d20${modStr}`, 'Initiative', actor.name, btnEl);
+        entry.initiative = roll.total;
+    });
+
+    sortCombatOrder();
+    broadcastState();
+    renderDmView();
+}
+
+function changeCombatTurn(delta) {
+    const len = gameState.combat.order.length;
+    if (len === 0) return;
+
+    let next = gameState.combat.turnIndex + delta;
+    if (next >= len) {
+        next = 0;
+        gameState.combat.round += 1;
+    } else if (next < 0) {
+        next = len - 1;
+        gameState.combat.round = Math.max(1, gameState.combat.round - 1);
+    }
+
+    gameState.combat.turnIndex = next;
+    broadcastState();
+    renderDmView();
+}
+
+function endCombatSession() {
+    openConfirmModal("Möchtest du den aktuellen Kampf wirklich beenden und alle Kämpfer vom Spielfeld entfernen?", () => {
+        gameState.combat.active = false;
+        gameState.combat.round = 1;
+        gameState.combat.turnIndex = 0;
+        gameState.combat.order = [];
+        broadcastState();
+        renderDmView();
+    });
+}
+
+function updateCombatantInit(idx, newVal) {
+    gameState.combat.order[idx].initiative = parseInt(newVal) || 0;
+    sortCombatOrder();
+    broadcastState();
+    renderDmView();
+}
+
+function setCombatantTeam(orderIdx, teamName) {
+    gameState.combat.order[orderIdx].teamName = teamName;
+    broadcastState();
+    renderDmView();
+}
+
+function addNewTeamByDm() {
+    const nameInput = document.getElementById('new-team-name-input');
+    const colorInput = document.getElementById('new-team-color-input');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const color = colorInput ? colorInput.value : '#a855f7';
+
+    if (!name) return alert("Bitte einen Team-Namen eingeben!");
+    if (!gameState.combat.teams) gameState.combat.teams = {};
+
+    gameState.combat.teams[name] = color;
+    nameInput.value = '';
+    broadcastState();
+    renderDmView();
+}
+
+function deleteTeamByDm(teamName) {
+    const teamKeys = Object.keys(gameState.combat.teams || {});
+    if (teamKeys.length <= 1) return alert("Mindestens ein Team muss bestehen bleiben!");
+
+    openConfirmModal(`Möchtest du das Team "${teamName}" wirklich löschen?`, () => {
+        delete gameState.combat.teams[teamName];
+        const fallbackTeam = Object.keys(gameState.combat.teams)[0];
+        (gameState.combat.order || []).forEach(entry => {
+            if (entry.teamName === teamName) entry.teamName = fallbackTeam;
+        });
+        broadcastState();
+        renderDmView();
+    });
+}
+
+function applyCombatHpDelta(orderIdx, delta) {
+    const entry = gameState.combat.order[orderIdx];
+    const actor = resolveCombatant(entry);
+    if (!actor) return;
+    actor.hp += delta;
+    broadcastState();
+    renderDmView();
+}
+
+function applyCustomCombatHp(orderIdx, sign) {
+    const input = document.getElementById(`combat-hp-input-${orderIdx}`);
+    if (!input) return;
+    const val = parseInt(input.value) || 0;
+    if (val === 0) return;
+    applyCombatHpDelta(orderIdx, val * sign);
+}
+
+function addCombatCondition(orderIdx) {
+    const select = document.getElementById(`cond-select-${orderIdx}`);
+    if (!select || !select.value) return;
+    const cond = select.value;
+    const entry = gameState.combat.order[orderIdx];
+    if (!entry.conditions.includes(cond)) {
+        entry.conditions.push(cond);
+    }
+    broadcastState();
+    renderDmView();
+}
+
+function removeCombatCondition(orderIdx, condIdx) {
+    const condName = gameState.combat.order[orderIdx]?.conditions?.[condIdx] || 'diesen Zustand';
+    openConfirmModal(`Zustand "${condName}" wirklich entfernen?`, () => {
+        gameState.combat.order[orderIdx].conditions.splice(condIdx, 1);
+        broadcastState();
+        renderDmView();
+    });
+}
+
+// ============================================================================
+// SPIELFELD-LOGIK (Grid erweitern, Block-Palette, Drag & Drop, Vorlagen)
+// ============================================================================
+function dmResizeBattlemap(dRows, dCols) {
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const newRows = Math.max(2, Math.min(24, map.rows + dRows));
+    const newCols = Math.max(2, Math.min(24, map.cols + dCols));
+    map.rows = newRows;
+    map.cols = newCols;
+
+    (gameState.combat.order || []).forEach(entry => {
+        if (entry.row >= newRows) entry.row = newRows - 1;
+        if (entry.col >= newCols) entry.col = newCols - 1;
+    });
+
+    broadcastState();
+    renderDmView();
+}
+
+// Klick auf einen Block aktiviert den Baumodus; erneuter Klick auf denselben Block verlässt den Baumodus!
+function dmSelectPaletteBlock(blockId) {
+    ensureBattlemapState();
+    if (gameState.combat.map.selectedBlockId === blockId) {
+        gameState.combat.map.selectedBlockId = null;
+    } else {
+        gameState.combat.map.selectedBlockId = blockId;
+    }
+    renderDmView();
+}
+
+function dmToggleNewBlockCreator() {
+    showNewBlockCreator = !showNewBlockCreator;
+    renderDmView();
+}
+
+function dmCreatePaletteBlock() {
+    ensureBattlemapState();
+    const colorEl = document.getElementById('dm-new-block-color');
+    const nameEl = document.getElementById('dm-new-block-name');
+    const color = colorEl ? colorEl.value : newBlockDraftColor;
+    const rawName = nameEl ? nameEl.value.trim() : '';
+    const name = rawName || `Block ${color.toUpperCase()}`;
+
+    const newBlock = {
+        id: 'block_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name: name,
+        color: color,
+        isDefault: false
+    };
+
+    gameState.combat.map.palette.push(newBlock);
+    gameState.combat.map.selectedBlockId = newBlock.id; // Aktiviert direkt den Baumodus mit dem neuen Block
+    newBlockDraftName = '';
+    showNewBlockCreator = false;
+    broadcastState();
+    renderDmView();
+}
+
+function dmRemoveSelectedBlock() {
+    ensureBattlemapState();
+    const map = gameState.combat.map;
+    const selected = map.palette.find(b => b.id === map.selectedBlockId);
+    if (!selected || selected.isDefault) return;
+
+    openConfirmModal(`Möchtest du den Block "${selected.name}" wirklich aus der Block-Liste entfernen? Alle damit gesetzten Felder auf dem Spielfeld werden wieder Grau.`, () => {
+        map.palette = map.palette.filter(b => b.id !== selected.id);
+        Object.keys(map.cells).forEach(cellKey => {
+            if (map.cells[cellKey] === selected.id) {
+                delete map.cells[cellKey];
+            }
+        });
+        map.selectedBlockId = null; // Zurück in den Bewegungsmodus
+        broadcastState();
+        renderDmView();
+    });
+}
+
+
+function dmHandleBlockDragStart(e, blockId) {
+    e.dataTransfer.setData('text/plain', `block:${blockId}`);
+    gameState.combat.map.selectedBlockId = blockId;
+}
+
+function dmHandleCellDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('cell-drop-hover');
+}
+
+function dmHandleCellDragLeave(e) {
+    e.currentTarget.classList.remove('cell-drop-hover');
+}
+
+function dmHandleCellDrop(e, r, c) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('cell-drop-hover');
+    const data = e.dataTransfer.getData('text/plain') || '';
+    if (data.startsWith('block:')) {
+        const blockId = data.replace('block:', '');
+        ensureBattlemapState();
+        gameState.combat.map.cells[`${r}_${c}`] = blockId;
+        broadcastState();
+        renderDmView();
+    }
+}
+
+function dmSaveBattlemapTemplate() {
+    ensureBattlemapState();
+    const input = document.getElementById('dm-map-template-name');
+    const name = input ? input.value.trim() : '';
+    if (!name) return alert("Bitte gib einen Namen für die Spielfeld-Vorlage ein!");
+
+    const map = gameState.combat.map;
+    const templateObj = {
+        name: name,
+        rows: map.rows,
+        cols: map.cols,
+        cells: JSON.parse(JSON.stringify(map.cells)),
+        palette: JSON.parse(JSON.stringify(map.palette))
+    };
+
+    const existingIdx = gameState.mapTemplates.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
+    if (existingIdx !== -1) {
+        gameState.mapTemplates[existingIdx] = templateObj;
+    } else {
+        gameState.mapTemplates.push(templateObj);
+    }
+
+    input.value = '';
+    broadcastState();
+    renderDmView();
+}
+
+function dmLoadBattlemapTemplate() {
+    ensureBattlemapState();
+    const select = document.getElementById('dm-map-template-select');
+    if (!select || select.value === "") return alert("Bitte wähle zuerst eine gespeicherte Spielfeld-Vorlage aus!");
+
+    const tpl = gameState.mapTemplates[parseInt(select.value)];
+    if (!tpl) return;
+
+    gameState.combat.map.rows = tpl.rows || 6;
+    gameState.combat.map.cols = tpl.cols || 6;
+    gameState.combat.map.cells = JSON.parse(JSON.stringify(tpl.cells || {}));
+    gameState.combat.map.palette = JSON.parse(JSON.stringify(tpl.palette || [
+        { id: 'block_gray', name: 'Pures Grau', color: '#3f3f46', isDefault: true }
+    ]));
+    gameState.combat.map.selectedBlockId = null;
+
+    ensureBattlemapState();
+    broadcastState();
+    renderDmView();
+    centerBattlemapInViewport();
+}
+
+function renderDmCombatTab(container) {
+    cleanStaleCombatants();
+    ensureBattlemapState();
+
+    const order = gameState.combat.order || [];
+    const map = gameState.combat.map;
+    const teamNames = Object.keys(gameState.combat.teams);
 
     const inCombatKeys = new Set(order.map(e => e.key));
     const availablePlayers = Object.values(gameState.characters).filter(c => !inCombatKeys.has(`player_${c.id}`));
     const availableEnemies = gameState.enemies.filter(e => !inCombatKeys.has(e._uid));
 
-    const teamsOverview = {};
-    teamNames.forEach(t => teamsOverview[t] = []);
-    order.forEach(entry => {
+    const participantOptionsHtml = `
+        ${availablePlayers.length > 0 ? `
+            <optgroup label="Spieler (noch nicht im Kampf)">
+                ${availablePlayers.map(p => `<option value="player:${p.id}">🛡️ ${p.name} (HP ${p.hp}/${p.maxHp})</option>`).join('')}
+            </optgroup>
+        ` : ''}
+        ${availableEnemies.length > 0 ? `
+            <optgroup label="Monster & NPCs (noch nicht im Kampf)">
+                ${availableEnemies.map(e => `<option value="enemy:${e._uid}">👹 ${e.name} (HP ${e.hp}/${e.maxHp})</option>`).join('')}
+            </optgroup>
+        ` : ''}
+    `;
+
+    const teamsMap = {};
+    teamNames.forEach(t => teamsMap[t] = []);
+    order.forEach((entry, orderIdx) => {
         const actor = resolveCombatant(entry);
         if (!actor) return;
         const t = entry.teamName || teamNames[0];
-        if (!teamsOverview[t]) teamsOverview[t] = [];
-        teamsOverview[t].push({ entry, actor });
+        if (!teamsMap[t]) teamsMap[t] = [];
+        teamsMap[t].push({ entry, actor, orderIdx });
     });
 
+    const selectedBlock = map.selectedBlockId
+        ? map.palette.find(b => b.id === map.selectedBlockId) || null
+        : null;
+    const isBuildMode = Boolean(selectedBlock);
+
     container.innerHTML = `
-        <div class="templates-vertical-stack">
+        <div class="combat-master-wrapper">
             
-            <div class="card combat-top-bar">
-                <div class="combat-bar-left">
-                    <div class="round-badge">
-                        <span>RUNDE</span>
-                        <strong>${gameState.combat.round}</strong>
-                    </div>
-                    <div class="turn-controls">
-                        <button type="button" onclick="changeCombatTurn(-1)">◀ Vorheriger</button>
-                        <button type="button" class="btn-primary btn-next-turn" onclick="changeCombatTurn(1)">Nächster Zug ▶</button>
-                    </div>
-                </div>
+            <!-- A) OBERE SCHMALE ZUG-LEISTE -->
+            ${buildTopTurnBarHtml(true)}
 
-                <div class="combat-bar-right">
-                    <button type="button" class="btn-secondary" onclick="syncPlayersOnlyIntoCombat()" title="Holt automatisch nur alle verbundenen Spieler in den Kampf">
-                        🔄 Spieler-Sync
-                    </button>
-                    <button type="button" onclick="rollInitiativeFor('enemies', this)">🎲 Monster-Init</button>
-                    <button type="button" onclick="rollInitiativeFor('all', this)">🎲 Alle im Kampf Init</button>
-                    ${order.length > 0 || gameState.combat.active ? `<button type="button" class="btn-del" onclick="endCombatSession()">Kampf beenden</button>` : ''}
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Teilnehmer zum Kampf hinzufügen & Teams verwalten</h3>
+            <!-- B) 3-SPALTEN-COCKPIT DARUNTER -->
+            <div class="combat-three-col-cockpit">
                 
-                <div class="combat-add-bar">
-                    <select id="combat-add-participant-select">
-                        <option value="">-- Spieler oder Monster/NPC (nicht im Kampf) wählen (${availablePlayers.length + availableEnemies.length}) --</option>
-                        ${availablePlayers.length > 0 ? `
-                            <optgroup label="Spieler (nicht im Kampf)">
-                                ${availablePlayers.map(p => `<option value="player:${p.id}">🛡️ [Spieler] ${p.name} (HP ${p.hp}/${p.maxHp})</option>`).join('')}
-                            </optgroup>
-                        ` : ''}
-                        ${availableEnemies.length > 0 ? `
-                            <optgroup label="Aktive Monster & NPCs (nicht im Kampf)">
-                                ${availableEnemies.map(e => `<option value="enemy:${e._uid}">👹 [Monster/NPC] ${e.name} (HP ${e.hp}/${e.maxHp} | AC ${e.ac})</option>`).join('')}
-                            </optgroup>
-                        ` : ''}
-                    </select>
-
-                    <select id="combat-add-team-select">
-                        ${teamNames.map(t => `<option value="${t}">Team: ${t}</option>`).join('')}
-                    </select>
-
-                    <button type="button" class="btn-primary" onclick="addSelectedParticipantToCombat()">+ Zum Kampf hinzufügen</button>
-                </div>
-
-                <div class="form-row" style="margin-top: 0.35rem;">
-                    <input type="text" id="new-team-name-input" placeholder="Neues Team (z.B. Rebellen / Dämonen)">
-                    <input type="color" id="new-team-color-input" value="#a855f7" style="width: 60px; height: 38px; padding: 2px; cursor: pointer;">
-                    <button type="button" onclick="addNewTeamByDm()">+ Team hinzufügen</button>
-                </div>
-
-                <div class="teams-overview-grid">
-                    ${teamNames.map(tName => {
-        const color = gameState.combat.teams[tName] || '#ffffff';
-        const members = teamsOverview[tName] || [];
-        return `
-                            <div class="team-overview-box" style="border-top: 4px solid ${color}">
-                                <div class="team-overview-title" style="color: ${color}">${tName} (${members.length})</div>
-                                <div class="team-members-list">
-                                    ${members.length === 0 ? '<span class="muted">Keine Mitglieder</span>' : members.map(m => `
-                                        <span class="team-member-pill">${m.actor.name}</span>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-    }).join('')}
-                </div>
-            </div>
-
-            ${order.length === 0 ? `
-                <div class="card">
-                    <h3>Keine Kämpfer im Initiative-Tracker</h3>
-                    <p class="muted">Klicke oben auf <strong>„🔄 Spieler-Sync“</strong> (um nur alle Spieler zu holen) oder wähle in der Auswahl-Leiste gezielt einzelne Spieler, Monster oder NPCs für ein Team aus.</p>
-                </div>
-            ` : `
-                <div class="combat-cockpit-grid">
+                <!-- 1. LINKE SCHMALE SPALTE: Teilnehmer & Teams -->
+                <aside class="combat-left-col">
                     
-                    <section class="dm-stack">
-                        <h2>Initiative-Reihenfolge (${order.length})</h2>
-                        ${order.map((entry, idx) => {
-        const actor = resolveCombatant(entry);
-        if (!actor) return '';
-        const isTurn = idx === gameState.combat.turnIndex;
-        const isDead = actor.hp <= 0;
-        const teamColor = gameState.combat.teams[entry.teamName] || '#3f3f46';
+                    <div class="card combat-side-card">
+                        <div class="side-card-title-row">
+                            <h3>⚔️ Teilnehmer & Teams</h3>
+                        </div>
 
+                        <label class="field-label">SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN
+                            <select id="combat-add-participant-select">
+                                <option value="">-- Kämpfer wählen (${availablePlayers.length + availableEnemies.length} verfügbar) --</option>
+                                ${participantOptionsHtml}
+                            </select>
+                        </label>
+
+                        <div class="dm-assign-row">
+                            <select id="combat-add-team-select">
+                                ${teamNames.map(t => `<option value="${t}">In Team: ${t}</option>`).join('')}
+                            </select>
+                            <button type="button" class="btn-primary" onclick="addSelectedParticipantToCombat()">+ Hinzufügen</button>
+                        </div>
+
+                        <div class="side-card-divider"></div>
+
+                        <label class="field-label">NEUES TEAM ERSTELLEN
+                            <div class="team-create-row">
+                                <input type="text" id="new-team-name-input" placeholder="Team-Name (z.B. Wachen)...">
+                                <input type="color" id="new-team-color-input" value="#a855f7" title="Teamfarbe wählen">
+                                <button type="button" class="btn-secondary" onclick="addNewTeamByDm()">+ Team</button>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="combat-teams-vertical-list">
+                        ${teamNames.map(tName => {
+        const color = gameState.combat.teams[tName] || '#ffffff';
+        const members = teamsMap[tName] || [];
+        const safeTeamName = tName.replace(/'/g, "\\'");
         return `
-                                <div class="combat-row-card ${isTurn ? 'active-turn-row' : ''} ${isDead ? 'combatant-down' : ''}" style="border-left: 6px solid ${teamColor};">
-                                    
-                                    <div class="combat-row-top">
-                                        <div class="combat-init-cell">
-                                            <span class="ability-label">INIT</span>
-                                            <input type="number" value="${entry.initiative}"
-                                                onchange="updateCombatantInit(${idx}, this.value)">
-                                        </div>
-
-                                        <div class="char-identity" style="flex:1">
-                                            ${actor.avatar
-            ? `<img src="${actor.avatar}" class="mini-avatar">`
-            : `<div class="mini-avatar-placeholder">${actor.name[0]}</div>`
-        }
-                                            <div>
-                                                <div class="combat-name-line">
-                                                    ${isTurn ? `<span class="turn-indicator-pill">▶ AM ZUG</span>` : ''}
-                                                    <span class="tag">${entry.kind === 'player' ? 'SPIELER' : 'MONSTER / NPC'}</span>
-                                                    <strong>${actor.name}</strong>
-                                                    ${isDead ? `<span class="badge-hp">0 HP / K.O.</span>` : ''}
-                                                </div>
-                                                
-                                                <div class="combat-team-select-row">
-                                                    <select onchange="setCombatantTeam(${idx}, this.value)" style="border-color: ${teamColor}; color: ${teamColor}; font-weight: bold;">
-                                                        ${teamNames.map(t => `<option value="${t}" ${entry.teamName === t ? 'selected' : ''}>${t}</option>`).join('')}
-                                                    </select>
-                                                    <span class="sub-info">AC: ${actor.ac} | Moral: ${actor.morality}</span>
-                                                    ${entry.kind === 'enemy' ? `<span class="sub-info">| ${formatCopperCoins(actor.copper || 0)}</span>` : ''}
-                                                </div>
-
-                                                <div class="cat-badge-row">
-                                                    ${(entry.conditions || []).map((cond, cIdx) => `
-                                                        <span class="inline-item-pill">${cond} <b onclick="removeCombatCondition(${idx}, ${cIdx})">×</b></span>
-                                                    `).join('')}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="dm-badges">
-                                            <span class="badge-hp">HP: ${actor.hp} / ${actor.maxHp}</span>
-                                            ${entry.kind === 'player' && actor.hp <= 0 ? `
-                                                <button type="button" class="btn-death" onclick="dmKillPlayer('${actor.id}')">💀 Tot</button>
-                                            ` : ''}
-                                            <button type="button" class="btn-del" title="Aus dem Kampf entfernen (bleibt im Spiel)" onclick="removeCombatantFromCombat(${idx})">
-                                                Aus Kampf ✕
-                                            </button>
-                                        </div>
+                                <div class="card team-group-card" style="border-top: 4px solid ${color};">
+                                    <div class="team-group-header" style="color: ${color};">
+                                        <strong>${tName} (${members.length})</strong>
+                                        ${teamNames.length > 1 ? `<button type="button" class="btn-del btn-tiny-del" title="Team löschen" onclick="deleteTeamByDm('${safeTeamName}')">🗑️</button>` : ''}
                                     </div>
 
-                                    <div class="combat-row-actions">
-                                        <div class="dm-quick-actions">
-                                            <button type="button" onclick="applyCombatHpDelta(${idx}, -5)">-5</button>
-                                            <button type="button" onclick="applyCombatHpDelta(${idx}, -1)">-1</button>
-                                            <button type="button" onclick="applyCombatHpDelta(${idx}, 1)">+1</button>
-                                            <button type="button" onclick="applyCombatHpDelta(${idx}, 5)">+5</button>
-                                        </div>
+                                    ${(availablePlayers.length + availableEnemies.length) > 0 ? `
+                                        <select class="team-quick-add-select" onchange="quickAddIntoTeamCard(this, '${safeTeamName}')">
+                                            <option value="">+ Kämpfer direkt in „${tName}“ setzen...</option>
+                                            ${participantOptionsHtml}
+                                        </select>
+                                    ` : ''}
 
-                                        <div class="combat-custom-dmg">
-                                            <input type="number" id="combat-hp-input-${idx}" placeholder="Wert" min="1">
-                                            <button type="button" class="btn-demonic" onclick="applyCustomCombatHp(${idx}, -1)">Schaden</button>
-                                            <button type="button" class="btn-holy" onclick="applyCustomCombatHp(${idx}, 1)">Heilen</button>
-                                        </div>
+                                    ${members.length === 0 ? `<small class="muted">Keine Kämpfer in diesem Team.</small>` : ''}
 
-                                        <div class="combat-cond-picker">
-                                            <select id="cond-select-${idx}" onchange="addCombatCondition(${idx})">
-                                                <option value="">+ Zustand...</option>
-                                                <option value="Blutend">Blutend</option>
-                                                <option value="Brennend">Brennend</option>
-                                                <option value="Betäubt">Betäubt</option>
-                                                <option value="Vergiftet">Vergiftet</option>
-                                                <option value="Verängstigt">Verängstigt</option>
-                                                <option value="Dämonischer Rausch">Dämonischer Rausch</option>
-                                                <option value="Heiliger Schutz">Heiliger Schutz</option>
-                                            </select>
-                                        </div>
+                                    <div class="team-members-stack">
+                                        ${members.map(({ entry, actor, orderIdx }) => {
+            const isTurn = orderIdx === gameState.combat.turnIndex;
+            const isDead = actor.hp <= 0;
+            return `
+                                                <div class="team-combatant-item ${isTurn ? 'active-turn-row' : ''} ${isDead ? 'combatant-down' : ''}" style="border-left: 4px solid ${color};">
+                                                    <div class="team-combatant-top">
+                                                        <div class="char-identity">
+                                                            ${actor.avatar
+                ? `<img src="${actor.avatar}" class="mini-avatar">`
+                : `<div class="mini-avatar-placeholder">${actor.name[0]}</div>`
+            }
+                                                            <div>
+                                                                <div class="combat-name-line">
+                                                                    ${isTurn ? `<span class="turn-indicator-pill">▶ ZUG</span>` : ''}
+                                                                    <strong>${actor.name}</strong>
+                                                                </div>
+                                                                <small class="muted">AC ${actor.ac} · Feld (${entry.row + 1},${entry.col + 1})</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="dm-badges">
+                                                            <span class="badge-hp">${actor.hp}/${actor.maxHp}</span>
+                                                            ${entry.kind === 'player' && isDead ? `
+                                                                <button type="button" class="btn-death" onclick="dmKillPlayer('${actor.id}')">💀 Tot</button>
+                                                            ` : ''}
+                                                            <button type="button" class="btn-del" title="Aus Kampf & vom Spielfeld entfernen" onclick="removeCombatantFromCombat(${orderIdx})">✕</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="team-combatant-meta-row">
+                                                        <label class="mini-inline-label">Init:
+                                                            <input type="number" value="${entry.initiative}" onchange="updateCombatantInit(${orderIdx}, this.value)">
+                                                        </label>
+                                                        <select onchange="setCombatantTeam(${orderIdx}, this.value)" style="border-color: ${color}; color: ${color};">
+                                                            ${teamNames.map(t => `<option value="${t}" ${entry.teamName === t ? 'selected' : ''}>${t}</option>`).join('')}
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="dm-quick-actions">
+                                                        <button type="button" onclick="applyCombatHpDelta(${orderIdx}, -5)">-5</button>
+                                                        <button type="button" onclick="applyCombatHpDelta(${orderIdx}, -1)">-1</button>
+                                                        <button type="button" onclick="applyCombatHpDelta(${orderIdx}, 1)">+1</button>
+                                                        <button type="button" onclick="applyCombatHpDelta(${orderIdx}, 5)">+5</button>
+                                                    </div>
+
+                                                    <div class="combat-custom-dmg">
+                                                        <input type="number" id="combat-hp-input-${orderIdx}" placeholder="HP" min="1">
+                                                        <button type="button" class="btn-demonic" onclick="applyCustomCombatHp(${orderIdx}, -1)">-DMG</button>
+                                                        <button type="button" class="btn-holy" onclick="applyCustomCombatHp(${orderIdx}, 1)">+HEAL</button>
+                                                    </div>
+
+                                                    <div class="cat-badge-row">
+                                                        ${(entry.conditions || []).map((cond, cIdx) => `
+                                                            <span class="inline-item-pill">${cond} <b onclick="removeCombatCondition(${orderIdx}, ${cIdx})">×</b></span>
+                                                        `).join('')}
+                                                    </div>
+
+                                                    <select id="cond-select-${orderIdx}" onchange="addCombatCondition(${orderIdx})">
+                                                        <option value="">+ Zustand...</option>
+                                                        <option value="Blutend">Blutend</option>
+                                                        <option value="Brennend">Brennend</option>
+                                                        <option value="Betäubt">Betäubt</option>
+                                                        <option value="Vergiftet">Vergiftet</option>
+                                                        <option value="Verängstigt">Verängstigt</option>
+                                                        <option value="Dämonischer Rausch">Dämonischer Rausch</option>
+                                                        <option value="Heiliger Schutz">Heiliger Schutz</option>
+                                                    </select>
+                                                </div>
+                                            `;
+        }).join('')}
                                     </div>
                                 </div>
                             `;
     }).join('')}
-                    </section>
+                    </div>
 
-                    <aside class="dm-stack">
-                        <h2>Aktiver Zug im Fokus</h2>
-                        ${activeActor ? `
-                            <div class="card active-spotlight-card" style="border-left: 5px solid ${gameState.combat.teams[activeEntry.teamName] || '#ef4444'};">
-                                <div class="char-identity">
-                                    ${activeActor.avatar
-        ? `<img src="${activeActor.avatar}" class="mini-avatar">`
-        : `<div class="mini-avatar-placeholder">${activeActor.name[0]}</div>`
+                </aside>
+
+                <!-- 2. MITTLERE GROSSE BOX: Das interaktive Spielfeld mit 2 Zeiger-Modi -->
+                <section class="card battlemap-board-card">
+                    <div class="battlemap-board-header">
+                        <div>
+                            <div class="combat-name-line">
+                                <h3>🗺️ Spielfeld (${map.rows} × ${map.cols} Grid)</h3>
+                                ${isBuildMode
+        ? `<span class="mode-status-pill mode-pill-build" onclick="dmSelectPaletteBlock('${selectedBlock.id}')" title="Klicken oder rechts denselben Block drücken, um in den Bewegungsmodus zu wechseln">🧱 Baumodus: ${selectedBlock.name} (✕ Beenden)</span>`
+        : `<span class="mode-status-pill mode-pill-move">🖐️ Verschieben- & Bewegungsmodus</span>`
     }
-                                    <div>
-                                        <h3>${activeActor.name} ist am Zug!</h3>
-                                        <span class="sub-info">Team: <strong>${activeEntry.teamName}</strong> | AC ${activeActor.ac} | HP ${activeActor.hp}/${activeActor.maxHp}</span>
+                            </div>
+                            <small class="muted">
+                                ${isBuildMode
+        ? 'Baumodus aktiv: Halte die Maustaste über dem Grid gedrückt zum Malen · Klicke rechts denselben Block nochmal zum Verlassen.'
+        : 'Bewegungsmodus: Halte die Maustaste gedrückt zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger.'
+    }
+                            </small>
+                        </div>
+
+                        <div class="battlemap-resize-controls">
+                            ${buildBattlemapZoomControlsHtml()}
+                            <button type="button" onclick="dmResizeBattlemap(1, 0)" title="Zeile hinzufügen">+ Zeile</button>
+                            <button type="button" onclick="dmResizeBattlemap(-1, 0)" title="Zeile entfernen">− Zeile</button>
+                            <button type="button" onclick="dmResizeBattlemap(0, 1)" title="Spalte hinzufügen">+ Spalte</button>
+                            <button type="button" onclick="dmResizeBattlemap(0, -1)" title="Spalte entfernen">− Spalte</button>
+                            <button type="button" class="btn-del" onclick="dmClearBattlemapCells()" title="Alle Blöcke zurücksetzen">↺ Reset</button>
+                        </div>
+                    </div>
+
+                    <!-- Spielfeld-Vorlagen Speichern & Laden -->
+                    <div class="battlemap-template-bar">
+                        <div class="dm-assign-row">
+                            <input type="text" id="dm-map-template-name" placeholder="Vorlagenname (z.B. Thronsaal)...">
+                            <button type="button" class="btn-secondary" onclick="dmSaveBattlemapTemplate()">💾 Spielfeld speichern</button>
+                        </div>
+                        <div class="dm-assign-row">
+                            <select id="dm-map-template-select">
+                                <option value="">-- Gespeichertes Spielfeld laden (${gameState.mapTemplates.length}) --</option>
+                                ${gameState.mapTemplates.map((tpl, i) => `<option value="${i}">${tpl.name} (${tpl.rows}×${tpl.cols})</option>`).join('')}
+                            </select>
+                            <button type="button" class="btn-primary" onclick="dmLoadBattlemapTemplate()">📂 Laden</button>
+                            ${gameState.mapTemplates.length > 0 ? `<button type="button" class="btn-del" onclick="dmDeleteBattlemapTemplate()" title="Ausgewählte Vorlage löschen">🗑️</button>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Freies 2D-Kamerafeld (Pan & Cursor-Zoom) -->
+                    <div id="battlemap-stage-wrapper"
+                         class="battlemap-stage-wrapper ${isBuildMode ? 'stage-mode-build' : 'stage-mode-move'}"
+                         onpointerdown="handleBattlemapStagePointerDown(event, true)"
+                         onwheel="handleBattlemapWheel(event)">
+                        <div id="battlemap-pan-zoom-plane"
+                             class="battlemap-pan-zoom-plane"
+                             style="transform: translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom});">
+                            <div id="active-battlemap-grid"
+                                 class="battlemap-grid"
+                                 style="grid-template-columns: repeat(${map.cols}, 74px); grid-template-rows: repeat(${map.rows}, 74px);">
+                                ${buildBattlemapGridCellsHtml(true)}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. RECHTE SCHMALE SPALTE: Block-Palette -->
+                <aside class="card battlemap-palette-card">
+                    <div class="palette-top-header">
+                        <h3>🧱 Block-Arten</h3>
+                        <button type="button" class="btn-primary" style="width:100%;" onclick="dmToggleNewBlockCreator()">
+                            ${showNewBlockCreator ? '✕ Schließen' : '+ Neuer Block'}
+                        </button>
+                    </div>
+
+                    ${showNewBlockCreator ? `
+                        <div class="palette-creator-popover">
+                            <label class="field-label">BLOCK-FARBE WÄHLEN
+                                <input type="color" id="dm-new-block-color" value="${newBlockDraftColor}"
+                                    onchange="newBlockDraftColor = this.value"
+                                    style="width:100%; height:38px; padding:2px; cursor:pointer;">
+                            </label>
+                            <label class="field-label">NAME (OPTIONAL)
+                                <input type="text" id="dm-new-block-name" placeholder="z.B. Lava, Wasser, Wand" value="${newBlockDraftName}"
+                                     oninput="newBlockDraftName = this.value">
+                            </label>
+                            <button type="button" class="btn-secondary" style="width:100%;" onclick="dmCreatePaletteBlock()">✓ Block erschaffen</button>
+                        </div>
+                    ` : ''}
+
+                    ${selectedBlock && !selectedBlock.isDefault ? `
+                        <button type="button" class="btn-del palette-remove-btn" onclick="dmRemoveSelectedBlock()">
+                            🗑️ Block entfernen („${selectedBlock.name}“)
+                        </button>
+                    ` : ''}
+
+                    <small class="muted">1× Klick = Baumodus an · 2× Klick auf denselben Block = Baumodus aus:</small>
+
+                    <div class="palette-blocks-scroll">
+                        ${map.palette.map(b => {
+        const isSelected = b.id === map.selectedBlockId;
+        return `
+                                <div class="palette-block-entry ${isSelected ? 'palette-block-active' : ''}"
+                                     draggable="true"
+                                     ondragstart="dmHandleBlockDragStart(event, '${b.id}')"
+                                     onclick="dmSelectPaletteBlock('${b.id}')">
+                                    <div class="palette-color-swatch" style="background-color: ${b.color};"></div>
+                                    <div class="palette-block-meta">
+                                        <strong>${b.name}</strong>
+                                        <small class="muted">${isSelected ? '🧱 Baumodus aktiv' : b.color}</small>
                                     </div>
                                 </div>
-
-                                <small class="muted">Klicke auf ein Attribut für einen d20-Check:</small>
-                                <div class="spotlight-stats-grid">
-                                    ${Object.entries(activeActor.stats || {}).map(([k, v]) => {
-        const mod = Math.floor((v - 10) / 2);
-        const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
-        return `
-                                            <button type="button" class="stat-roll-btn"
-                                                onclick="triggerUniversalRoll('1d20${modStr}', '${k.toUpperCase()}-Check', '${activeActor.name.replace(/'/g, "\\'")}', this)">
-                                                <span>${k.toUpperCase()}</span>
-                                                <strong>${modStr} 🎲</strong>
-                                            </button>
-                                        `;
+                            `;
     }).join('')}
-                                </div>
+                    </div>
+                </aside>
 
-                                <h4>Attacken</h4>
-                                <div class="item-list">
-                                    ${(activeActor.attacks || []).length === 0 ? '<p class="muted">Keine Attacken hinterlegt.</p>' : ''}
-                                    ${(activeActor.attacks || []).map(atk => {
-        const strMod = Math.floor(((activeActor.stats?.str || 10) - 10) / 2);
-        const prof = activeActor.proficiency || 2;
-        const hitBonus = strMod + prof;
-        const hitStr = hitBonus >= 0 ? `+${hitBonus}` : `${hitBonus}`;
-        const formulaMatch = (atk.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
-        const dmgFormula = formulaMatch ? formulaMatch[1] : '1d6';
-        return `
-                                            <div class="item-badge">
-                                                <div>
-                                                    <strong>${atk.name}</strong>
-                                                    ${atk.usesExhaustion ? `<span class="exh-badge">⚡ Exh.</span>` : ''}
-                                                    <small><strong>Aktion:</strong> ${atk.action || '-'}</small>
-                                                </div>
-                                                <div class="dm-badges">
-                                                    <button type="button" onclick="triggerUniversalRoll('1d20${hitStr}', '${atk.name} (Treffer)', '${activeActor.name.replace(/'/g, "\\'")}', this)">🎯 Treffer (${hitStr})</button>
-                                                    <button type="button" class="btn-primary" onclick="triggerUniversalRoll('${dmgFormula.replace(/'/g, "")}', '${atk.name} (Aktion)', '${activeActor.name.replace(/'/g, "\\'")}', this)">⚔️ Aktion</button>
-                                                </div>
-                                            </div>
-                                        `;
-    }).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </aside>
-
-                </div>
-            `}
+            </div>
         </div>
     `;
+
+    initBattlemapViewport();
 }
+
+
 
 function dmModifyStat(playerId, prop, delta) {
     const char = gameState.characters[playerId];
@@ -1533,7 +2011,6 @@ function dmToggleMoralityVisibility(playerId, isVisible) {
     renderDmView();
 }
 
-// Prüft beim Übergeben von Gegenständen automatisch das Packmaß gegen den Beutelplatz des Spielers
 function dmAssignItem(playerId, sourceKey, targetKey, selectId) {
     const select = document.getElementById(selectId);
     if (!select || select.value === "") return;

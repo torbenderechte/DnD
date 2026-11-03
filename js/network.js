@@ -210,6 +210,20 @@ function hostGame(savedSessionPayload = null) {
                 renderChatWidget();
                 broadcastState();
             }
+
+            // NEU: Spieler bewegt seinen eigenen Token auf dem Kampffeld
+            if (data.type === 'MOVE_TOKEN') {
+                ensureBattlemapState();
+                const expectedKey = `player_${data.playerId}`;
+                const entry = (gameState.combat.order || []).find(e => e.key === expectedKey || e.key === data.key);
+                if (entry && entry.kind === 'player' && entry.id === data.playerId) {
+                    const map = gameState.combat.map;
+                    entry.row = Math.max(0, Math.min(map.rows - 1, parseInt(data.row) || 0));
+                    entry.col = Math.max(0, Math.min(map.cols - 1, parseInt(data.col) || 0));
+                    broadcastState();
+                    renderDmView();
+                }
+            }
         });
     });
 }
