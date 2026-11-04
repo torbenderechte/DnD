@@ -163,11 +163,14 @@ function renderDmPlayers() {
         if (!c.attacks) c.attacks = [];
         if (!c.spells) c.spells = [];
         if (!c.affinities) c.affinities = [];
+        if (!Array.isArray(c.skills)) c.skills = [];
 
         const bagUsed = getPlayerBagUsed(c);
         const bagMax = getPlayerBagMax(c);
         const defaultBagMax = 15 + (parseInt(c.stats?.str) || 10);
         const isInf = Boolean(c.bagInfinite);
+        const fillPercent = isInf ? 25 : Math.min(100, Math.round((bagUsed / Math.max(1, bagMax)) * 100));
+        const isFull = !isInf && bagUsed >= bagMax;
 
         return `
             <div class="card dm-player-card">
@@ -176,7 +179,7 @@ function renderDmPlayers() {
                         ${c.avatar ? `<img src="${c.avatar}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">?</div>`}
                         <div>
                             <h3>${c.name} <small>(Lvl ${c.level} | ${c.alignment})</small></h3>
-                            <span class="sub-info">${c.origin} | AC: ${c.ac} | Init: ${c.initiative} | Exh: ${c.exhaustion}</span>
+                            <span class="sub-info">${c.origin} | AC: ${c.ac} | Init: ${c.initiative} | Prof: +${c.proficiency || 2} | Exh: ${c.exhaustion}</span>
                         </div>
                     </div>
                     <div class="dm-badges">
@@ -194,10 +197,16 @@ function renderDmPlayers() {
                     </label>
                 </div>
 
+                <!-- TASCHEN-AUSLASTUNG & STEUERUNG -->
                 <div class="dm-bag-control-row">
-                    <div>
-                        <strong>🎒 Beutel: ${bagUsed} / ${isInf ? '∞' : bagMax} Packmaß</strong>
-                        <small class="muted" style="display:block;">Standard (15 + STR): ${defaultBagMax}</small>
+                    <div style="flex: 1;">
+                        <strong>🎒 Beutel: ${bagUsed} / ${isInf ? '∞' : bagMax} Packmaß (${isInf ? 'Unendlich' : fillPercent + '%'})</strong>
+                        <div class="bag-progress-track" style="margin: 6px 0;">
+                            <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
+                        </div>
+                        <small class="muted" style="display:block;">
+                            ${isInf ? 'Unendliche Kapazität aktiv' : `Freier Platz: ${Math.max(0, bagMax - bagUsed)} Packmaß`} · Standard (15 + STR): ${defaultBagMax}
+                        </small>
                     </div>
                     <div class="dm-bag-inputs">
                         <input type="number" min="0" value="${isInf ? defaultBagMax : bagMax}"
@@ -219,6 +228,17 @@ function renderDmPlayers() {
                     STR ${c.stats.str} | DEX ${c.stats.dex} | CON ${c.stats.con} |
                     INT ${c.stats.int} | WIS ${c.stats.wis} | CHA ${c.stats.cha}<br>
                     Geld: <span class="coin-pp"><strong>${c.currency.pp}</strong> PP</span> · <span class="coin-gp"><strong>${c.currency.gp}</strong> GP</span> · <span class="coin-sp"><strong>${c.currency.sp}</strong> SP</span> · <span class="coin-cp"><strong>${c.currency.cp}</strong> CP</span>
+                </div>
+
+                <!-- NEU: SKILLS ANZEIGE (NUR FÜR DM SICHTBAR) -->
+                <div class="dm-attacks-editor">
+                    <strong>🎯 Ausgewählte Skills von ${c.name}:</strong>
+                    ${c.skills.length === 0
+            ? '<p class="muted">Keine Skills ausgewählt.</p>'
+            : `<div class="cat-badge-row" style="margin-top: 6px;">
+                            ${c.skills.map(s => `<span class="inline-item-pill">${s}</span>`).join(' ')}
+                           </div>`
+        }
                 </div>
 
                 <div class="dm-quick-actions">
@@ -262,6 +282,33 @@ function renderDmPlayers() {
                     <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customAffinities', 'affinities', 'assign-aff-${c.id}')">+ Merkmal</button>
                 </div>
 
+                <!-- NEU: GEGENSTÄNDE DES SPIELERS ANZEIGEN & ENTFERNEN -->
+                <div class="dm-attacks-editor">
+                    <strong>🎒 Gegenstände im Beutel von ${c.name} (${bagUsed}/${isInf ? '∞' : bagMax} Packmaß):</strong>
+                    ${c.items.length === 0 ? '<p class="muted">Keine Gegenstände im Beutel.</p>' : ''}
+                    ${c.items.map((it, idx) => `
+                        <div class="dm-attack-row">
+                            <span class="atk-title">${it.name} <span class="packmass-pill">📦 ${clampPackmass(it.packmass)}</span></span>
+                            <small class="muted" style="flex: 1;">Anf: ${it.requirement || 'Keine'} | Aktion: ${it.action || '-'}</small>
+                            <button type="button" class="btn-del" title="Gegenstand entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'items', ${idx})">X</button>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- NEU: MERKMALE DES SPIELERS ANZEIGEN & ENTFERNEN -->
+                <div class="dm-attacks-editor">
+                    <strong>🧬 Merkmale von ${c.name}:</strong>
+                    ${c.affinities.length === 0 ? '<p class="muted">Keine Merkmale aktiv.</p>' : ''}
+                    ${c.affinities.map((af, idx) => `
+                        <div class="dm-attack-row">
+                            <span class="atk-title">${af.name}</span>
+                            <small class="muted" style="flex: 1;">Effekt: ${af.effect || af.desc || '-'}</small>
+                            <button type="button" class="btn-del" title="Merkmal entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'affinities', ${idx})">X</button>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- ATTACKEN DES SPIELERS BEARBEITEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
                     <strong>⚔️ Attacken von ${c.name} (Aktion & Exhaustion live anpassen):</strong>
                     ${c.attacks.length === 0 ? '<p class="muted">Keine Attacken.</p>' : ''}
@@ -275,10 +322,12 @@ function renderDmPlayers() {
                                     onchange="dmUpdatePlayerAttack('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
                                 ⚡ Exh.
                             </label>
+                            <button type="button" class="btn-del" title="Attacke entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'attacks', ${idx})">X</button>
                         </div>
                     `).join('')}
                 </div>
 
+                <!-- ZAUBER DES SPIELERS BEARBEITEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
                     <strong>✨ Zauber von ${c.name} (Anforderung, Aktion & Exhaustion live anpassen):</strong>
                     ${c.spells.length === 0 ? '<p class="muted">Keine Zauber.</p>' : ''}
@@ -294,12 +343,26 @@ function renderDmPlayers() {
                                     onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
                                 ⚡ Exh.
                             </label>
+                            <button type="button" class="btn-del" title="Zauber entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'spells', ${idx})">X</button>
                         </div>
                     `).join('')}
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function dmRemovePlayerEntry(playerId, listKey, idx) {
+    const char = gameState.characters[playerId];
+    if (!char || !Array.isArray(char[listKey])) return;
+    const entry = char[listKey][idx];
+    const label = entry && entry.name ? `"${entry.name}"` : 'diesen Eintrag';
+
+    openConfirmModal(`Möchtest du ${label} wirklich vom Charakterbogen von "${char.name}" entfernen?`, () => {
+        char[listKey].splice(idx, 1);
+        broadcastState();
+        renderDmView();
+    });
 }
 
 function dmSetPlayerBagMax(playerId, newVal) {
@@ -472,7 +535,7 @@ function dmRemoveNpcItem(enemyIdx, targetKey, itemIdx) {
 }
 
 // ============================================================================
-// DM TAB 2: VORLAGEN & BIBLIOTHEK (Jetzt inkl. 4. Zauber-Kategorie)
+// DM TAB 2: VORLAGEN & BIBLIOTHEK
 // ============================================================================
 function renderDmTemplatesTab(container) {
     ensureSpellsAndDmNotesState();
@@ -696,7 +759,7 @@ function renderDmTemplatesTab(container) {
                     </div>
                 </div>
 
-                <!-- 4. ZAUBER (NEU) -->
+                <!-- 4. ZAUBER -->
                 <div class="card">
                     <div class="creator-header-row">
                         <h3>4. Zauber</h3>
@@ -1182,7 +1245,7 @@ function deleteLibraryItem(libType, idx) {
 }
 
 // ============================================================================
-// DM TAB 3: TAKTISCHES KAMPFFELD (Top-Leiste + 3-Spalten-Cockpit)
+// DM TAB 3: TAKTISCHES KAMPFFELD
 // ============================================================================
 function resolveCombatant(entry) {
     return resolveCombatantShared(entry);
@@ -1465,7 +1528,7 @@ function removeCombatCondition(orderIdx, condIdx) {
 }
 
 // ============================================================================
-// SPIELFELD-LOGIK (Grid erweitern, Block-Palette, Drag & Drop, Vorlagen)
+// SPIELFELD-LOGIK
 // ============================================================================
 function dmResizeBattlemap(dRows, dCols) {
     ensureBattlemapState();
@@ -1936,7 +1999,7 @@ function renderDmCombatTab(container) {
 }
 
 // ============================================================================
-// DM TAB 4: GROSSES DM-NOTIZBUCH (Story, Geheimnisse, Welt & eigene Karten)
+// DM TAB 4: GROSSES DM-NOTIZBUCH
 // ============================================================================
 function renderDmNotesTab(container) {
     ensureSpellsAndDmNotesState();

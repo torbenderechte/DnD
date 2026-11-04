@@ -5,6 +5,27 @@ let playerAttackDraftAvatar = '';
 let playerSpellDraftAvatar = '';
 let playerAffinityDraftAvatar = '';
 
+const DND_SKILLS = [
+    "Acrobatics (Dex)",
+    "Animal Handling (Wis)",
+    "Arcana (Int)",
+    "Athletics (Str)",
+    "Deception (Cha)",
+    "History (Int)",
+    "Insight (Wis)",
+    "Intimidation (Cha)",
+    "Investigation (Int)",
+    "Medicine (Wis)",
+    "Nature (Int)",
+    "Perception (Wis)",
+    "Performance (Cha)",
+    "Persuasion (Cha)",
+    "Religion (Int)",
+    "Sleight of Hand (Dex)",
+    "Stealth (Dex)",
+    "Survival (Wis)"
+];
+
 function getMod(score) {
     const mod = Math.floor((score - 10) / 2);
     return mod >= 0 ? `+${mod}` : `${mod}`;
@@ -32,6 +53,21 @@ function syncMyCharacter(char, mergeLibrary = false) {
     }
 }
 
+function togglePlayerSkill(playerId, skillName, isChecked) {
+    const char = gameState.characters[playerId];
+    if (!char) return;
+    if (!Array.isArray(char.skills)) char.skills = [];
+
+    if (isChecked && !char.skills.includes(skillName)) {
+        char.skills.push(skillName);
+    } else if (!isChecked) {
+        char.skills = char.skills.filter(s => s !== skillName);
+    }
+
+    renderPlayerView(playerId);
+    syncMyCharacter(char);
+}
+
 function applyImportedPlayerCharacter(parsedJson) {
     const char = gameState.characters[currentPlayerId];
     if (!char) return;
@@ -46,6 +82,7 @@ function applyImportedPlayerCharacter(parsedJson) {
         if (imported.bagInfinite === undefined) imported.bagInfinite = false;
         if (imported.bagCustomMax === undefined) imported.bagCustomMax = null;
         if (!Array.isArray(imported.spells)) imported.spells = [];
+        if (!Array.isArray(imported.skills)) imported.skills = [];
         (imported.items || []).forEach(it => {
             it.packmass = clampPackmass(it.packmass);
         });
@@ -90,6 +127,7 @@ function renderPlayerView(playerId) {
     if (!char.attacks) char.attacks = [];
     if (!char.spells) char.spells = [];
     if (!char.affinities) char.affinities = [];
+    if (!Array.isArray(char.skills)) char.skills = [];
     if (char.notes === undefined) char.notes = "";
 
     updatePlayerCombatTabVisibility();
@@ -194,6 +232,24 @@ function renderGameplayTab(char, tabBody) {
                     <span class="stat-box-title">EXHAUSTION</span>
                     <input type="number" id="p-exh" class="compact-num-input" value="${char.exhaustion}" min="0" max="6">
                 </div>
+            </div>
+        </div>
+
+        <!-- NEU: SKILLS UNTER DER LEBENSPUNKTE/AC-ZEILE -->
+        <div class="card" style="margin-bottom: 16px;">
+            <h3>Skills (Fertigkeiten)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;">
+                ${DND_SKILLS.map(skill => {
+        const hasSkill = Array.isArray(char.skills) && char.skills.includes(skill);
+        return `
+                        <label class="checkbox-inline-row" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid ${hasSkill ? '#ef4444' : 'rgba(255,255,255,0.08)'}; border-radius: 8px; cursor: pointer; margin: 0;">
+                            <input type="checkbox"
+                                   ${hasSkill ? 'checked' : ''}
+                                   onchange="togglePlayerSkill('${char.id}', '${skill}', this.checked)">
+                            <span style="color: ${hasSkill ? '#ffffff' : '#a1a1aa'}; font-weight: ${hasSkill ? '600' : '400'};">${skill}</span>
+                        </label>
+                    `;
+    }).join('')}
             </div>
         </div>
 
@@ -609,7 +665,7 @@ function renderEquipmentTab(char, tabBody) {
                 </div>
             </div>
 
-            <!-- ZAUBER (NEU) -->
+            <!-- ZAUBER -->
             <div class="card">
                 <h3>✨ Zauber</h3>
                 <div class="item-list">
@@ -777,7 +833,7 @@ function renderEquipmentTab(char, tabBody) {
 }
 
 // ==========================================
-// TAB 4: SPIELER-KAMPFFELD (Nur Bewegungsmodus: Freies Schieben & Cursor-Zoom)
+// TAB 4: SPIELER-KAMPFFELD
 // ==========================================
 function renderPlayerCombatTab(char, tabBody) {
     ensureBattlemapState();
