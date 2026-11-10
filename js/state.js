@@ -898,20 +898,25 @@ function buildBattlemapGridCellsHtml(isDmView) {
                 // Im Baumodus lassen Tokens den Pinsel durch; im Bewegungsmodus sind sie ziehbar
                 const canDrag = !buildMode && (isDmView || (entry.kind === 'player' && entry.id === currentPlayerId));
                 const isDown = actor.hp <= 0;
-
+                
+                const myCombatEntry = (gameState.combat.order || []).find(e => e.kind === 'player' && e.id === currentPlayerId);
+                const myTeam = myCombatEntry ? myCombatEntry.teamName : 'Helden';
+                
+                const canSeeHp = isDmView || (entry.teamName === myTeam);
+                
                 return `
                             <div class="battlemap-token ${isActiveTurn ? 'token-active-turn' : ''} ${canDrag ? 'token-can-drag' : 'token-locked'} ${buildMode ? 'token-passthrough' : ''} ${isDown ? 'token-down' : ''}"
                                  data-token-key="${entry.key}"
                                  style="border-color: ${teamColor};"
                                  ${canDrag ? `onpointerdown="startTokenCarryDrag(event, '${entry.key}', ${isDmView})"` : ''}
-                                 title="${actor.name} (${entry.teamName}) | HP: ${actor.hp}/${actor.maxHp}">
+                                 title="${actor.name} (${entry.teamName})${canSeeHp ? ` • HP: ${actor.hp}/${actor.maxHp}` : ''}">
                                 ${actor.avatar
                     ? `<img src="${actor.avatar}" class="token-avatar-img" draggable="false">`
                     : `<div class="token-initials">${actor.name.substring(0, 2).toUpperCase()}</div>`
                 }
                                 <div class="token-label-bar">
                                     <span class="token-name-text">${actor.name}</span>
-                                    <span class="token-hp-text">${actor.hp}/${actor.maxHp}</span>
+                                    ${canSeeHp ? `<span class="token-hp-text">${actor.hp}/${actor.maxHp}</span>` : ''}
                                 </div>
                             </div>
                         `;
