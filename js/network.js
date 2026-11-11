@@ -1,4 +1,4 @@
-const RELAY_URL = "wss:\/\/graphical-within-effectiveness-hearings.trycloudflare.com";
+const RELAY_URL = "wss:\/\/initiatives-maintained-unnecessary-acdbentity.trycloudflare.com";
 let peer = null;
 let heartbeatInterval = null;
 let playerConnections = [];
