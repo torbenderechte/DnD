@@ -1,4 +1,4 @@
-const RELAY_URL = "wss://cheats-argue-partner-sub.trycloudflare.com";
+const RELAY_URL = "wss:\/\/machines-learned-scales-different.trycloudflare.com";
 let peer = null;
 let heartbeatInterval = null;
 let playerConnections = [];
