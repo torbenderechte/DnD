@@ -22,6 +22,11 @@ const gameState = {
     }
 };
 
+// Für Würfel Knopf Cooldown
+let lastRollTime = 0;
+const ROLL_COOLDOWN_MS = 1000; // 1000 Millisekunden = 1 Sekunde Sperre
+
+
 // Zwischenspeicher für Lobby-Dateien (vor dem Klick auf Start/Beitreten)
 let pendingResumeSessionData = null;
 let pendingPlayerCharData = null;
@@ -345,6 +350,29 @@ function evaluateDiceFormula(formulaStr, mode = 'normal') {
 }
 
 function triggerUniversalRoll(formula, label = 'Wurf', rollerOverride = null, btnEl = null) {
+
+    // 1. Ausnahme: Beim Sammel-Wurf für die Kampf-Initiative würfelt der DM für alle gleichzeitig
+    if (label !== 'Initiative') {
+        const now = Date.now();
+        if (now - lastRollTime < ROLL_COOLDOWN_MS) {
+            return null; // Cooldown noch aktiv -> Wurf sofort abbrechen!
+        }
+        lastRollTime = now;
+    }
+
+    // 2. Verhindert das Gedrückthalten von Enter / Leertaste auf einem Button
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+    }
+
+    // 3. Optional: Den geklickten Button für die Dauer des Cooldowns kurz deaktivieren
+    if (btnEl) {
+        btnEl.disabled = true;
+        setTimeout(() => {
+            btnEl.disabled = false;
+        }, ROLL_COOLDOWN_MS);
+    }
+
     animateDiceButton(btnEl);
 
     const modeSelect = document.getElementById('dice-roll-mode');

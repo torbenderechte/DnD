@@ -880,16 +880,25 @@ function usePlayerAttack(idx, btnEl) {
     if (!char || !char.attacks[idx]) return;
     const atk = char.attacks[idx];
 
+    // 1. Würfelformel ermitteln
+    const formulaMatch = (atk.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
+    const formula = formulaMatch ? formulaMatch[1] : '1d20';
+
+    // 2. ERST würfeln und das Ergebnis in "roll" abfangen
+    const roll = triggerUniversalRoll(formula, `${atk.name}`, char.name, btnEl);
+
+    // 3. Wenn "roll" null ist (Cooldown noch aktiv), sofort abbrechen!
+    if (!roll) return;
+
+    // 4. Erst wenn der Wurf wirklich gezählt hat, Exhaustion abziehen
     if (atk.usesExhaustion) {
         char.exhaustion = Math.min(6, (char.exhaustion || 0) + 1);
         syncMyCharacter(char);
     }
 
-    const formulaMatch = (atk.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
-    const formula = formulaMatch ? formulaMatch[1] : '1d20';
-    triggerUniversalRoll(formula, `${atk.name}`, char.name, btnEl);
     renderPlayerView(char.id);
 }
+
 
 function usePlayerSpell(idx, btnEl) {
     const char = gameState.characters[currentPlayerId];

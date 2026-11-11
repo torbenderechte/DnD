@@ -1,4 +1,4 @@
-const RELAY_URL = "wss://afterlife-peer-server-1.onrender.com";
+const RELAY_URL = "wss://cheats-argue-partner-sub.trycloudflare.com";
 let peer = null;
 let heartbeatInterval = null;
 let playerConnections = [];
