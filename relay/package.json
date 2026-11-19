@@ -1,0 +1,22 @@
+{
+  "name": "relay",
+  "version": "1.0.0",
+  "description": "Lokaler WebSocket-Relay + Static-Server + Ein-Klick-Launcher für Afterlife",
+  "main": "server.js",
+  "scripts": {
+    "start": "node launcher.js",
+    "relay": "node server.js",
+    "check": "node --check server.js && node --check launcher.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ws": "^8.22.2"
+  }
+}

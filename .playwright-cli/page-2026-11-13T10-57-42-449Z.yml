@@ -1,0 +1,88 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e2]:
+    - generic [ref=f7e43]:
+      - heading "Afterlife" [level=1] [ref=f7e44]
+      - navigation [ref=f7e49]:
+        - button "Gameplay" [ref=f7e50] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f7e51]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [ref=f7e52] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f7e53]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=f7e54] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f7e55]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=f7e56] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f7e57]: "4"
+          - text: DM-Notizen
+    - generic [ref=f7e3]:
+      - button "Session speichern" [ref=f7e58] [cursor=pointer]
+      - status [ref=f7e4]: "DM | Raum-Code: 135452 | 0 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=f7e6] [cursor=pointer]
+  - generic [ref=f7e62]:
+    - generic [ref=f7e63]:
+      - generic [ref=f7e64]:
+        - button "d4" [ref=f7e65] [cursor=pointer]
+        - button "d6" [ref=f7e66] [cursor=pointer]
+        - button "d8" [ref=f7e67] [cursor=pointer]
+        - button "d10" [ref=f7e68] [cursor=pointer]
+        - button "d12" [ref=f7e69] [cursor=pointer]
+        - button "d20" [ref=f7e70] [cursor=pointer]
+        - button "d100" [ref=f7e71] [cursor=pointer]
+      - generic [ref=f7e72]:
+        - textbox "Würfelformel" [ref=f7e73]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=f7e74] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=f7e75] [cursor=pointer]
+      - generic [ref=f7e78] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=f7e79]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=f7e80]: Noch keine Würfe. Klicke oben auf d20 oder auf ein Attribut/Attacke!
+  - text: BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN ES GIBT KEINEN AUSGANG
+  - main [ref=f7e82]:
+    - generic [ref=f7e83]:
+      - generic [ref=f7e84]:
+        - generic [ref=f7e85]:
+          - generic [ref=f7e86]:
+            - heading "DM Schnell-Notizen (Live-Session)" [level=3] [ref=f7e87]
+            - text: Wird automatisch mit deinem großen Notizbuch (Tab 4) und der Session-Datei gespeichert.
+          - button "Großes DM-Notizbuch öffnen (Tab 4)" [ref=f7e90] [cursor=pointer]
+        - textbox "Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)..." [ref=f7e93]
+      - generic [ref=f7e94]:
+        - generic [ref=f7e95]:
+          - heading "Spieler im Spiel (Live)" [level=2] [ref=f7e96]
+          - paragraph [ref=f7e99]: Noch keine Spieler im Raum.
+        - generic [ref=f7e100]:
+          - generic [ref=f7e101]:
+            - heading "Monster & NPCs im Spiel" [level=2] [ref=f7e102]
+            - generic [ref=f7e103]:
+              - combobox [ref=f7e104] [cursor=pointer]:
+                - option "-- Vorlage zum Spawnen wählen (0) --" [selected]
+              - button "+ Spawnen" [ref=f7e105] [cursor=pointer]
+          - paragraph [ref=f7e108]: Keine aktiven Monster oder NPCs im Spiel.
+  - complementary [ref=f7e109]:
+    - generic [ref=f7e110] [cursor=pointer]:
+      - generic [ref=f7e111]: Session-Chat
+      - generic [ref=f7e114]: ▼
+    - generic [ref=f7e116]:
+      - paragraph [ref=f7e118]: Noch keine Nachrichten.
+      - generic [ref=f7e119]:
+        - combobox "Empfänger" [ref=f7e120] [cursor=pointer]:
+          - 'option "An: Alle" [selected]'
+        - generic [ref=f7e121]:
+          - textbox "Nachricht" [ref=f7e122]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=f7e123] [cursor=pointer]
+  - generic [aria-hidden]:
+    - generic: ⮕ NOTAUSGANG
+    - generic:
+      - generic: ▶ PLAY
+      - generic: LEVEL 1
+    - generic:
+      - generic: ● REC
+      - generic: 00:00:02
+      - generic: JAN. 01 1996
+    - generic: SP ▮▮▮▯

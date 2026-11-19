@@ -1,0 +1,22 @@
+[     124ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[     124ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[     124ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[     831ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[     831ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[     832ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[   21452ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   21452ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   21452ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[   34488ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   34488ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   34489ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[   47726ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   47727ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   47727ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[   57050ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   57050ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8765/:0
+[   57051ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/api/status:0
+[   58325ms] [ERROR] WebSocket connection to 'ws://localhost:8765/' failed: Error during WebSocket handshake: Unexpected response code: 200 @ http://localhost:8765/js/network.js:234
+[   58756ms] [ERROR] WebSocket connection to 'ws://localhost:8765/' failed: Error during WebSocket handshake: Unexpected response code: 200 @ http://localhost:8765/js/network.js:234
+[   59917ms] [ERROR] WebSocket connection to 'ws://localhost:8765/' failed: Error during WebSocket handshake: Unexpected response code: 200 @ http://localhost:8765/js/network.js:234
+[   62086ms] [ERROR] WebSocket connection to 'ws://localhost:8765/' failed: Error during WebSocket handshake: Unexpected response code: 200 @ http://localhost:8765/js/network.js:234

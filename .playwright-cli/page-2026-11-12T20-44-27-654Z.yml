@@ -1,0 +1,188 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - navigation [ref=e39]:
+        - button "Gameplay" [active] [ref=e40] [cursor=pointer]
+        - button "Vorlagen & Bibliothek" [ref=e42] [cursor=pointer]
+        - button "Kampfsystem" [ref=e44] [cursor=pointer]
+        - button "DM-Notizen" [ref=e46] [cursor=pointer]
+    - generic [ref=e3]:
+      - button "Session speichern" [ref=e48] [cursor=pointer]
+      - status [ref=e4]: "DM | Raum-Code: 7195 | 1 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - button "d4" [ref=e55] [cursor=pointer]
+        - button "d6" [ref=e56] [cursor=pointer]
+        - button "d8" [ref=e57] [cursor=pointer]
+        - button "d10" [ref=e58] [cursor=pointer]
+        - button "d12" [ref=e59] [cursor=pointer]
+        - button "d20" [ref=e60] [cursor=pointer]
+        - button "d100" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - textbox "Würfelformel" [ref=e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e65] [cursor=pointer]
+      - generic [ref=e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=e70]:
+      - generic [ref=e335]:
+        - generic [ref=e336]: DM
+        - generic [ref=e337]: "Würfel d20:"
+        - strong [ref=e338]: "15"
+        - generic [ref=e339]: "[15]"
+      - generic [ref=e340]:
+        - generic [ref=e341]: DM
+        - generic [ref=e342]: "Würfel d20:"
+        - strong [ref=e343]: "4"
+        - generic [ref=e344]: "[4]"
+        - text: ✦
+      - generic [ref=e345]:
+        - generic [ref=e346]: DM
+        - generic [ref=e347]: "Würfel d20:"
+        - strong [ref=e348]: "17"
+        - generic [ref=e349]: "[17]"
+      - generic [ref=e350]:
+        - generic [ref=e351]: DM
+        - generic [ref=e352]: "Würfel d20:"
+        - strong [ref=e353]: "16"
+        - generic [ref=e354]: "[16]"
+      - generic [ref=e355]:
+        - generic [ref=e356]: DM
+        - generic [ref=e357]: "Würfel d20:"
+        - strong [ref=e358]: "10"
+        - generic [ref=e359]: "[10]"
+      - generic [ref=e360]:
+        - generic [ref=e361]: DM
+        - generic [ref=e362]: "Würfel d20:"
+        - strong [ref=e363]: "17"
+        - generic [ref=e364]: "[17]"
+  - main [ref=e72]:
+    - generic [ref=e73]:
+      - generic [ref=e1621]:
+        - generic [ref=e1622]:
+          - generic [ref=e1623]:
+            - heading "DM Schnell-Notizen (Live-Session)" [level=3] [ref=e1624]
+            - text: Wird automatisch mit deinem großen Notizbuch (Tab 4) und der Session-Datei gespeichert.
+          - button "Großes DM-Notizbuch öffnen (Tab 4)" [ref=e1627] [cursor=pointer]
+        - textbox "Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)..." [ref=e1630]
+      - generic [ref=e1631]:
+        - generic [ref=e1632]:
+          - heading "Spieler im Spiel (Live)" [level=2] [ref=e1633]
+          - generic [ref=e1635]:
+            - generic [ref=e1636]:
+              - generic [ref=e1637]:
+                - generic [ref=e1638]: "?"
+                - generic [ref=e1639]:
+                  - heading "Musashi (Lvl 1 | Neutral (True Neutral))" [level=3] [ref=e1640]
+                  - text: "Unbekannte Epoche | AC: 10 | Init: 0 | Prof: +2 | Exh: 0"
+              - generic [ref=e1641]:
+                - generic [ref=e1642]: "HP: 10/10"
+                - generic [ref=e1643]: Neutral (0 Punkte)
+            - generic [ref=e1645] [cursor=pointer]:
+              - checkbox "Moral-Zähler für Spieler sichtbar (Geheim)" [ref=e1646]
+              - text: Moral-Zähler für Spieler sichtbar (Geheim)
+            - generic [ref=e1647]:
+              - generic [ref=e1648]:
+                - strong [ref=e1649]: "Beutel: 0 / 25 Packmaß (0%)"
+                - generic [ref=e1653]: "Freier Platz: 25 Packmaß · Standard (15 + STR): 25"
+              - generic [ref=e1654]:
+                - spinbutton "Maximale Beutel-Kapazität festlegen" [ref=e1655]: "25"
+                - button "15+STR" [ref=e1656] [cursor=pointer]
+                - generic [ref=e1659] [cursor=pointer]:
+                  - checkbox "∞ Unendlich" [ref=e1660]
+                  - text: ∞ Unendlich
+            - generic [ref=e1661]:
+              - text: "STR 10 | DEX 10 | CON 10 | INT 10 | WIS 10 | CHA 10 Geld:"
+              - generic [ref=e1662]:
+                - strong [ref=e1663]: "0"
+                - text: PP
+              - text: ·
+              - generic [ref=e1664]:
+                - strong [ref=e1665]: "0"
+                - text: GP
+              - text: ·
+              - generic [ref=e1666]:
+                - strong [ref=e1667]: "0"
+                - text: SP
+              - text: ·
+              - generic [ref=e1668]:
+                - strong [ref=e1669]: "0"
+                - text: CP
+            - generic [ref=e1670]:
+              - strong [ref=e1671]: "Ausgewählte Skills von Musashi:"
+              - paragraph [ref=e1674]: Keine Skills ausgewählt.
+            - generic [ref=e1675]:
+              - button "-5 HP" [ref=e1676] [cursor=pointer]
+              - button "-1 HP" [ref=e1677] [cursor=pointer]
+              - button "+1 HP" [ref=e1678] [cursor=pointer]
+              - button "+5 HP" [ref=e1679] [cursor=pointer]
+              - button "-1 Dämonisch" [ref=e1680] [cursor=pointer]
+              - button "+1 Heilig" [ref=e1681] [cursor=pointer]
+            - generic [ref=e1682]:
+              - combobox [ref=e1683] [cursor=pointer]:
+                - option "-- Gegenstand geben (0) --" [selected]
+              - button "+ Gegenstand" [ref=e1684] [cursor=pointer]
+            - generic [ref=e1685]:
+              - combobox [ref=e1686] [cursor=pointer]:
+                - option "-- Attacke geben (0) --" [selected]
+              - button "+ Attacke" [ref=e1687] [cursor=pointer]
+            - generic [ref=e1688]:
+              - combobox [ref=e1689] [cursor=pointer]:
+                - option "-- Zauber geben (0) --" [selected]
+              - button "+ Zauber" [ref=e1690] [cursor=pointer]
+            - generic [ref=e1691]:
+              - combobox [ref=e1692] [cursor=pointer]:
+                - option "-- Merkmal geben (0) --" [selected]
+              - button "+ Merkmal" [ref=e1693] [cursor=pointer]
+            - generic [ref=e1694]:
+              - strong [ref=e1695]: "Gegenstände im Beutel von Musashi (0/25 Packmaß):"
+              - paragraph [ref=e1698]: Keine Gegenstände im Beutel.
+            - generic [ref=e1699]:
+              - strong [ref=e1700]: "Merkmale von Musashi:"
+              - paragraph [ref=e1703]: Keine Merkmale aktiv.
+            - generic [ref=e1704]:
+              - strong [ref=e1705]: "Attacken von Musashi (Aktion & Exhaustion live anpassen):"
+              - paragraph [ref=e1708]: Keine Attacken.
+            - generic [ref=e1709]:
+              - strong [ref=e1710]: "Zauber von Musashi (Anforderung, Aktion & Exhaustion live anpassen):"
+              - paragraph [ref=e1713]: Keine Zauber.
+        - generic [ref=e1714]:
+          - generic [ref=e1715]:
+            - heading "Monster & NPCs im Spiel" [level=2] [ref=e1716]
+            - generic [ref=e1717]:
+              - combobox [ref=e1718] [cursor=pointer]:
+                - option "-- Vorlage zum Spawnen wählen (0) --" [selected]
+              - button "+ Spawnen" [ref=e1719] [cursor=pointer]
+          - paragraph [ref=e1722]: Keine aktiven Monster oder NPCs im Spiel.
+  - complementary [ref=e99]:
+    - generic [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]: Session-Chat
+      - generic [ref=e104]: ▼
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e1254]:
+          - generic [ref=e1255]:
+            - generic [ref=e1256]: Dungeon Master → Musashi
+            - generic [ref=e1257]: 21:44
+          - generic [ref=e1258]: Psst, die Tür ist verflucht.
+        - generic [ref=e1259]:
+          - generic [ref=e1260]:
+            - generic [ref=e1261]: Dungeon Master → Musashi
+            - generic [ref=e1262]: 21:44
+          - generic [ref=e1263]: Hallo an alle
+      - generic [ref=e109]:
+        - combobox "Empfänger" [ref=e110] [cursor=pointer]:
+          - 'option "An: Alle"'
+          - 'option "Privat an: Musashi" [selected]'
+        - generic [ref=e111]:
+          - textbox "Nachricht" [ref=e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=e113] [cursor=pointer]

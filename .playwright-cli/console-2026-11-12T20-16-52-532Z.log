@@ -1,0 +1,2 @@
+[    8966ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8181/css/themes/obsidian.css:0
+[    8966ms] [WARNING] Thema konnte nicht geladen werden: css/themes/obsidian.css @ http://127.0.0.1:8181/js/themes.js:83

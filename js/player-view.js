@@ -38,9 +38,29 @@ function formatMorality(points) {
     return `${abs} ${abs === 1 ? 'Dämonischer Punkt' : 'Dämonische Punkte'} (${points})`;
 }
 
-function parsePlayerCategories(str) {
-    if (!str) return [];
-    return str.split(',').map(s => s.trim()).filter(Boolean);
+// Seelen-Waage als Holzschnitt: Der Balken neigt sich zur schwereren Schale
+// (links dämonisch, rechts heilig). Ab ±10 Punkten liegt er am Anschlag.
+function buildSoulScaleSvg(morality) {
+    const m = Math.max(-10, Math.min(10, Number(morality) || 0));
+    const rad = (m / 10) * 13 * Math.PI / 180;
+    const px = 120, py = 26, arm = 78;
+    const dx = Math.cos(rad) * arm;
+    const dy = Math.sin(rad) * arm;
+    const n = (v) => v.toFixed(1);
+    const pan = (x, y, cls) => `
+        <path class="scale-line scale-cord" d="M${n(x)} ${n(y)} L${n(x - 17)} ${n(y + 36)} M${n(x)} ${n(y)} L${n(x + 17)} ${n(y + 36)}"/>
+        <path class="scale-pan ${cls}" d="M${n(x - 21)} ${n(y + 36)} H${n(x + 21)} Q${n(x)} ${n(y + 56)} ${n(x - 21)} ${n(y + 36)} Z"/>`;
+
+    return `
+        <svg class="soul-scale" viewBox="0 0 240 108" role="img" aria-label="Seelen-Waage: ${esc(formatMorality(Number(morality) || 0))}">
+            <path class="scale-solid" d="M98 104 L107 95 H133 L142 104 Z"/>
+            <path class="scale-line" d="M120 16 V95"/>
+            <path class="scale-solid" d="M120 6 L125 13 L120 20 L115 13 Z"/>
+            ${pan(px - dx, py - dy, 'pan-demonic')}
+            ${pan(px + dx, py + dy, 'pan-holy')}
+            <path class="scale-line scale-beam" d="M${n(px - dx)} ${n(py - dy)} L${n(px + dx)} ${n(py + dy)}"/>
+            <circle class="scale-pivot" cx="${px}" cy="${py}" r="4.2"/>
+        </svg>`;
 }
 
 function syncMyCharacter(char, mergeLibrary = false) {
@@ -51,6 +71,7 @@ function syncMyCharacter(char, mergeLibrary = false) {
             mergeLibrary: mergeLibrary
         });
     }
+    scheduleAccountSave();
 }
 
 function togglePlayerSkill(playerId, skillName, isChecked) {
@@ -64,7 +85,7 @@ function togglePlayerSkill(playerId, skillName, isChecked) {
         char.skills = char.skills.filter(s => s !== skillName);
     }
 
-    renderPlayerView(playerId);
+    renderPlayerView(playerId, { preserveInputs: true });
     syncMyCharacter(char);
 }
 
@@ -79,13 +100,7 @@ function applyImportedPlayerCharacter(parsedJson) {
 
     openConfirmModal(`Möchtest du deinen Charakterbogen mit "${imported.name}" aus der Datei ausfüllen und alle gespeicherten Gegenstände, Attacken, Zauber und Merkmale zur Session-Bibliothek hinzufügen?`, () => {
         imported.id = char.id;
-        if (imported.bagInfinite === undefined) imported.bagInfinite = false;
-        if (imported.bagCustomMax === undefined) imported.bagCustomMax = null;
-        if (!Array.isArray(imported.spells)) imported.spells = [];
-        if (!Array.isArray(imported.skills)) imported.skills = [];
-        (imported.items || []).forEach(it => {
-            it.packmass = clampPackmass(it.packmass);
-        });
+        normalizeCharacter(imported);
 
         gameState.characters[char.id] = imported;
         mergeCharacterIntoSessionLibrary(imported);
@@ -103,7 +118,9 @@ function updatePlayerCombatTabVisibility() {
     if (!isVisible && activePlayerTab === 'combat') {
         activePlayerTab = 'gameplay';
         document.getElementById('tab-btn-gameplay')?.classList.add('active');
-        document.getElementById('tab-btn-combat')?.classList.remove('active');
+        ['story', 'equipment', 'combat'].forEach(name => {
+            document.getElementById(`tab-btn-${name}`)?.classList.remove('active');
+        });
     }
 }
 
@@ -119,25 +136,31 @@ function switchPlayerTab(tabName) {
     renderPlayerView(currentPlayerId);
 }
 
-function renderPlayerView(playerId) {
+function renderPlayerView(playerId, options) {
     ensureSpellsAndDmNotesState();
-    const char = gameState.characters[playerId];
+    const char = gameState.characters ? gameState.characters[playerId] : null;
     if (!char) return;
-    if (!char.items) char.items = [];
-    if (!char.attacks) char.attacks = [];
-    if (!char.spells) char.spells = [];
-    if (!char.affinities) char.affinities = [];
-    if (!Array.isArray(char.skills)) char.skills = [];
-    if (char.notes === undefined) char.notes = "";
+    normalizeCharacter(char);
 
     updatePlayerCombatTabVisibility();
 
-    const activeEl = document.activeElement;
-    const activeId = activeEl && activeEl.id ? activeEl.id : null;
-    const selStart = activeEl && typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : null;
-    const selEnd = activeEl && typeof activeEl.selectionEnd === 'number' ? activeEl.selectionEnd : null;
-
     const container = document.getElementById('player-sheet-content');
+    if (!container) return;
+
+    const preserveInputs = Boolean(options && options.preserveInputs);
+    let formSnapshot = null;
+    let activeId = null;
+    let selStart = null;
+    let selEnd = null;
+    if (preserveInputs) {
+        formSnapshot = snapshotFormState(container);
+    } else {
+        const activeEl = document.activeElement;
+        activeId = activeEl && activeEl.id ? activeEl.id : null;
+        selStart = activeEl && typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : null;
+        selEnd = activeEl && typeof activeEl.selectionEnd === 'number' ? activeEl.selectionEnd : null;
+    }
+
     container.innerHTML = `<div id="tab-body"></div>`;
     const tabBody = document.getElementById('tab-body');
 
@@ -151,7 +174,9 @@ function renderPlayerView(playerId) {
         renderPlayerCombatTab(char, tabBody);
     }
 
-    if (activeId) {
+    if (preserveInputs) {
+        restoreFormState(container, formSnapshot);
+    } else if (activeId) {
         const restoredEl = document.getElementById(activeId);
         if (restoredEl) {
             restoredEl.focus();
@@ -166,42 +191,61 @@ function renderPlayerView(playerId) {
 // TAB 1: GAMEPLAY
 // ==========================================
 function renderGameplayTab(char, tabBody) {
+    const statKeys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     const moralClass = char.morality < 0 ? 'moral-is-demonic' : char.morality > 0 ? 'moral-is-holy' : 'moral-is-neutral';
+
+    // Lebensader: Füllstand & Zustandsklasse (nicht nur Farbe — Klassen tragen Bedeutung)
+    const hpValue = Number(char.hp) || 0;
+    const hpMax = Math.max(1, Number(char.maxHp) || 1);
+    const hpPct = Math.max(0, Math.min(100, Math.round((hpValue / hpMax) * 100)));
+    const veinState = hpValue <= 0 ? 'is-down' : (hpPct < 25 ? 'is-low' : '');
 
     tabBody.innerHTML = `
         ${char.moralityVisible ? `
             <div class="morality-banner ${moralClass}">
                 <button id="btn-p-moral-minus" class="btn-demonic">−1 Dämonisch</button>
                 <div class="morality-emblem">
-                    <span class="morality-subtitle">SEELEN-WAAGE / MORAL</span>
-                    <div class="morality-score-big">${char.morality > 0 ? '+' + char.morality : char.morality}</div>
-                    <span class="morality-state-text">${formatMorality(char.morality)}</span>
+                    ${buildSoulScaleSvg(char.morality)}
+                    <div class="morality-readout">
+                        <span class="morality-subtitle">Seelen-Waage · Moral</span>
+                        <div class="morality-score-big">${esc(char.morality > 0 ? '+' + char.morality : char.morality)}</div>
+                        <span class="morality-state-text">${esc(formatMorality(char.morality))}</span>
+                    </div>
                 </div>
                 <button id="btn-p-moral-plus" class="btn-holy">+1 Heilig</button>
             </div>
         ` : ''}
 
         <div class="abilities-row-grid">
-            ${Object.entries(char.stats).map(([key, val]) => `
+            ${statKeys.map(key => {
+        const val = char.stats[key];
+        const label = key.toUpperCase();
+        const mod = getMod(val);
+        return `
                 <div class="ability-shield">
-                    <span class="ability-label">${key.toUpperCase()}</span>
-                    <div class="ability-mod-big" title="Klicken für 1d20 ${key.toUpperCase()}-Check"
-                         onclick="triggerUniversalRoll('1d20${getMod(val)}', '${key.toUpperCase()}-Check', null, this)">
-                        ${getMod(val)} 🎲
-                    </div>
-                    <input type="number" class="p-stat-input ability-score-oval" data-stat="${key}" value="${val}">
+                    <span class="ability-label">${label}</span>
+                    <button type="button" class="ability-mod-big" title="Klicken für 1d20 ${label}-Check"
+                            aria-label="${label}-Check würfeln (1d20${esc(mod)})"
+                            onclick="triggerUniversalRoll(${jsArg('1d20' + mod)}, ${jsArg(label + '-Check')}, null, this)">
+                        ${esc(mod)} ${icon('dice')}
+                    </button>
+                    <input type="number" id="p-stat-${key}" class="p-stat-input ability-score-oval" data-stat="${key}" value="${esc(val)}" aria-label="${label}-Wert">
                 </div>
-            `).join('')}
+            `;
+    }).join('')}
         </div>
 
         <div class="combat-dashboard-row">
             <div class="card vitals-card">
                 <span class="stat-box-title">LEBENSPUNKTE (HIT POINTS)</span>
                 <div class="hp-fraction-row">
-                    <input type="number" id="p-hp" class="hp-big-input" value="${char.hp}">
+                    <input type="number" id="p-hp" class="hp-big-input" value="${esc(char.hp)}" aria-label="Aktuelle Lebenspunkte">
                     <span class="hp-slash">/</span>
-                    <input type="number" id="p-maxhp" class="hp-big-input" value="${char.maxHp}">
+                    <input type="number" id="p-maxhp" class="hp-big-input" value="${esc(char.maxHp)}" aria-label="Maximale Lebenspunkte">
                     <span class="muted">Max HP</span>
+                </div>
+                <div class="life-vein" title="Lebensader: ${esc(hpValue)} von ${esc(hpMax)}">
+                    <div class="life-vein-fill ${veinState}" style="width: ${esc(hpPct)}%;"></div>
                 </div>
                 <div class="hp-quick-btns">
                     <button type="button" onclick="quickChangeMyHp(-5)">-5 HP</button>
@@ -214,39 +258,39 @@ function renderGameplayTab(char, tabBody) {
             <div class="compact-stats-row">
                 <div class="stat-shield-box">
                     <span class="stat-box-title">ARMOR CLASS</span>
-                    <input type="number" id="p-ac" class="compact-num-input" value="${char.ac}">
+                    <input type="number" id="p-ac" class="compact-num-input" value="${esc(char.ac)}">
                 </div>
                 <div class="stat-shield-box">
                     <span class="stat-box-title">INITIATIVE</span>
-                    <input type="number" id="p-init" class="compact-num-input" value="${char.initiative}">
+                    <input type="number" id="p-init" class="compact-num-input" value="${esc(char.initiative)}">
                 </div>
                 <div class="stat-shield-box">
                     <span class="stat-box-title">LEVEL</span>
-                    <input type="number" id="p-level" class="compact-num-input" value="${char.level}" min="1">
+                    <input type="number" id="p-level" class="compact-num-input" value="${esc(char.level)}" min="1">
                 </div>
                 <div class="stat-shield-box">
                     <span class="stat-box-title">PROFICIENCY</span>
-                    <input type="number" id="p-prof" class="compact-num-input" value="${char.proficiency}">
+                    <input type="number" id="p-prof" class="compact-num-input" value="${esc(char.proficiency)}">
                 </div>
                 <div class="stat-shield-box">
                     <span class="stat-box-title">EXHAUSTION</span>
-                    <input type="number" id="p-exh" class="compact-num-input" value="${char.exhaustion}" min="0" max="6">
+                    <input type="number" id="p-exh" class="compact-num-input" value="${esc(char.exhaustion)}" min="0" max="6">
                 </div>
             </div>
         </div>
 
-        <!-- NEU: SKILLS UNTER DER LEBENSPUNKTE/AC-ZEILE -->
-        <div class="card" style="margin-bottom: 16px;">
-            <h3>Skills (Fertigkeiten)</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;">
+        <!-- Skills als Gravur-Chips -->
+        <div class="card">
+            <h3>${icon('target')} Skills (Fertigkeiten)</h3>
+            <div class="skill-grid">
                 ${DND_SKILLS.map(skill => {
         const hasSkill = Array.isArray(char.skills) && char.skills.includes(skill);
         return `
-                        <label class="checkbox-inline-row" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid ${hasSkill ? '#ef4444' : 'rgba(255,255,255,0.08)'}; border-radius: 8px; cursor: pointer; margin: 0;">
+                        <label class="skill-chip ${hasSkill ? 'is-known' : ''}">
                             <input type="checkbox"
                                    ${hasSkill ? 'checked' : ''}
-                                   onchange="togglePlayerSkill('${char.id}', '${skill}', this.checked)">
-                            <span style="color: ${hasSkill ? '#ffffff' : '#a1a1aa'}; font-weight: ${hasSkill ? '600' : '400'};">${skill}</span>
+                                   onchange="togglePlayerSkill(${jsArg(char.id)}, ${jsArg(skill)}, this.checked)">
+                            <span>${esc(skill)}</span>
                         </label>
                     `;
     }).join('')}
@@ -255,23 +299,23 @@ function renderGameplayTab(char, tabBody) {
 
         <!-- Merkmale & Charakter-Datei nebeneinander -->
         <div class="bottom-grid">
-            <div class="card" style="margin-bottom: 0;">
-                <h3>Merkmale (Affinitäten, Mutationen & Psychosen)</h3>
+            <div class="card card-fill">
+                <h3>${icon('flask')} Merkmale (Affinitäten, Mutationen & Psychosen)</h3>
                 <div class="item-list">
                     ${char.affinities.length === 0 ? '<p class="muted">Keine Merkmale aktiv.</p>' : ''}
                     ${char.affinities.map((a, idx) => `
                         <div class="item-badge">
                             <div class="item-badge-left">
-                                ${a.avatar ? `<img src="${a.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">M</div>`}
+                                ${a.avatar ? `<img src="${esc(a.avatar)}" class="item-icon">` : `<div class="mini-avatar-placeholder" aria-hidden="true">M</div>`}
                                 <div>
-                                    <strong>${a.name}</strong>
+                                    <strong>${esc(a.name)}</strong>
                                     <div class="cat-badge-row">
-                                        ${(a.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                        ${(Array.isArray(a.categories) ? a.categories : []).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
                                     </div>
-                                    <small><strong>Effekt:</strong> ${a.effect || a.desc || '-'}</small>
+                                    <small><strong>Effekt:</strong> ${esc(a.effect || a.desc || '-')}</small>
                                 </div>
                             </div>
-                            <button class="btn-del" onclick="removePlayerItem('affinities', ${idx})">X</button>
+                            <button type="button" class="btn-del" title="Entfernen" aria-label="Entfernen" onclick="removePlayerItem('affinities', ${idx})">${icon('x')}</button>
                         </div>
                     `).join('')}
                 </div>
@@ -280,7 +324,7 @@ function renderGameplayTab(char, tabBody) {
                     <small class="muted">Eigenes Merkmal hinzufügen:</small>
                     <div id="p-aff-dropzone" class="drop-zone drop-zone-mini">
                         ${playerAffinityDraftAvatar
-        ? `<img src="${playerAffinityDraftAvatar}" class="drop-preview-img">`
+        ? `<img src="${esc(playerAffinityDraftAvatar)}" class="drop-preview-img">`
         : `<div class="drop-zone-prompt"><strong>Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="p-aff-file" accept="image/*" class="hidden">
@@ -294,17 +338,17 @@ function renderGameplayTab(char, tabBody) {
                 </div>
             </div>
 
-            <div class="card" style="margin-bottom: 0; justify-content: space-between;">
-                <div class="creator-header-row" style="flex-wrap: wrap;">
+            <div class="card card-fill card-spread">
+                <div class="creator-header-row">
                     <div>
                         <h3>Charakter-Datei (.json) speichern & laden</h3>
                         <small class="muted">Speichere deinen kompletten Charakter auf deinem Gerät oder ziehe eine gespeicherte Datei hier hinein.</small>
                     </div>
-                    <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">💾 Charakter als Datei speichern</button>
+                    <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">${icon('save')} Charakter als Datei speichern</button>
                 </div>
-                <div id="p-gameplay-json-dropzone" class="drop-zone" style="flex: 1; min-height: 150px;">
+                <div id="p-gameplay-json-dropzone" class="drop-zone drop-zone-grow">
                     <div class="drop-zone-prompt">
-                        <strong>📂 Gespeicherte Charakter-Datei (.json) hierher ziehen (Drag & Drop)</strong>
+                        <strong>Gespeicherte Charakter-Datei (.json) hierher ziehen (Drag & Drop)</strong>
                         <span>Füllt alle Werte, Bilder & Notizen aus und fügt deine Items, Attacken & Zauber zur Session-Bibliothek hinzu</span>
                     </div>
                     <input type="file" id="p-gameplay-json-file" accept=".json,application/json" class="hidden">
@@ -315,7 +359,7 @@ function renderGameplayTab(char, tabBody) {
 
     bindImageDropZone('p-aff-dropzone', 'p-aff-file', (b64) => {
         playerAffinityDraftAvatar = b64;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
     });
 
     bindJsonDropZone('p-gameplay-json-dropzone', 'p-gameplay-json-file', (parsed) => {
@@ -325,12 +369,12 @@ function renderGameplayTab(char, tabBody) {
     if (char.moralityVisible) {
         document.getElementById('btn-p-moral-minus').addEventListener('click', () => {
             char.morality -= 1;
-            renderPlayerView(char.id);
+            renderPlayerView(char.id, { preserveInputs: true });
             syncMyCharacter(char);
         });
         document.getElementById('btn-p-moral-plus').addEventListener('click', () => {
             char.morality += 1;
-            renderPlayerView(char.id);
+            renderPlayerView(char.id, { preserveInputs: true });
             syncMyCharacter(char);
         });
     }
@@ -338,7 +382,9 @@ function renderGameplayTab(char, tabBody) {
     const bindNum = (id, prop) => {
         document.getElementById(id).addEventListener('change', (e) => {
             char[prop] = parseInt(e.target.value) || 0;
-            renderPlayerView(char.id);
+            renderPlayerView(char.id, { preserveInputs: true });
+            const el = document.getElementById(id);
+            if (el) el.value = char[prop];
             syncMyCharacter(char);
         });
     };
@@ -354,15 +400,18 @@ function renderGameplayTab(char, tabBody) {
     document.querySelectorAll('.p-stat-input').forEach(input => {
         input.addEventListener('change', (e) => {
             const statKey = e.target.getAttribute('data-stat');
+            if (!statKeys.includes(statKey)) return;
             char.stats[statKey] = parseInt(e.target.value) || 10;
-            renderPlayerView(char.id);
+            renderPlayerView(char.id, { preserveInputs: true });
+            const el = document.getElementById(`p-stat-${statKey}`);
+            if (el) el.value = char.stats[statKey];
             syncMyCharacter(char);
         });
     });
 
     document.getElementById('btn-p-add-aff').addEventListener('click', () => {
         const name = document.getElementById('p-new-a-name').value.trim();
-        const cats = parsePlayerCategories(document.getElementById('p-new-a-cats').value);
+        const cats = parseCategories(document.getElementById('p-new-a-cats').value);
         const effect = document.getElementById('p-new-a-effect').value.trim();
         if (!name) return;
         char.affinities.push({
@@ -381,7 +430,7 @@ function quickChangeMyHp(delta) {
     const char = gameState.characters[currentPlayerId];
     if (!char) return;
     char.hp += delta;
-    renderPlayerView(char.id);
+    renderPlayerView(char.id, { preserveInputs: true });
     syncMyCharacter(char);
 }
 
@@ -396,8 +445,8 @@ function renderStoryTab(char, tabBody) {
                     <h3>Charakterbild</h3>
                     <div id="p-avatar-dropzone" class="drop-zone avatar-drop-large">
                         ${char.avatar
-        ? `<img src="${char.avatar}" class="avatar-large">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="removePlayerAvatar(event)">Bild entfernen</button>`
+        ? `<img src="${esc(char.avatar)}" class="avatar-large">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="removePlayerAvatar(event)">${icon('x')} Bild entfernen</button>`
         : `<div class="drop-zone-prompt">
                                    <strong>Bild hierher ziehen (Drag & Drop)</strong>
                                    <span>oder klicken zum Auswählen</span>
@@ -409,10 +458,10 @@ function renderStoryTab(char, tabBody) {
 
                 <div class="card">
                     <h3>Charakter-Datei (.json)</h3>
-                    <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">💾 Charakter auf Gerät speichern</button>
+                    <button type="button" class="btn-secondary" onclick="exportPlayerCharToFile()">${icon('save')} Charakter auf Gerät speichern</button>
                     <div id="p-char-json-dropzone" class="drop-zone drop-zone-small">
                         <div class="drop-zone-prompt">
-                            <strong>📂 Gespeicherten Charakter (.json) laden</strong>
+                            <strong>Gespeicherten Charakter (.json) laden</strong>
                             <span>Hierher ziehen, um Werte & Items zu importieren</span>
                         </div>
                         <input type="file" id="p-char-json-file" accept=".json,application/json" class="hidden">
@@ -424,10 +473,10 @@ function renderStoryTab(char, tabBody) {
                 <h3>Identität & Gesinnung</h3>
                 <div class="form-row">
                     <label>Charaktername
-                        <input type="text" id="p-name" value="${char.name}">
+                        <input type="text" id="p-name" value="${esc(char.name)}">
                     </label>
                     <label>Epoche / Herkunft
-                        <input type="text" id="p-origin" value="${char.origin}">
+                        <input type="text" id="p-origin" value="${esc(char.origin)}">
                     </label>
                 </div>
 
@@ -437,22 +486,22 @@ function renderStoryTab(char, tabBody) {
         "Rechtschaffen Gut (Lawful Good)", "Neutral Gut (Neutral Good)", "Chaotisch Gut (Chaotic Good)",
         "Rechtschaffen Neutral (Lawful Neutral)", "Neutral (True Neutral)", "Chaotisch Neutral (Chaotic Neutral)",
         "Rechtschaffen Böse (Lawful Evil)", "Neutral Böse (Neutral Evil)", "Chaotisch Böse (Chaotic Evil)"
-    ].map(al => `<option value="${al}" ${char.alignment === al ? 'selected' : ''}>${al}</option>`).join('')}
+    ].map(al => `<option value="${esc(al)}" ${char.alignment === al ? 'selected' : ''}>${esc(al)}</option>`).join('')}
                     </select>
                 </label>
 
                 <h3>Hintergrundgeschichte (Leben & Tod)</h3>
-                <textarea id="p-backstory" rows="6" placeholder="Wer warst du vor deinem Tod? Wie bist du gestorben?">${char.backstory || ''}</textarea>
+                <textarea id="p-backstory" rows="6" placeholder="Wer warst du vor deinem Tod? Wie bist du gestorben?">${esc(char.backstory)}</textarea>
 
                 <h3>Persönliche Session-Notizen</h3>
-                <textarea id="p-notes" rows="6" placeholder="Hinweise, Namen von NPCs, Quests, verdächtige Beobachtungen...">${char.notes || ''}</textarea>
+                <textarea id="p-notes" rows="6" placeholder="Hinweise, Namen von NPCs, Quests, verdächtige Beobachtungen...">${esc(char.notes)}</textarea>
             </div>
         </div>
     `;
 
     bindImageDropZone('p-avatar-dropzone', 'p-avatar-file', (base64) => {
         char.avatar = base64;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
         syncMyCharacter(char);
     });
 
@@ -462,19 +511,21 @@ function renderStoryTab(char, tabBody) {
 
     document.getElementById('p-name').addEventListener('change', (e) => {
         char.name = e.target.value.trim() || char.name;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
+        const nameEl = document.getElementById('p-name');
+        if (nameEl) nameEl.value = char.name;
         syncMyCharacter(char);
     });
 
     document.getElementById('p-origin').addEventListener('change', (e) => {
         char.origin = e.target.value;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
         syncMyCharacter(char);
     });
 
     document.getElementById('p-alignment').addEventListener('change', (e) => {
         char.alignment = e.target.value;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
         syncMyCharacter(char);
     });
 
@@ -493,8 +544,9 @@ function removePlayerAvatar(e) {
     e.stopPropagation();
     openConfirmModal("Möchtest du dein Charakterbild wirklich entfernen?", () => {
         const char = gameState.characters[currentPlayerId];
+        if (!char) return;
         char.avatar = "";
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
         syncMyCharacter(char);
     });
 }
@@ -520,26 +572,26 @@ function renderEquipmentTab(char, tabBody) {
             <div class="currency-header">
                 <div>
                     <h3>Geldbeutel (Umrechnung 10 : 1)</h3>
-                    <small class="muted">10 Kupfer = 1 Silber | 10 Silber = 1 Gold | 10 Gold = 1 Platin (Gesamt: ${totalInCopper} Kupfer)</small>
+                    <small class="muted">10 Kupfer = 1 Silber | 10 Silber = 1 Gold | 10 Gold = 1 Platin (Gesamt: ${esc(totalInCopper)} Kupfer)</small>
                 </div>
                 <button id="btn-convert-coins" class="btn-secondary">Münzen optimal umrechnen (10:1)</button>
             </div>
             <div class="currency-four-grid">
                 <div class="coin-box coin-cp">
                     <span>Kupfer (CP)</span>
-                    <input type="number" id="coin-cp" value="${char.currency.cp}" min="0">
+                    <input type="number" id="coin-cp" value="${esc(char.currency.cp)}" min="0">
                 </div>
                 <div class="coin-box coin-sp">
                     <span>Silber (SP)</span>
-                    <input type="number" id="coin-sp" value="${char.currency.sp}" min="0">
+                    <input type="number" id="coin-sp" value="${esc(char.currency.sp)}" min="0">
                 </div>
                 <div class="coin-box coin-gp">
                     <span>Gold (GP)</span>
-                    <input type="number" id="coin-gp" value="${char.currency.gp}" min="0">
+                    <input type="number" id="coin-gp" value="${esc(char.currency.gp)}" min="0">
                 </div>
                 <div class="coin-box coin-pp">
                     <span>Platin (PP)</span>
-                    <input type="number" id="coin-pp" value="${char.currency.pp}" min="0">
+                    <input type="number" id="coin-pp" value="${esc(char.currency.pp)}" min="0">
                 </div>
             </div>
         </div>
@@ -547,20 +599,20 @@ function renderEquipmentTab(char, tabBody) {
         <!-- 1. GEGENSTÄNDE & BEUTEL -->
         <div class="card">
             <div class="creator-header-row">
-                <h3>🎒 Gegenstände & Beutel</h3>
+                <h3>${icon('bag')} Gegenstände & Beutel</h3>
                 <span class="packmass-badge ${isFull ? 'packmass-full' : ''}">
-                    🎒 Beutelplatz: <strong>${bagUsed} / ${isInf ? '∞ (Unendlich)' : bagMax}</strong> Packmaß
+                    Beutelplatz: <strong>${esc(bagUsed)} / ${isInf ? '∞ (Unendlich)' : esc(bagMax)}</strong> Packmaß
                 </span>
             </div>
 
             <div class="bag-capacity-box">
                 <div class="bag-progress-track">
-                    <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
+                    <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${esc(fillPercent)}%;"></div>
                 </div>
                 <small class="muted">
                     ${isInf
         ? 'Dein Beutel hat unendliche Kapazität (vom DM freigeschaltet).'
-        : `Freier Platz: ${Math.max(0, bagMax - bagUsed)} Packmaß (Standard: 15 + STR = ${15 + (parseInt(char.stats?.str) || 10)} · Nur vom DM änderbar)`
+        : `Freier Platz: ${esc(Math.max(0, bagMax - bagUsed))} Packmaß (Standard: 15 + STR = ${esc(15 + (parseInt(char.stats?.str) || 10))} · Nur vom DM änderbar)`
     }
                 </small>
             </div>
@@ -570,20 +622,20 @@ function renderEquipmentTab(char, tabBody) {
                 ${char.items.map((item, idx) => `
                     <div class="item-badge">
                         <div class="item-badge-left">
-                            ${item.avatar ? `<img src="${item.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">I</div>`}
+                            ${item.avatar ? `<img src="${esc(item.avatar)}" class="item-icon">` : `<div class="mini-avatar-placeholder" aria-hidden="true">I</div>`}
                             <div>
                                 <div class="combat-name-line">
-                                    <strong>${item.name}</strong>
-                                    <span class="packmass-pill">📦 Packmaß: ${clampPackmass(item.packmass)}</span>
+                                    <strong>${esc(item.name)}</strong>
+                                    <span class="packmass-pill">${icon('box')} Packmaß: ${esc(clampPackmass(item.packmass))}</span>
                                 </div>
                                 <div class="cat-badge-row">
-                                    ${(item.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                    ${(Array.isArray(item.categories) ? item.categories : []).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
                                 </div>
-                                <small><strong>Anforderung:</strong> ${item.requirement || 'Keine'}</small>
-                                <small><strong>Aktion:</strong> ${item.action || '-'}</small>
+                                <small><strong>Anforderung:</strong> ${esc(item.requirement || 'Keine')}</small>
+                                <small><strong>Aktion:</strong> ${esc(item.action || '-')}</small>
                             </div>
                         </div>
-                        <button class="btn-del" onclick="removePlayerItem('items', ${idx})">X</button>
+                        <button type="button" class="btn-del" title="Entfernen" aria-label="Entfernen" onclick="removePlayerItem('items', ${idx})">${icon('x')}</button>
                     </div>
                 `).join('')}
             </div>
@@ -592,7 +644,7 @@ function renderEquipmentTab(char, tabBody) {
                 <small class="muted">Gegenstand hinzufügen (Bild, Name, Packmaß 1–10, Kategorien, Anforderung, Aktion):</small>
                 <div id="p-item-dropzone" class="drop-zone drop-zone-mini">
                     ${playerItemDraftAvatar
-        ? `<img src="${playerItemDraftAvatar}" class="drop-preview-img">`
+        ? `<img src="${esc(playerItemDraftAvatar)}" class="drop-preview-img">`
         : `<div class="drop-zone-prompt"><strong>Gegenstands-Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
                     <input type="file" id="p-item-file" accept="image/*" class="hidden">
@@ -619,25 +671,25 @@ function renderEquipmentTab(char, tabBody) {
             
             <!-- ATTACKEN -->
             <div class="card">
-                <h3>⚔️ Attacken</h3>
+                <h3>${icon('blade')} Attacken</h3>
                 <div class="item-list">
                     ${char.attacks.length === 0 ? '<p class="muted">Noch keine Attacken.</p>' : ''}
                     ${char.attacks.map((atk, idx) => `
                         <div class="item-badge">
                             <div class="item-badge-left">
-                                ${atk.avatar ? `<img src="${atk.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">A</div>`}
+                                ${atk.avatar ? `<img src="${esc(atk.avatar)}" class="item-icon">` : `<div class="mini-avatar-placeholder" aria-hidden="true">A</div>`}
                                 <div>
-                                    <strong>${atk.name}</strong>
-                                    ${atk.usesExhaustion ? `<span class="exh-badge">⚡ Verbraucht 1 Exhaustion</span>` : ''}
+                                    <strong>${esc(atk.name)}</strong>
+                                    ${atk.usesExhaustion ? `<span class="exh-badge">${icon('bolt')} Verbraucht 1 Exhaustion</span>` : ''}
                                     <div class="cat-badge-row">
-                                        ${(atk.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                        ${(Array.isArray(atk.categories) ? atk.categories : []).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
                                     </div>
-                                    <small><strong>Aktion:</strong> ${atk.action || 'Wartet auf DM...'}</small>
+                                    <small><strong>Aktion:</strong> ${esc(atk.action || 'Wartet auf DM...')}</small>
                                 </div>
                             </div>
                             <div class="dm-badges">
-                                <button type="button" onclick="usePlayerAttack(${idx}, this)">🎲 Nutzen</button>
-                                <button class="btn-del" onclick="removePlayerItem('attacks', ${idx})">X</button>
+                                <button type="button" onclick="usePlayerAttack(${idx}, this)">${icon('dice')} Nutzen</button>
+                                <button type="button" class="btn-del" title="Entfernen" aria-label="Entfernen" onclick="removePlayerItem('attacks', ${idx})">${icon('x')}</button>
                             </div>
                         </div>
                     `).join('')}
@@ -647,7 +699,7 @@ function renderEquipmentTab(char, tabBody) {
                     <small class="muted">Attacke hinzufügen (Bild, Name, Kategorien, Aktion, Exhaustion-Box):</small>
                     <div id="p-atk-dropzone" class="drop-zone drop-zone-mini">
                         ${playerAttackDraftAvatar
-        ? `<img src="${playerAttackDraftAvatar}" class="drop-preview-img">`
+        ? `<img src="${esc(playerAttackDraftAvatar)}" class="drop-preview-img">`
         : `<div class="drop-zone-prompt"><strong>Attacken-Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="p-atk-file" accept="image/*" class="hidden">
@@ -667,26 +719,26 @@ function renderEquipmentTab(char, tabBody) {
 
             <!-- ZAUBER -->
             <div class="card">
-                <h3>✨ Zauber</h3>
+                <h3>${icon('spark')} Zauber</h3>
                 <div class="item-list">
                     ${char.spells.length === 0 ? '<p class="muted">Noch keine Zauber gelernt.</p>' : ''}
                     ${char.spells.map((sp, idx) => `
                         <div class="item-badge">
                             <div class="item-badge-left">
-                                ${sp.avatar ? `<img src="${sp.avatar}" class="item-icon">` : `<div class="mini-avatar-placeholder">✨</div>`}
+                                ${sp.avatar ? `<img src="${esc(sp.avatar)}" class="item-icon">` : `<div class="mini-avatar-placeholder">${icon('spark')}</div>`}
                                 <div>
-                                    <strong>${sp.name}</strong>
-                                    ${sp.usesExhaustion ? `<span class="exh-badge">⚡ Verbraucht 1 Exhaustion</span>` : ''}
+                                    <strong>${esc(sp.name)}</strong>
+                                    ${sp.usesExhaustion ? `<span class="exh-badge">${icon('bolt')} Verbraucht 1 Exhaustion</span>` : ''}
                                     <div class="cat-badge-row">
-                                        ${(sp.categories || []).map(c => `<span class="cat-tag">${c}</span>`).join('')}
+                                        ${(Array.isArray(sp.categories) ? sp.categories : []).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
                                     </div>
-                                    <small><strong>Anforderung:</strong> ${sp.requirement || 'Keine'}</small>
-                                    <small><strong>Aktion:</strong> ${sp.action || 'Wartet auf DM...'}</small>
+                                    <small><strong>Anforderung:</strong> ${esc(sp.requirement || 'Keine')}</small>
+                                    <small><strong>Aktion:</strong> ${esc(sp.action || 'Wartet auf DM...')}</small>
                                 </div>
                             </div>
                             <div class="dm-badges">
-                                <button type="button" onclick="usePlayerSpell(${idx}, this)">🎲 Wirken</button>
-                                <button class="btn-del" onclick="removePlayerItem('spells', ${idx})">X</button>
+                                <button type="button" onclick="usePlayerSpell(${idx}, this)">${icon('dice')} Wirken</button>
+                                <button type="button" class="btn-del" title="Entfernen" aria-label="Entfernen" onclick="removePlayerItem('spells', ${idx})">${icon('x')}</button>
                             </div>
                         </div>
                     `).join('')}
@@ -696,7 +748,7 @@ function renderEquipmentTab(char, tabBody) {
                     <small class="muted">Zauber hinzufügen (Bild, Name, Kategorien, Anforderung, Aktion, Exhaustion-Box):</small>
                     <div id="p-spell-dropzone" class="drop-zone drop-zone-mini">
                         ${playerSpellDraftAvatar
-        ? `<img src="${playerSpellDraftAvatar}" class="drop-preview-img">`
+        ? `<img src="${esc(playerSpellDraftAvatar)}" class="drop-preview-img">`
         : `<div class="drop-zone-prompt"><strong>Zauber-Bild</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="p-spell-file" accept="image/*" class="hidden">
@@ -722,23 +774,25 @@ function renderEquipmentTab(char, tabBody) {
 
     bindImageDropZone('p-item-dropzone', 'p-item-file', (b64) => {
         playerItemDraftAvatar = b64;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
     });
 
     bindImageDropZone('p-atk-dropzone', 'p-atk-file', (b64) => {
         playerAttackDraftAvatar = b64;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
     });
 
     bindImageDropZone('p-spell-dropzone', 'p-spell-file', (b64) => {
         playerSpellDraftAvatar = b64;
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
     });
 
     ['cp', 'sp', 'gp', 'pp'].forEach(coin => {
         document.getElementById(`coin-${coin}`).addEventListener('change', (e) => {
             char.currency[coin] = Math.max(0, parseInt(e.target.value) || 0);
-            renderPlayerView(char.id);
+            renderPlayerView(char.id, { preserveInputs: true });
+            const coinEl = document.getElementById(`coin-${coin}`);
+            if (coinEl) coinEl.value = char.currency[coin];
             syncMyCharacter(char);
         });
     });
@@ -757,7 +811,11 @@ function renderEquipmentTab(char, tabBody) {
         char.currency.sp = Math.floor(total / 10);
         char.currency.cp = total % 10;
 
-        renderPlayerView(char.id);
+        renderPlayerView(char.id, { preserveInputs: true });
+        ['cp', 'sp', 'gp', 'pp'].forEach(coin => {
+            const coinEl = document.getElementById(`coin-${coin}`);
+            if (coinEl) coinEl.value = char.currency[coin];
+        });
         syncMyCharacter(char);
     });
 
@@ -776,7 +834,7 @@ function renderEquipmentTab(char, tabBody) {
             return alert(`Nicht genug Platz im Beutel! "${name}" hat ein Packmaß von ${packmass}, aber dein Beutel ist bei ${used} / ${max} Packmaß.`);
         }
 
-        const cats = parsePlayerCategories(document.getElementById('p-new-item-cats').value);
+        const cats = parseCategories(document.getElementById('p-new-item-cats').value);
         const requirement = document.getElementById('p-new-item-req').value.trim();
         const action = document.getElementById('p-new-item-action').value.trim();
 
@@ -795,7 +853,7 @@ function renderEquipmentTab(char, tabBody) {
 
     document.getElementById('btn-p-add-atk').addEventListener('click', () => {
         const name = document.getElementById('p-new-atk-name').value.trim();
-        const cats = parsePlayerCategories(document.getElementById('p-new-atk-cats').value);
+        const cats = parseCategories(document.getElementById('p-new-atk-cats').value);
         const action = document.getElementById('p-new-atk-action').value.trim();
         const usesExhaustion = document.getElementById('p-new-atk-exh').checked;
         if (!name) return;
@@ -813,7 +871,7 @@ function renderEquipmentTab(char, tabBody) {
 
     document.getElementById('btn-p-add-spell').addEventListener('click', () => {
         const name = document.getElementById('p-new-spell-name').value.trim();
-        const cats = parsePlayerCategories(document.getElementById('p-new-spell-cats').value);
+        const cats = parseCategories(document.getElementById('p-new-spell-cats').value);
         const requirement = document.getElementById('p-new-spell-req').value.trim();
         const action = document.getElementById('p-new-spell-action').value.trim();
         const usesExhaustion = document.getElementById('p-new-spell-exh').checked;
@@ -847,11 +905,11 @@ function renderPlayerCombatTab(char, tabBody) {
             <div class="card battlemap-board-card player-battlemap-card">
                 <div class="battlemap-board-header">
                     <div>
-                        <h3>🗺️ Taktisches Kampffeld (${map.rows} × ${map.cols})</h3>
+                        <h3>${icon('map')} Taktisches Kampffeld (${esc(map.rows)} × ${esc(map.cols)})</h3>
                         <small class="muted">
                             ${isMyCharInCombat
-        ? 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · Ziehe deinen eigenen Token.'
-        : 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger.'
+        ? 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert · Ziehe deinen eigenen Token.'
+        : 'Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert.'
     }
                         </small>
                     </div>
@@ -896,7 +954,7 @@ function usePlayerAttack(idx, btnEl) {
         syncMyCharacter(char);
     }
 
-    renderPlayerView(char.id);
+    renderPlayerView(char.id, { preserveInputs: true });
 }
 
 
@@ -905,25 +963,36 @@ function usePlayerSpell(idx, btnEl) {
     if (!char || !char.spells || !char.spells[idx]) return;
     const sp = char.spells[idx];
 
+    const formulaMatch = (sp.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
+    const formula = formulaMatch ? formulaMatch[1] : '1d20';
+    const roll = triggerUniversalRoll(formula, `${sp.name}`, char.name, btnEl);
+
+    // Cooldown aktiv: kein Wurf, also auch keine Exhaustion
+    if (!roll) return;
+
     if (sp.usesExhaustion) {
         char.exhaustion = Math.min(6, (char.exhaustion || 0) + 1);
         syncMyCharacter(char);
     }
 
-    const formulaMatch = (sp.action || '').match(/(\d*d\d+(?:\s*[+-]\s*\d+)?)/i);
-    const formula = formulaMatch ? formulaMatch[1] : '1d20';
-    triggerUniversalRoll(formula, `✨ ${sp.name}`, char.name, btnEl);
-    renderPlayerView(char.id);
+    renderPlayerView(char.id, { preserveInputs: true });
 }
 
 function removePlayerItem(listKey, idx) {
     const char = gameState.characters[currentPlayerId];
-    const item = char[listKey][idx];
-    const label = item && item.name ? `"${item.name}"` : 'diesen Eintrag';
+    if (!char || !Array.isArray(char[listKey])) return;
+    const entry = char[listKey][idx];
+    const entryName = entry ? entry.name : undefined;
+    const label = entry && entry.name ? `"${entry.name}"` : 'diesen Eintrag';
 
     openConfirmModal(`Möchtest du ${label} wirklich von deinem Charakterbogen entfernen?`, () => {
-        char[listKey].splice(idx, 1);
-        renderPlayerView(currentPlayerId);
-        syncMyCharacter(char);
+        // Charakter neu lesen: ein Sync kann das Objekt inzwischen ersetzt haben
+        const current = gameState.characters[currentPlayerId];
+        if (!current || !Array.isArray(current[listKey])) return;
+        const target = current[listKey][idx];
+        if (!target || target.name !== entryName) return;
+        current[listKey].splice(idx, 1);
+        renderPlayerView(currentPlayerId, { preserveInputs: true });
+        syncMyCharacter(current);
     });
 }

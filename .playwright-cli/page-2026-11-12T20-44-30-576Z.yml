@@ -1,0 +1,134 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - generic [ref=e39]:
+        - button "Gameplay" [ref=e40] [cursor=pointer]
+        - button "Story & Notizen" [ref=e42] [cursor=pointer]
+        - button "Ausrüstung" [ref=e44] [cursor=pointer]
+        - button "Kampffeld" [active] [ref=e238] [cursor=pointer]
+    - generic [ref=e3]:
+      - button "Charakter speichern" [ref=e46] [cursor=pointer]
+      - status [ref=e4]: Verbunden (Raum 7195)
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e50]:
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - button "d4" [ref=e53] [cursor=pointer]
+        - button "d6" [ref=e54] [cursor=pointer]
+        - button "d8" [ref=e55] [cursor=pointer]
+        - button "d10" [ref=e56] [cursor=pointer]
+        - button "d12" [ref=e57] [cursor=pointer]
+        - button "d20" [ref=e58] [cursor=pointer]
+        - button "d100" [ref=e59] [cursor=pointer]
+      - generic [ref=e60]:
+        - textbox "Würfelformel" [ref=e61]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e62] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e63] [cursor=pointer]
+    - generic [ref=e66]:
+      - generic [ref=e343]:
+        - generic [ref=e344]: DM
+        - generic [ref=e345]: "Würfel d20:"
+        - strong [ref=e346]: "15"
+        - generic [ref=e347]: "[15]"
+      - generic [ref=e348]:
+        - generic [ref=e349]: DM
+        - generic [ref=e350]: "Würfel d20:"
+        - strong [ref=e351]: "4"
+        - generic [ref=e352]: "[4]"
+      - generic [ref=e353]:
+        - generic [ref=e354]: DM
+        - generic [ref=e355]: "Würfel d20:"
+        - strong [ref=e356]: "17"
+        - generic [ref=e357]: "[17]"
+      - generic [ref=e358]:
+        - generic [ref=e359]: DM
+        - generic [ref=e360]: "Würfel d20:"
+        - strong [ref=e361]: "16"
+        - generic [ref=e362]: "[16]"
+      - generic [ref=e363]:
+        - generic [ref=e364]: DM
+        - generic [ref=e365]: "Würfel d20:"
+        - strong [ref=e366]: "10"
+        - generic [ref=e367]: "[10]"
+      - generic [ref=e368]:
+        - generic [ref=e369]: DM
+        - generic [ref=e370]: "Würfel d20:"
+        - strong [ref=e371]: "17"
+        - generic [ref=e372]: "[17]"
+  - main [ref=e68]:
+    - generic [ref=e526]:
+      - generic [ref=e527]:
+        - generic [ref=e529]:
+          - generic [aria-hidden] [ref=e530]: M
+          - generic [ref=e531]:
+            - generic [ref=e532]: AM ZUG
+            - strong [ref=e535]: Musashi
+            - generic [ref=e536]: Helden · Init 0
+        - generic [ref=e537]:
+          - generic [ref=e538]:
+            - generic [ref=e539]: RUNDE
+            - strong [ref=e540]: "2"
+          - generic [ref=e541]: Verschieben- & Bewegungsmodus
+      - generic [ref=e544]:
+        - generic [ref=e545]:
+          - generic [ref=e546]:
+            - heading "Taktisches Kampffeld (6 × 6)" [level=3] [ref=e547]
+            - text: Gedrückt halten zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert · Ziehe deinen eigenen Token.
+          - generic [ref=e550]:
+            - button "Rauszoomen (Taste −)" [ref=e551] [cursor=pointer]
+            - button "100%" [ref=e554] [cursor=pointer]
+            - button "Reinzoomen (Taste +)" [ref=e555] [cursor=pointer]
+        - generic [ref=e560]:
+          - generic "Pures Grau (1, 1)" [ref=e561]:
+            - generic: 1,1
+            - 'generic "Musashi (Helden) • HP: 10/10" [ref=e562]':
+              - generic: MU
+              - generic:
+                - generic: Musashi
+                - generic: 10/10
+          - generic "Pures Grau (1, 2)" [ref=e563]: 1,2
+          - generic "Pures Grau (1, 3)" [ref=e564]: 1,3
+          - generic "Pures Grau (1, 4)" [ref=e565]: 1,4
+          - generic "Pures Grau (1, 5)" [ref=e566]: 1,5
+          - generic "Pures Grau (1, 6)" [ref=e567]: 1,6
+          - generic "Pures Grau (2, 1)" [ref=e568]: 2,1
+          - generic "Pures Grau (2, 2)" [ref=e569]: 2,2
+          - generic "Pures Grau (2, 3)" [ref=e570]: 2,3
+          - generic "Pures Grau (2, 4)" [ref=e571]: 2,4
+          - generic "Pures Grau (2, 5)" [ref=e572]: 2,5
+          - generic "Pures Grau (2, 6)" [ref=e573]: 2,6
+          - generic "Pures Grau (3, 1)" [ref=e574]: 3,1
+          - generic "Pures Grau (3, 2)" [ref=e575]: 3,2
+          - generic "Pures Grau (3, 3)" [ref=e576]: 3,3
+          - generic "Pures Grau (3, 4)" [ref=e577]: 3,4
+          - generic "Pures Grau (3, 5)" [ref=e578]: 3,5
+          - generic "Pures Grau (3, 6)" [ref=e579]: 3,6
+          - generic "Pures Grau (4, 1)" [ref=e580]: 4,1
+          - generic "Pures Grau (4, 2)" [ref=e581]: 4,2
+          - generic "Pures Grau (4, 3)" [ref=e582]: 4,3
+          - generic "Pures Grau (4, 4)" [ref=e583]: 4,4
+          - generic "Pures Grau (4, 5)" [ref=e584]: 4,5
+          - generic "Pures Grau (4, 6)" [ref=e585]: 4,6
+          - generic "Pures Grau (5, 1)" [ref=e586]: 5,1
+          - generic "Pures Grau (5, 2)" [ref=e587]: 5,2
+          - generic "Pures Grau (5, 3)" [ref=e588]: 5,3
+          - generic "Pures Grau (5, 4)" [ref=e589]: 5,4
+          - generic "Pures Grau (5, 5)" [ref=e590]: 5,5
+          - generic "Pures Grau (5, 6)" [ref=e591]: 5,6
+          - generic "Pures Grau (6, 1)" [ref=e592]: 6,1
+          - generic "Pures Grau (6, 2)" [ref=e593]: 6,2
+          - generic "Pures Grau (6, 3)" [ref=e594]: 6,3
+          - generic "Pures Grau (6, 4)" [ref=e595]: 6,4
+          - generic "Pures Grau (6, 5)" [ref=e596]: 6,5
+          - generic "Pures Grau (6, 6)" [ref=e597]: 6,6
+  - complementary [ref=e221]:
+    - generic [ref=e222] [cursor=pointer]:
+      - generic [ref=e223]: Session-Chat
+      - generic [ref=e226]:
+        - generic [ref=e524]: "2"
+        - generic [ref=e227]: ▲

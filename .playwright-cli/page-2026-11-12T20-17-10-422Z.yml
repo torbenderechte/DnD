@@ -1,0 +1,62 @@
+- generic [ref=f3e1]:
+  - banner [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - status [ref=f3e4]: Nicht verbunden
+      - generic [ref=f3e5]:
+        - button "Erscheinungsbild wählen" [expanded] [ref=f3e6] [cursor=pointer]
+        - menu "Erscheinungsbild wählen" [ref=f3e33]:
+          - generic [ref=f3e34]: Erscheinungsbild
+          - menuitemradio "Tagdruck Holzschnitt auf Papier" [ref=f3e35] [cursor=pointer]:
+            - generic [ref=f3e37]:
+              - strong [ref=f3e38]: Tagdruck
+              - generic [ref=f3e39]: Holzschnitt auf Papier
+          - menuitemradio "Nachtdruck Holzschnitt im Negativ" [checked] [active] [ref=f3e40] [cursor=pointer]:
+            - generic [ref=f3e42]:
+              - strong [ref=f3e43]: Nachtdruck
+              - generic [ref=f3e44]: Holzschnitt im Negativ
+          - menuitemradio "Obsidian Schlicht & dunkel" [ref=f3e45] [cursor=pointer]:
+            - generic [ref=f3e47]:
+              - strong [ref=f3e48]: Obsidian
+              - generic [ref=f3e49]: Schlicht & dunkel
+          - menuitemradio "Äther Abstrakt & animiert" [ref=f3e50] [cursor=pointer]:
+            - generic [ref=f3e52]:
+              - strong [ref=f3e53]: Äther
+              - generic [ref=f3e54]: Abstrakt & animiert
+          - menuitemradio "Phosphor Retro-Terminal" [ref=f3e55] [cursor=pointer]:
+            - generic [ref=f3e57]:
+              - strong [ref=f3e58]: Phosphor
+              - generic [ref=f3e59]: Retro-Terminal
+          - menuitemradio "Grimoire Leder, Kerzenlicht & Blattgold" [ref=f3e60] [cursor=pointer]:
+            - generic [ref=f3e62]:
+              - strong [ref=f3e63]: Grimoire
+              - generic [ref=f3e64]: Leder, Kerzenlicht & Blattgold
+  - main [ref=f3e9]:
+    - generic [aria-hidden] [ref=f3e10]:
+      - paragraph [ref=f3e11]: Afterlife
+      - paragraph [ref=f3e12]: Memento mori
+    - generic [ref=f3e13]:
+      - generic [ref=f3e14]:
+        - heading "Dungeon Master" [level=2] [ref=f3e15]
+        - paragraph [ref=f3e16]:
+          - text: Starte eine neue Session oder ziehe eine gespeicherte Session-Datei (
+          - code [ref=f3e17]: .json
+          - text: ) hinein, um mit allen Daten und exakt demselben Raum-Code fortzufahren.
+        - button "Neue Session als DM starten" [ref=f3e18] [cursor=pointer]
+        - generic [ref=f3e21]: ODER SESSION FORTSETZEN
+        - generic [ref=f3e22] [cursor=pointer]:
+          - generic:
+            - strong: Session-Datei (.json) hierher ziehen
+            - generic: oder klicken zum Auswählen
+        - button "Session fortsetzen (Erst Datei einfügen)" [disabled] [ref=f3e23]
+      - generic [ref=f3e24]:
+        - heading "Spieler beitreten" [level=2] [ref=f3e25]
+        - paragraph [ref=f3e26]: Gib deinen Namen und den 4-stelligen Raum-Code ein – oder ziehe direkt deine gespeicherte Charakter-Datei hinein.
+        - textbox "Charaktername" [ref=f3e27]:
+          - /placeholder: Charaktername (z.B. Musashi)
+        - textbox "4-stelliger Raum-Code" [ref=f3e28]:
+          - /placeholder: 4-stelliger Raum-Code (z.B. 4829)
+        - generic [ref=f3e29] [cursor=pointer]:
+          - generic:
+            - strong: Gespeicherten Charakter (.json) hierher ziehen
+            - generic: "Optional: Füllt alle Werte aus & ergänzt deine Items in der Session-Bibliothek"
+        - button "Session beitreten" [ref=f3e30] [cursor=pointer]

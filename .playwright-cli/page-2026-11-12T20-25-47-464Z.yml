@@ -1,0 +1,285 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - navigation [ref=e39]:
+        - button "Gameplay" [ref=e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e41]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [ref=e42] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e43]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=e44] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e45]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=e46] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e47]: "4"
+          - text: DM-Notizen
+    - generic [ref=e3]:
+      - button "Session speichern" [ref=e48] [cursor=pointer]
+      - status [ref=e4]: "DM | Raum-Code: 3407 | 1 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - button "d4" [ref=e55] [cursor=pointer]
+        - button "d6" [ref=e56] [cursor=pointer]
+        - button "d8" [ref=e57] [cursor=pointer]
+        - button "d10" [ref=e58] [cursor=pointer]
+        - button "d12" [ref=e59] [cursor=pointer]
+        - button "d20" [ref=e60] [cursor=pointer]
+        - button "d100" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - textbox "Würfelformel" [ref=e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e65] [cursor=pointer]
+      - generic [ref=e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [checked] [active] [ref=e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=e70]: Noch keine Würfe. Klicke oben auf d20 oder auf ein Attribut/Attacke!
+  - main [ref=e72]:
+    - generic [ref=e1229]:
+      - generic [ref=e1230]:
+        - generic [ref=e1231]:
+          - generic [ref=e1232]:
+            - generic [aria-hidden] [ref=e1233]: T
+            - generic [ref=e1234]:
+              - generic [ref=e1235]: AM ZUG
+              - strong [ref=e1238]: Tester
+              - generic [ref=e1239]: Helden · Init 0
+          - generic [ref=e1240]: →
+          - generic [ref=e1242]:
+            - generic [aria-hidden] [ref=e1243]: G
+            - generic [ref=e1244]:
+              - strong [ref=e1245]: Goblin
+              - generic [ref=e1246]: Init 0
+        - generic [ref=e1247]:
+          - generic [ref=e1248]:
+            - generic [ref=e1249]: RUNDE
+            - strong [ref=e1250]: "1"
+          - generic "Schaltet den 4. Tab (Kampffeld) für alle Spieler ein oder aus" [ref=e1251] [cursor=pointer]:
+            - checkbox "Für Spieler sichtbar" [checked] [ref=e1252]
+            - text: Für Spieler sichtbar
+          - button "Vorheriger Zug" [ref=e1255] [cursor=pointer]
+          - button "Nächster Zug" [ref=e1256] [cursor=pointer]
+          - button "Spieler-Sync" [ref=e1259] [cursor=pointer]
+          - button "Monster-Init" [ref=e1262] [cursor=pointer]
+          - button "Alle Init" [ref=e1265] [cursor=pointer]
+          - button "Kampf beenden" [ref=e1268] [cursor=pointer]
+      - generic [ref=e1269]:
+        - complementary [ref=e1270]:
+          - generic [ref=e1271]:
+            - heading "Teilnehmer & Teams" [level=3] [ref=e1273]
+            - generic [ref=e1276]:
+              - text: SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN
+              - combobox "SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN" [ref=e1277] [cursor=pointer]:
+                - option "-- Kämpfer wählen (0 verfügbar) --" [selected]
+            - generic [ref=e1278]:
+              - combobox [ref=e1279] [cursor=pointer]:
+                - 'option "In Team: Helden" [selected]'
+                - 'option "In Team: Monster / Feinde"'
+                - 'option "In Team: Fraktion 3"'
+                - 'option "In Team: Fraktion 4"'
+              - button "+ Hinzufügen" [ref=e1280] [cursor=pointer]
+            - generic [ref=e1282]:
+              - text: NEUES TEAM ERSTELLEN
+              - generic [ref=e1283]:
+                - 'textbox "NEUES TEAM ERSTELLEN #8a6fae + Team" [ref=e1284]':
+                  - /placeholder: Team-Name (z.B. Wachen)...
+                - textbox "Teamfarbe wählen" [ref=e1285] [cursor=pointer]: "#8a6fae"
+                - button "+ Team" [ref=e1286] [cursor=pointer]
+          - generic [ref=e1287]:
+            - generic [ref=e1288]:
+              - generic [ref=e1289]:
+                - strong [ref=e1292]: Helden (1)
+                - button "Team löschen" [ref=e1293] [cursor=pointer]
+              - generic [ref=e1297]:
+                - generic [ref=e1298]:
+                  - generic [ref=e1299]:
+                    - generic [ref=e1300]: T
+                    - generic [ref=e1301]:
+                      - generic [ref=e1302]:
+                        - generic [ref=e1303]: ZUG
+                        - strong [ref=e1306]: Tester
+                      - text: AC 10 · Feld (1,1)
+                  - generic [ref=e1307]:
+                    - generic [ref=e1308]: 10/10
+                    - button "Aus Kampf entfernen" [ref=e1309] [cursor=pointer]
+                - generic [ref=e1312]:
+                  - generic [ref=e1313]:
+                    - text: "Init:"
+                    - spinbutton "Init:" [ref=e1314]: "0"
+                  - combobox "Team" [ref=e1315] [cursor=pointer]:
+                    - option "Helden" [selected]
+                    - option "Monster / Feinde"
+                    - option "Fraktion 3"
+                    - option "Fraktion 4"
+                - generic [ref=e1316]:
+                  - button "-5" [ref=e1317] [cursor=pointer]
+                  - button "-1" [ref=e1318] [cursor=pointer]
+                  - button "+1" [ref=e1319] [cursor=pointer]
+                  - button "+5" [ref=e1320] [cursor=pointer]
+                - generic [ref=e1321]:
+                  - spinbutton "HP" [ref=e1322]
+                  - button "-DMG" [ref=e1323] [cursor=pointer]
+                  - button "+HEAL" [ref=e1324] [cursor=pointer]
+                - combobox [ref=e1325] [cursor=pointer]:
+                  - option "+ Zustand..." [selected]
+                  - option "Blutend"
+                  - option "Brennend"
+                  - option "Betäubt"
+                  - option "Vergiftet"
+                  - option "Verängstigt"
+                  - option "Dämonischer Rausch"
+                  - option "Heiliger Schutz"
+            - generic [ref=e1326]:
+              - generic [ref=e1327]:
+                - strong [ref=e1330]: Monster / Feinde (1)
+                - button "Team löschen" [ref=e1331] [cursor=pointer]
+              - generic [ref=e1335]:
+                - generic [ref=e1336]:
+                  - generic [ref=e1337]:
+                    - generic [ref=e1338]: G
+                    - generic [ref=e1339]:
+                      - strong [ref=e1341]: Goblin
+                      - text: AC 14 · Feld (1,2)
+                  - generic [ref=e1342]:
+                    - generic [ref=e1343]: 30/30
+                    - button "Aus Kampf entfernen" [ref=e1344] [cursor=pointer]
+                - generic [ref=e1347]:
+                  - generic [ref=e1348]:
+                    - text: "Init:"
+                    - spinbutton "Init:" [ref=e1349]: "0"
+                  - combobox "Team" [ref=e1350] [cursor=pointer]:
+                    - option "Helden"
+                    - option "Monster / Feinde" [selected]
+                    - option "Fraktion 3"
+                    - option "Fraktion 4"
+                - generic [ref=e1351]:
+                  - button "-5" [ref=e1352] [cursor=pointer]
+                  - button "-1" [ref=e1353] [cursor=pointer]
+                  - button "+1" [ref=e1354] [cursor=pointer]
+                  - button "+5" [ref=e1355] [cursor=pointer]
+                - generic [ref=e1356]:
+                  - spinbutton "HP" [ref=e1357]
+                  - button "-DMG" [ref=e1358] [cursor=pointer]
+                  - button "+HEAL" [ref=e1359] [cursor=pointer]
+                - combobox [ref=e1360] [cursor=pointer]:
+                  - option "+ Zustand..." [selected]
+                  - option "Blutend"
+                  - option "Brennend"
+                  - option "Betäubt"
+                  - option "Vergiftet"
+                  - option "Verängstigt"
+                  - option "Dämonischer Rausch"
+                  - option "Heiliger Schutz"
+            - generic [ref=e1361]:
+              - generic [ref=e1362]:
+                - strong [ref=e1365]: Fraktion 3 (0)
+                - button "Team löschen" [ref=e1366] [cursor=pointer]
+              - generic [ref=e1369]: Keine Kämpfer in diesem Team.
+            - generic [ref=e1370]:
+              - generic [ref=e1371]:
+                - strong [ref=e1374]: Fraktion 4 (0)
+                - button "Team löschen" [ref=e1375] [cursor=pointer]
+              - generic [ref=e1378]: Keine Kämpfer in diesem Team.
+        - generic [ref=e1379]:
+          - generic [ref=e1380]:
+            - generic [ref=e1381]:
+              - generic [ref=e1382]:
+                - heading "Spielfeld (6 × 6 Grid)" [level=3] [ref=e1383]
+                - generic [ref=e1386]: Verschieben- & Bewegungsmodus
+              - text: "Bewegungsmodus: Halte die Maustaste gedrückt zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert."
+            - generic [ref=e1389]:
+              - generic [ref=e1390]:
+                - button "Rauszoomen (Taste −)" [ref=e1391] [cursor=pointer]
+                - button "100%" [ref=e1394] [cursor=pointer]
+                - button "Reinzoomen (Taste +)" [ref=e1395] [cursor=pointer]
+              - button "+ Zeile" [ref=e1398] [cursor=pointer]
+              - button "− Zeile" [ref=e1399] [cursor=pointer]
+              - button "+ Spalte" [ref=e1400] [cursor=pointer]
+              - button "− Spalte" [ref=e1401] [cursor=pointer]
+              - button "Reset" [ref=e1402] [cursor=pointer]
+          - generic [ref=e1405]:
+            - generic [ref=e1406]:
+              - textbox "Vorlagenname (z.B. Thronsaal)..." [ref=e1407]
+              - button "Spielfeld speichern" [ref=e1408] [cursor=pointer]
+            - generic [ref=e1411]:
+              - combobox [ref=e1412] [cursor=pointer]:
+                - option "-- Gespeichertes Spielfeld laden (0) --" [selected]
+              - button "Laden" [ref=e1413] [cursor=pointer]
+          - generic [ref=e1418]:
+            - generic "Pures Grau (1, 1)" [ref=e1419]:
+              - generic: 1,1
+              - 'generic "Tester (Helden) • HP: 10/10" [ref=e1420]':
+                - generic: TE
+                - generic:
+                  - generic: Tester
+                  - generic: 10/10
+            - generic "Pures Grau (1, 2)" [ref=e1421]:
+              - generic: 1,2
+              - 'generic "Goblin (Monster / Feinde) • HP: 30/30" [ref=e1422]':
+                - generic: GO
+                - generic:
+                  - generic: Goblin
+                  - generic: 30/30
+            - generic "Pures Grau (1, 3)" [ref=e1423]: 1,3
+            - generic "Pures Grau (1, 4)" [ref=e1424]: 1,4
+            - generic "Pures Grau (1, 5)" [ref=e1425]: 1,5
+            - generic "Pures Grau (1, 6)" [ref=e1426]: 1,6
+            - generic "Pures Grau (2, 1)" [ref=e1427]: 2,1
+            - generic "Pures Grau (2, 2)" [ref=e1428]: 2,2
+            - generic "Pures Grau (2, 3)" [ref=e1429]: 2,3
+            - generic "Pures Grau (2, 4)" [ref=e1430]: 2,4
+            - generic "Pures Grau (2, 5)" [ref=e1431]: 2,5
+            - generic "Pures Grau (2, 6)" [ref=e1432]: 2,6
+            - generic "Pures Grau (3, 1)" [ref=e1433]: 3,1
+            - generic "Pures Grau (3, 2)" [ref=e1434]: 3,2
+            - generic "Pures Grau (3, 3)" [ref=e1435]: 3,3
+            - generic "Pures Grau (3, 4)" [ref=e1436]: 3,4
+            - generic "Pures Grau (3, 5)" [ref=e1437]: 3,5
+            - generic "Pures Grau (3, 6)" [ref=e1438]: 3,6
+            - generic "Pures Grau (4, 1)" [ref=e1439]: 4,1
+            - generic "Pures Grau (4, 2)" [ref=e1440]: 4,2
+            - generic "Pures Grau (4, 3)" [ref=e1441]: 4,3
+            - generic "Pures Grau (4, 4)" [ref=e1442]: 4,4
+            - generic "Pures Grau (4, 5)" [ref=e1443]: 4,5
+            - generic "Pures Grau (4, 6)" [ref=e1444]: 4,6
+            - generic "Pures Grau (5, 1)" [ref=e1445]: 5,1
+            - generic "Pures Grau (5, 2)" [ref=e1446]: 5,2
+            - generic "Pures Grau (5, 3)" [ref=e1447]: 5,3
+            - generic "Pures Grau (5, 4)" [ref=e1448]: 5,4
+            - generic "Pures Grau (5, 5)" [ref=e1449]: 5,5
+            - generic "Pures Grau (5, 6)" [ref=e1450]: 5,6
+            - generic "Pures Grau (6, 1)" [ref=e1451]: 6,1
+            - generic "Pures Grau (6, 2)" [ref=e1452]: 6,2
+            - generic "Pures Grau (6, 3)" [ref=e1453]: 6,3
+            - generic "Pures Grau (6, 4)" [ref=e1454]: 6,4
+            - generic "Pures Grau (6, 5)" [ref=e1455]: 6,5
+            - generic "Pures Grau (6, 6)" [ref=e1456]: 6,6
+        - complementary [ref=e1457]:
+          - generic [ref=e1458]:
+            - heading "Block-Arten" [level=3] [ref=e1459]
+            - button "Neuer Block" [ref=e1462] [cursor=pointer]
+          - generic [ref=e1465]: "1× Klick = Baumodus an · 2× Klick auf denselben Block = Baumodus aus:"
+          - generic [ref=e1469] [cursor=pointer]:
+            - strong [ref=e1470]: Pures Grau
+            - generic [ref=e1471]: "#3f3f46"
+  - complementary [ref=e99]:
+    - generic [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]: Session-Chat
+      - generic [ref=e104]: ▼
+    - generic [ref=e106]:
+      - paragraph [ref=e108]: Noch keine Nachrichten.
+      - generic [ref=e109]:
+        - combobox "Empfänger" [ref=e110] [cursor=pointer]:
+          - 'option "An: Alle" [selected]'
+          - 'option "Privat an: Tester"'
+        - generic [ref=e111]:
+          - textbox "Nachricht" [ref=e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=e113] [cursor=pointer]

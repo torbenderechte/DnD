@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - status [ref=e4]: Nicht verbunden
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - main [ref=e9]:
+    - generic [aria-hidden] [ref=e10]:
+      - paragraph [ref=e11]: Afterlife
+      - paragraph [ref=e12]: Memento mori
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Dungeon Master" [level=2] [ref=e15]
+        - paragraph [ref=e16]:
+          - text: Starte eine neue Session oder ziehe eine gespeicherte Session-Datei (
+          - code [ref=e17]: .json
+          - text: ) hinein, um mit allen Daten und exakt demselben Raum-Code fortzufahren.
+        - button "Neue Session als DM starten" [ref=e18] [cursor=pointer]
+        - generic [ref=e21]: ODER SESSION FORTSETZEN
+        - generic [ref=e22] [cursor=pointer]:
+          - generic:
+            - strong: Session-Datei (.json) hierher ziehen
+            - generic: oder klicken zum Auswählen
+        - button "Session fortsetzen (Erst Datei einfügen)" [disabled] [ref=e23]
+      - generic [ref=e24]:
+        - heading "Spieler beitreten" [level=2] [ref=e25]
+        - paragraph [ref=e26]: Gib deinen Namen und den 4-stelligen Raum-Code ein – oder ziehe direkt deine gespeicherte Charakter-Datei hinein.
+        - textbox "Charaktername" [ref=e27]:
+          - /placeholder: Charaktername (z.B. Musashi)
+        - textbox "4-stelliger Raum-Code" [ref=e28]:
+          - /placeholder: 4-stelliger Raum-Code (z.B. 4829)
+        - generic [ref=e29] [cursor=pointer]:
+          - generic:
+            - strong: Gespeicherten Charakter (.json) hierher ziehen
+            - generic: "Optional: Füllt alle Werte aus & ergänzt deine Items in der Session-Bibliothek"
+        - button "Session beitreten" [ref=e30] [cursor=pointer]

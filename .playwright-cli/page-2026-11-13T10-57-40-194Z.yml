@@ -1,0 +1,58 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e2]:
+    - generic [ref=f7e3]:
+      - status [ref=f7e4]: Nicht verbunden
+      - button "Erscheinungsbild wählen" [ref=f7e6] [cursor=pointer]
+  - main [ref=f7e9]:
+    - generic [aria-hidden] [ref=f7e10]:
+      - paragraph [ref=f7e11]: Afterlife
+      - paragraph [ref=f7e12]: Memento mori
+    - generic [ref=f7e13]:
+      - text: BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN
+      - generic [ref=f7e14]:
+        - heading "Dungeon Master" [level=2] [ref=f7e15]
+        - paragraph [ref=f7e16]:
+          - text: Starte eine neue Session, setze eine in deinem Konto gespeicherte fort oder ziehe eine Session-Datei (
+          - code [ref=f7e17]: .json
+          - text: ) hinein – mit allen Daten und exakt demselben Raum-Code.
+        - button "Neue Session als DM starten" [ref=f7e18] [cursor=pointer]
+        - generic [ref=f7e21]: MIT KONTO (DATENBANK)
+        - generic [ref=f7e22]:
+          - textbox "DM-Name" [ref=f7e23]:
+            - /placeholder: Name
+          - textbox "DM-Passwort" [ref=f7e24]:
+            - /placeholder: Passwort
+          - generic [ref=f7e25]: Angemeldet werden deine Sessions automatisch gespeichert. Neuer Name legt ein Konto an.
+          - button "Anmelden & Sessions anzeigen" [ref=f7e26] [cursor=pointer]
+        - generic [ref=f7e29]: ODER SESSION-DATEI
+        - generic [ref=f7e30] [cursor=pointer]:
+          - generic:
+            - strong: Session-Datei (.json) hierher ziehen
+            - generic: oder klicken zum Auswählen
+        - button "Session fortsetzen (Erst Datei einfügen)" [disabled] [ref=f7e31]
+      - generic [ref=f7e32]:
+        - heading "Spieler beitreten" [level=2] [ref=f7e33]
+        - paragraph [ref=f7e34]: Gib deinen Namen und den 4-stelligen Raum-Code ein. Mit Passwort wird dein Charakter automatisch gespeichert und beim nächsten Mal wieder geladen – oder ziehe eine gespeicherte Charakter-Datei hinein.
+        - textbox "Spielername" [ref=f7e35]:
+          - /placeholder: Spielername (z.B. Musashi)
+        - textbox "Passwort" [ref=f7e36]:
+          - /placeholder: Passwort (optional – für Speichern in der Datenbank)
+        - generic [ref=f7e37]: Neuer Name + Passwort legt ein Konto an. Namen & Passwörter gelten für alle Sessions.
+        - textbox "Raum-Code" [ref=f7e38]:
+          - /placeholder: Raum-Code (z.B. 482913)
+        - generic [ref=f7e39] [cursor=pointer]:
+          - generic:
+            - strong: Gespeicherten Charakter (.json) hierher ziehen
+            - generic: "Optional: Füllt alle Werte aus & ergänzt deine Items in der Session-Bibliothek"
+        - button "Session beitreten" [ref=f7e40] [cursor=pointer]
+      - text: ES GIBT KEINEN AUSGANG
+  - generic [aria-hidden]:
+    - generic: ⮕ NOTAUSGANG
+    - generic:
+      - generic: ▶ PLAY
+      - generic: LEVEL 0
+    - generic:
+      - generic: ● REC
+      - generic: 00:00:00
+      - generic: JAN. 01 1996
+    - generic: SP ▮▮▮▯

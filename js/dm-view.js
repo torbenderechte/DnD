@@ -23,11 +23,6 @@ let showNewBlockCreator = false;
 let newBlockDraftColor = '#ef4444';
 let newBlockDraftName = '';
 
-function parseCategories(inputStr) {
-    if (!inputStr) return [];
-    return inputStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
-}
-
 function getAllCustomCategories() {
     ensureSpellsAndDmNotesState();
     const set = new Set();
@@ -44,10 +39,34 @@ function getAllCustomCategories() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
+const LIB_TYPES = {
+    npc: { list: 'npcTemplates', label: 'Monster / NPC' },
+    item: { list: 'customItems', label: 'Gegenstand' },
+    attack: { list: 'customAttacks', label: 'Attacke' },
+    spell: { list: 'customSpells', label: 'Zauber' },
+    affinity: { list: 'customAffinities', label: 'Merkmal' }
+};
+
+function makeNpcUid(suffix) {
+    return 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + (suffix !== undefined ? '_' + suffix : '');
+}
+
+// Liest eine Zahl aus einem Eingabefeld; Fallback nur bei leerem/ungültigem Feld (0 bleibt 0).
+function readNumberInput(id, fallback) {
+    const el = document.getElementById(id);
+    const n = el ? parseInt(el.value) : NaN;
+    return isNaN(n) ? fallback : n;
+}
+
+function numOr(value, fallback) {
+    const n = parseInt(value);
+    return isNaN(n) ? fallback : n;
+}
+
 function ensureEnemyUids() {
     gameState.enemies.forEach((e, idx) => {
         if (!e._uid) {
-            e._uid = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '_' + idx;
+            e._uid = makeNpcUid(idx);
         }
     });
 }
@@ -61,9 +80,10 @@ function switchDmTab(tabName) {
     renderDmView();
 }
 
-function renderDmView() {
+function renderDmView(options) {
     const container = document.getElementById('dm-view-content');
     if (!container) return;
+    const snapshot = options && options.preserveInputs ? snapshotFormState(container) : null;
     ensureEnemyUids();
     ensureBattlemapState();
     ensureSpellsAndDmNotesState();
@@ -77,6 +97,8 @@ function renderDmView() {
     } else if (activeDmTab === 'notes') {
         renderDmNotesTab(container);
     }
+
+    if (snapshot) restoreFormState(container, snapshot);
 }
 
 // ============================================================================
@@ -89,12 +111,12 @@ function renderDmGameplayTab(container) {
         <div class="card dm-quick-notes-banner">
             <div class="creator-header-row">
                 <div>
-                    <h3>📝 DM Schnell-Notizen (Live-Session)</h3>
+                    <h3>${icon('quill')} DM Schnell-Notizen (Live-Session)</h3>
                     <small class="muted">Wird automatisch mit deinem großen Notizbuch (Tab 4) und der Session-Datei gespeichert.</small>
                 </div>
-                <button type="button" class="btn-secondary" onclick="switchDmTab('notes')">📖 Großes DM-Notizbuch öffnen (Tab 4)</button>
+                <button type="button" class="btn-secondary" onclick="switchDmTab('notes')">${icon('tome')} Großes DM-Notizbuch öffnen (Tab 4)</button>
             </div>
-            <textarea id="dm-gameplay-quick-notes" rows="3" placeholder="Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)...">${gameState.dmNotes.quick || ''}</textarea>
+            <textarea id="dm-gameplay-quick-notes" rows="3" placeholder="Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)...">${esc(gameState.dmNotes.quick)}</textarea>
         </div>
 
         <div class="dm-layout">
@@ -109,7 +131,7 @@ function renderDmGameplayTab(container) {
                     <div class="dm-assign-row">
                         <select id="dm-quick-spawn-select">
                             <option value="">-- Vorlage zum Spawnen wählen (${gameState.npcTemplates.length}) --</option>
-                            ${gameState.npcTemplates.map((t, i) => `<option value="${i}">${t.name} (HP ${t.maxHp} | AC ${t.ac})</option>`).join('')}
+                            ${gameState.npcTemplates.map((t, i) => `<option value="${i}">${esc(t.name)} (HP ${esc(t.maxHp)} | AC ${esc(t.ac)})</option>`).join('')}
                         </select>
                         <button class="btn-primary" onclick="dmSpawnFromTemplateSelect()">+ Spawnen</button>
                     </div>
@@ -141,10 +163,26 @@ function dmSpawnNpcByIndex(templateIdx) {
     if (!template) return;
     const spawned = JSON.parse(JSON.stringify(template));
     if (!Array.isArray(spawned.spells)) spawned.spells = [];
-    spawned._uid = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    spawned._uid = makeNpcUid();
     gameState.enemies.push(spawned);
     broadcastState();
     renderDmView();
+}
+
+function buildItemOptionsHtml() {
+    return gameState.customItems.map((it, i) => `<option value="${i}">${esc(it.name)} (Packmaß ${esc(clampPackmass(it.packmass))} | ${esc(it.action || 'Item')})</option>`).join('');
+}
+
+function buildAttackOptionsHtml() {
+    return gameState.customAttacks.map((w, i) => `<option value="${i}">${esc(w.name)} (${esc(w.action)})</option>`).join('');
+}
+
+function buildSpellOptionsHtml() {
+    return gameState.customSpells.map((sp, i) => `<option value="${i}">${esc(sp.name)} (Anf: ${esc(sp.requirement || 'Keine')} | ${esc(sp.action)})</option>`).join('');
+}
+
+function buildAffinityOptionsHtml() {
+    return gameState.customAffinities.map((a, i) => `<option value="${i}">${esc(a.name)} (${esc(a.effect)})</option>`).join('');
 }
 
 function renderDmPlayers() {
@@ -157,13 +195,14 @@ function renderDmPlayers() {
         return;
     }
 
+    const itemOptions = buildItemOptionsHtml();
+    const attackOptions = buildAttackOptionsHtml();
+    const spellOptions = buildSpellOptionsHtml();
+    const affinityOptions = buildAffinityOptionsHtml();
+
     list.innerHTML = ids.map(id => {
-        const c = gameState.characters[id];
-        if (!c.items) c.items = [];
-        if (!c.attacks) c.attacks = [];
-        if (!c.spells) c.spells = [];
-        if (!c.affinities) c.affinities = [];
-        if (!Array.isArray(c.skills)) c.skills = [];
+        const c = normalizeCharacter(gameState.characters[id]);
+        const cid = jsArg(c.id);
 
         const bagUsed = getPlayerBagUsed(c);
         const bagMax = getPlayerBagMax(c);
@@ -176,174 +215,174 @@ function renderDmPlayers() {
             <div class="card dm-player-card">
                 <div class="dm-player-header">
                     <div class="char-identity">
-                        ${c.avatar ? `<img src="${c.avatar}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">?</div>`}
+                        ${c.avatar ? `<img src="${esc(c.avatar)}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">?</div>`}
                         <div>
-                            <h3>${c.name} <small>(Lvl ${c.level} | ${c.alignment})</small></h3>
-                            <span class="sub-info">${c.origin} | AC: ${c.ac} | Init: ${c.initiative} | Prof: +${c.proficiency || 2} | Exh: ${c.exhaustion}</span>
+                            <h3>${esc(c.name)} <small>(Lvl ${esc(c.level)} | ${esc(c.alignment)})</small></h3>
+                            <span class="sub-info">${esc(c.origin)} | AC: ${esc(c.ac)} | Init: ${esc(c.initiative)} | Prof: +${esc(c.proficiency || 2)} | Exh: ${esc(c.exhaustion)}</span>
                         </div>
                     </div>
                     <div class="dm-badges">
-                        <span class="badge-hp">HP: ${c.hp}/${c.maxHp}</span>
-                        ${c.hp <= 0 ? `<button type="button" class="btn-death" onclick="dmKillPlayer('${c.id}')">💀 Tot</button>` : ''}
-                        <span class="badge-moral">${formatMorality(c.morality)}</span>
+                        <span class="badge-hp">HP: ${esc(c.hp)}/${esc(c.maxHp)}</span>
+                        ${c.hp <= 0 ? `<button type="button" class="btn-death" onclick="dmKillPlayer(${cid})">${icon('skull')} Tot</button>` : ''}
+                        <span class="badge-moral">${esc(formatMorality(c.morality))}</span>
                     </div>
                 </div>
 
                 <div class="dm-moral-bar">
                     <label class="dm-checkbox-label">
                         <input type="checkbox" ${c.moralityVisible ? 'checked' : ''}
-                            onchange="dmToggleMoralityVisibility('${c.id}', this.checked)">
+                            onchange="dmToggleMoralityVisibility(${cid}, this.checked)">
                         Moral-Zähler für Spieler sichtbar (${c.moralityVisible ? 'Eingeblendet' : 'Geheim'})
                     </label>
                 </div>
 
                 <!-- TASCHEN-AUSLASTUNG & STEUERUNG -->
                 <div class="dm-bag-control-row">
-                    <div style="flex: 1;">
-                        <strong>🎒 Beutel: ${bagUsed} / ${isInf ? '∞' : bagMax} Packmaß (${isInf ? 'Unendlich' : fillPercent + '%'})</strong>
-                        <div class="bag-progress-track" style="margin: 6px 0;">
-                            <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${fillPercent}%;"></div>
+                    <div class="dm-bag-meter">
+                        <strong>${icon('bag')} Beutel: ${esc(bagUsed)} / ${isInf ? '∞' : esc(bagMax)} Packmaß (${isInf ? 'Unendlich' : esc(fillPercent) + '%'})</strong>
+                        <div class="bag-progress-track bag-progress-track-spaced">
+                            <div class="bag-progress-fill ${isFull ? 'fill-full' : ''}" style="width: ${esc(fillPercent)}%;"></div>
                         </div>
-                        <small class="muted" style="display:block;">
-                            ${isInf ? 'Unendliche Kapazität aktiv' : `Freier Platz: ${Math.max(0, bagMax - bagUsed)} Packmaß`} · Standard (15 + STR): ${defaultBagMax}
+                        <small class="muted">
+                            ${isInf ? 'Unendliche Kapazität aktiv' : `Freier Platz: ${esc(Math.max(0, bagMax - bagUsed))} Packmaß`} · Standard (15 + STR): ${esc(defaultBagMax)}
                         </small>
                     </div>
                     <div class="dm-bag-inputs">
-                        <input type="number" min="0" value="${isInf ? defaultBagMax : bagMax}"
+                        <input type="number" min="0" id="dm-bag-max-${esc(c.id)}" value="${esc(isInf ? defaultBagMax : bagMax)}"
                             ${isInf ? 'disabled' : ''}
-                            onchange="dmSetPlayerBagMax('${c.id}', this.value)"
+                            onchange="dmSetPlayerBagMax(${cid}, this.value)"
                             title="Maximale Beutel-Kapazität festlegen">
-                        <button type="button" onclick="dmResetPlayerBagToDefault('${c.id}')" title="Auf Standard (15 + STR) zurücksetzen">
-                            ↺ 15+STR
+                        <button type="button" onclick="dmResetPlayerBagToDefault(${cid})" title="Auf Standard (15 + STR) zurücksetzen">
+                            ${icon('refresh')} 15+STR
                         </button>
                         <label class="dm-checkbox-label">
                             <input type="checkbox" ${isInf ? 'checked' : ''}
-                                onchange="dmTogglePlayerBagInfinite('${c.id}', this.checked)">
+                                onchange="dmTogglePlayerBagInfinite(${cid}, this.checked)">
                             ∞ Unendlich
                         </label>
                     </div>
                 </div>
 
                 <div class="dm-mini-stats">
-                    STR ${c.stats.str} | DEX ${c.stats.dex} | CON ${c.stats.con} |
-                    INT ${c.stats.int} | WIS ${c.stats.wis} | CHA ${c.stats.cha}<br>
-                    Geld: <span class="coin-pp"><strong>${c.currency.pp}</strong> PP</span> · <span class="coin-gp"><strong>${c.currency.gp}</strong> GP</span> · <span class="coin-sp"><strong>${c.currency.sp}</strong> SP</span> · <span class="coin-cp"><strong>${c.currency.cp}</strong> CP</span>
+                    STR ${esc(c.stats.str)} | DEX ${esc(c.stats.dex)} | CON ${esc(c.stats.con)} |
+                    INT ${esc(c.stats.int)} | WIS ${esc(c.stats.wis)} | CHA ${esc(c.stats.cha)}<br>
+                    Geld: <span class="coin-pp"><strong>${esc(c.currency.pp)}</strong> PP</span> · <span class="coin-gp"><strong>${esc(c.currency.gp)}</strong> GP</span> · <span class="coin-sp"><strong>${esc(c.currency.sp)}</strong> SP</span> · <span class="coin-cp"><strong>${esc(c.currency.cp)}</strong> CP</span>
                 </div>
 
                 <!-- NEU: SKILLS ANZEIGE (NUR FÜR DM SICHTBAR) -->
                 <div class="dm-attacks-editor">
-                    <strong>🎯 Ausgewählte Skills von ${c.name}:</strong>
+                    <strong>${icon('target')} Ausgewählte Skills von ${esc(c.name)}:</strong>
                     ${c.skills.length === 0
             ? '<p class="muted">Keine Skills ausgewählt.</p>'
-            : `<div class="cat-badge-row" style="margin-top: 6px;">
-                            ${c.skills.map(s => `<span class="inline-item-pill">${s}</span>`).join(' ')}
+            : `<div class="cat-badge-row cat-badge-row-spaced">
+                            ${c.skills.map(s => `<span class="inline-item-pill">${esc(s)}</span>`).join(' ')}
                            </div>`
         }
                 </div>
 
                 <div class="dm-quick-actions">
-                    <button onclick="dmModifyStat('${c.id}', 'hp', -5)">-5 HP</button>
-                    <button onclick="dmModifyStat('${c.id}', 'hp', -1)">-1 HP</button>
-                    <button onclick="dmModifyStat('${c.id}', 'hp', 1)">+1 HP</button>
-                    <button onclick="dmModifyStat('${c.id}', 'hp', 5)">+5 HP</button>
-                    <button class="btn-demonic" onclick="dmModifyStat('${c.id}', 'morality', -1)">-1 Dämonisch</button>
-                    <button class="btn-holy" onclick="dmModifyStat('${c.id}', 'morality', 1)">+1 Heilig</button>
+                    <button onclick="dmModifyStat(${cid}, 'hp', -5)">-5 HP</button>
+                    <button onclick="dmModifyStat(${cid}, 'hp', -1)">-1 HP</button>
+                    <button onclick="dmModifyStat(${cid}, 'hp', 1)">+1 HP</button>
+                    <button onclick="dmModifyStat(${cid}, 'hp', 5)">+5 HP</button>
+                    <button class="btn-demonic" onclick="dmModifyStat(${cid}, 'morality', -1)">-1 Dämonisch</button>
+                    <button class="btn-holy" onclick="dmModifyStat(${cid}, 'morality', 1)">+1 Heilig</button>
                 </div>
 
                 <div class="dm-assign-row">
-                    <select id="assign-item-${c.id}">
+                    <select id="assign-item-${esc(c.id)}">
                         <option value="">-- Gegenstand geben (${gameState.customItems.length}) --</option>
-                        ${gameState.customItems.map((it, i) => `<option value="${i}">${it.name} (Packmaß ${clampPackmass(it.packmass)} | ${it.action || 'Item'})</option>`).join('')}
+                        ${itemOptions}
                     </select>
-                    <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customItems', 'items', 'assign-item-${c.id}')">+ Gegenstand</button>
+                    <button class="btn-primary" onclick="dmAssignItem(${cid}, 'customItems', 'items', ${jsArg('assign-item-' + c.id)})">+ Gegenstand</button>
                 </div>
 
                 <div class="dm-assign-row">
-                    <select id="assign-atk-${c.id}">
+                    <select id="assign-atk-${esc(c.id)}">
                         <option value="">-- Attacke geben (${gameState.customAttacks.length}) --</option>
-                        ${gameState.customAttacks.map((w, i) => `<option value="${i}">${w.name} (${w.action})</option>`).join('')}
+                        ${attackOptions}
                     </select>
-                    <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customAttacks', 'attacks', 'assign-atk-${c.id}')">+ Attacke</button>
+                    <button class="btn-primary" onclick="dmAssignItem(${cid}, 'customAttacks', 'attacks', ${jsArg('assign-atk-' + c.id)})">+ Attacke</button>
                 </div>
 
                 <div class="dm-assign-row">
-                    <select id="assign-spell-${c.id}">
+                    <select id="assign-spell-${esc(c.id)}">
                         <option value="">-- Zauber geben (${gameState.customSpells.length}) --</option>
-                        ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name} (Anf: ${sp.requirement || 'Keine'} | ${sp.action})</option>`).join('')}
+                        ${spellOptions}
                     </select>
-                    <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customSpells', 'spells', 'assign-spell-${c.id}')">+ Zauber</button>
+                    <button class="btn-primary" onclick="dmAssignItem(${cid}, 'customSpells', 'spells', ${jsArg('assign-spell-' + c.id)})">+ Zauber</button>
                 </div>
 
                 <div class="dm-assign-row">
-                    <select id="assign-aff-${c.id}">
+                    <select id="assign-aff-${esc(c.id)}">
                         <option value="">-- Merkmal geben (${gameState.customAffinities.length}) --</option>
-                        ${gameState.customAffinities.map((a, i) => `<option value="${i}">${a.name} (${a.effect})</option>`).join('')}
+                        ${affinityOptions}
                     </select>
-                    <button class="btn-primary" onclick="dmAssignItem('${c.id}', 'customAffinities', 'affinities', 'assign-aff-${c.id}')">+ Merkmal</button>
+                    <button class="btn-primary" onclick="dmAssignItem(${cid}, 'customAffinities', 'affinities', ${jsArg('assign-aff-' + c.id)})">+ Merkmal</button>
                 </div>
 
                 <!-- NEU: GEGENSTÄNDE DES SPIELERS ANZEIGEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
-                    <strong>🎒 Gegenstände im Beutel von ${c.name} (${bagUsed}/${isInf ? '∞' : bagMax} Packmaß):</strong>
+                    <strong>${icon('bag')} Gegenstände im Beutel von ${esc(c.name)} (${esc(bagUsed)}/${isInf ? '∞' : esc(bagMax)} Packmaß):</strong>
                     ${c.items.length === 0 ? '<p class="muted">Keine Gegenstände im Beutel.</p>' : ''}
                     ${c.items.map((it, idx) => `
                         <div class="dm-attack-row">
-                            <span class="atk-title">${it.name} <span class="packmass-pill">📦 ${clampPackmass(it.packmass)}</span></span>
-                            <small class="muted" style="flex: 1;">Anf: ${it.requirement || 'Keine'} | Aktion: ${it.action || '-'}</small>
-                            <button type="button" class="btn-del" title="Gegenstand entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'items', ${idx})">X</button>
+                            <span class="atk-title">${esc(it.name)} <span class="packmass-pill">${icon('box')} ${esc(clampPackmass(it.packmass))}</span></span>
+                            <small class="muted">Anf: ${esc(it.requirement || 'Keine')} | Aktion: ${esc(it.action || '-')}</small>
+                            <button type="button" class="btn-del" title="Gegenstand entfernen" onclick="dmRemovePlayerEntry(${cid}, 'items', ${idx})" aria-label="Entfernen">${icon('x')}</button>
                         </div>
                     `).join('')}
                 </div>
 
                 <!-- NEU: MERKMALE DES SPIELERS ANZEIGEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
-                    <strong>🧬 Merkmale von ${c.name}:</strong>
+                    <strong>${icon('flask')} Merkmale von ${esc(c.name)}:</strong>
                     ${c.affinities.length === 0 ? '<p class="muted">Keine Merkmale aktiv.</p>' : ''}
                     ${c.affinities.map((af, idx) => `
                         <div class="dm-attack-row">
-                            <span class="atk-title">${af.name}</span>
-                            <small class="muted" style="flex: 1;">Effekt: ${af.effect || af.desc || '-'}</small>
-                            <button type="button" class="btn-del" title="Merkmal entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'affinities', ${idx})">X</button>
+                            <span class="atk-title">${esc(af.name)}</span>
+                            <small class="muted">Effekt: ${esc(af.effect || af.desc || '-')}</small>
+                            <button type="button" class="btn-del" title="Merkmal entfernen" onclick="dmRemovePlayerEntry(${cid}, 'affinities', ${idx})" aria-label="Entfernen">${icon('x')}</button>
                         </div>
                     `).join('')}
                 </div>
 
                 <!-- ATTACKEN DES SPIELERS BEARBEITEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
-                    <strong>⚔️ Attacken von ${c.name} (Aktion & Exhaustion live anpassen):</strong>
+                    <strong>${icon('blade')} Attacken von ${esc(c.name)} (Aktion & Exhaustion live anpassen):</strong>
                     ${c.attacks.length === 0 ? '<p class="muted">Keine Attacken.</p>' : ''}
                     ${c.attacks.map((atk, idx) => `
                         <div class="dm-attack-row">
-                            <span class="atk-title">${atk.name}</span>
-                            <input type="text" value="${atk.action || ''}" placeholder="Aktion (Schaden / Effekt)"
-                                onchange="dmUpdatePlayerAttack('${c.id}', ${idx}, 'action', this.value)">
+                            <span class="atk-title">${esc(atk.name)}</span>
+                            <input type="text" id="dm-patk-action-${esc(c.id)}-${idx}" value="${esc(atk.action || '')}" placeholder="Aktion (Schaden / Effekt)"
+                                onchange="dmUpdatePlayerAttack(${cid}, ${idx}, 'action', this.value)">
                             <label class="dm-checkbox-label" title="Verbraucht Exhaustion Point">
                                 <input type="checkbox" ${atk.usesExhaustion ? 'checked' : ''}
-                                    onchange="dmUpdatePlayerAttack('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
-                                ⚡ Exh.
+                                    onchange="dmUpdatePlayerAttack(${cid}, ${idx}, 'usesExhaustion', this.checked)">
+                                ${icon('bolt')} Exh.
                             </label>
-                            <button type="button" class="btn-del" title="Attacke entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'attacks', ${idx})">X</button>
+                            <button type="button" class="btn-del" title="Attacke entfernen" onclick="dmRemovePlayerEntry(${cid}, 'attacks', ${idx})" aria-label="Entfernen">${icon('x')}</button>
                         </div>
                     `).join('')}
                 </div>
 
                 <!-- ZAUBER DES SPIELERS BEARBEITEN & ENTFERNEN -->
                 <div class="dm-attacks-editor">
-                    <strong>✨ Zauber von ${c.name} (Anforderung, Aktion & Exhaustion live anpassen):</strong>
+                    <strong>${icon('spark')} Zauber von ${esc(c.name)} (Anforderung, Aktion & Exhaustion live anpassen):</strong>
                     ${c.spells.length === 0 ? '<p class="muted">Keine Zauber.</p>' : ''}
                     ${c.spells.map((sp, idx) => `
                         <div class="dm-spell-row">
-                            <span class="atk-title">✨ ${sp.name}</span>
-                            <input type="text" value="${sp.requirement || ''}" placeholder="Anforderung"
-                                onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'requirement', this.value)">
-                            <input type="text" value="${sp.action || ''}" placeholder="Aktion (Schaden / Effekt)"
-                                onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'action', this.value)">
+                            <span class="atk-title">${icon('spark')} ${esc(sp.name)}</span>
+                            <input type="text" id="dm-pspell-req-${esc(c.id)}-${idx}" value="${esc(sp.requirement || '')}" placeholder="Anforderung"
+                                onchange="dmUpdatePlayerSpell(${cid}, ${idx}, 'requirement', this.value)">
+                            <input type="text" id="dm-pspell-action-${esc(c.id)}-${idx}" value="${esc(sp.action || '')}" placeholder="Aktion (Schaden / Effekt)"
+                                onchange="dmUpdatePlayerSpell(${cid}, ${idx}, 'action', this.value)">
                             <label class="dm-checkbox-label" title="Verbraucht Exhaustion Point">
                                 <input type="checkbox" ${sp.usesExhaustion ? 'checked' : ''}
-                                    onchange="dmUpdatePlayerSpell('${c.id}', ${idx}, 'usesExhaustion', this.checked)">
-                                ⚡ Exh.
+                                    onchange="dmUpdatePlayerSpell(${cid}, ${idx}, 'usesExhaustion', this.checked)">
+                                ${icon('bolt')} Exh.
                             </label>
-                            <button type="button" class="btn-del" title="Zauber entfernen" onclick="dmRemovePlayerEntry('${c.id}', 'spells', ${idx})">X</button>
+                            <button type="button" class="btn-del" title="Zauber entfernen" onclick="dmRemovePlayerEntry(${cid}, 'spells', ${idx})" aria-label="Entfernen">${icon('x')}</button>
                         </div>
                     `).join('')}
                 </div>
@@ -356,10 +395,16 @@ function dmRemovePlayerEntry(playerId, listKey, idx) {
     const char = gameState.characters[playerId];
     if (!char || !Array.isArray(char[listKey])) return;
     const entry = char[listKey][idx];
+    const entryName = entry ? entry.name : undefined;
     const label = entry && entry.name ? `"${entry.name}"` : 'diesen Eintrag';
 
     openConfirmModal(`Möchtest du ${label} wirklich vom Charakterbogen von "${char.name}" entfernen?`, () => {
-        char[listKey].splice(idx, 1);
+        // Charakter neu lesen: ein Spieler-Update kann das Objekt inzwischen ersetzt haben
+        const current = gameState.characters[playerId];
+        if (!current || !Array.isArray(current[listKey])) return;
+        const target = current[listKey][idx];
+        if (!target || target.name !== entryName) return;
+        current[listKey].splice(idx, 1);
         broadcastState();
         renderDmView();
     });
@@ -397,10 +442,10 @@ function dmKillPlayer(playerId) {
     openConfirmModal(`"${char.name}" hat 0 HP. Möchtest du diesen Charakter wirklich für TOT erklären und den Spieler zurück ins Hauptmenü schicken?`, () => {
         broadcastPlayerDeath(playerId);
         delete gameState.characters[playerId];
-        gameState.combat.order = (gameState.combat.order || []).filter(entry => !(entry.kind === 'player' && entry.id === playerId));
-        if (gameState.combat.turnIndex >= gameState.combat.order.length) {
-            gameState.combat.turnIndex = 0;
-        }
+        const oldOrder = gameState.combat.order || [];
+        const activeKey = oldOrder[gameState.combat.turnIndex]?.key;
+        gameState.combat.order = oldOrder.filter(entry => !(entry.kind === 'player' && entry.id === playerId));
+        restoreTurnPointer(activeKey, oldOrder, gameState.combat.turnIndex);
         broadcastState();
         renderChatWidget();
         renderDmView();
@@ -416,31 +461,39 @@ function renderDmEnemies() {
         return;
     }
 
-    list.innerHTML = gameState.enemies.map((e, idx) => `
+    const itemOptions = gameState.customItems.map((it, i) => `<option value="${i}">${esc(it.name)} (${esc(clampPackmass(it.packmass))})</option>`).join('');
+    const attackOptions = gameState.customAttacks.map((w, i) => `<option value="${i}">${esc(w.name)}</option>`).join('');
+    const spellOptions = gameState.customSpells.map((sp, i) => `<option value="${i}">${esc(sp.name)}</option>`).join('');
+    const affinityOptions = gameState.customAffinities.map((af, i) => `<option value="${i}">${esc(af.name)}</option>`).join('');
+
+    list.innerHTML = gameState.enemies.map((e, idx) => {
+        const st = e.stats || {};
+        const stat = (k) => esc(st[k] === undefined || st[k] === null ? 10 : st[k]);
+        return `
         <div class="npc-card">
             <div class="dm-player-header">
                 <div class="char-identity">
-                    ${e.avatar ? `<img src="${e.avatar}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">M</div>`}
+                    ${e.avatar ? `<img src="${esc(e.avatar)}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">M</div>`}
                     <div>
-                        <strong>${e.name}</strong>
-                        <span class="sub-info"> | AC: ${e.ac} | Init: ${e.initiative}</span>
+                        <strong>${esc(e.name)}</strong>
+                        <span class="sub-info"> | AC: ${esc(e.ac)} | Init: ${esc(e.initiative)}</span>
                         <div class="cat-badge-row">
-                            ${(e.categories || []).map(cat => `<span class="cat-tag">${cat}</span>`).join('')}
+                            ${(e.categories || []).map(cat => `<span class="cat-tag">${esc(cat)}</span>`).join('')}
                         </div>
                     </div>
                 </div>
                 <div class="dm-badges">
-                    <span class="badge-hp">HP: ${e.hp}/${e.maxHp}</span>
-                    <span class="badge-moral">${formatMorality(e.morality)}</span>
-                    <button class="btn-del" onclick="dmRemoveEnemy(${idx})">X</button>
+                    <span class="badge-hp">HP: ${esc(e.hp)}/${esc(e.maxHp)}</span>
+                    <span class="badge-moral">${esc(formatMorality(e.morality))}</span>
+                    <button class="btn-del" onclick="dmRemoveEnemy(${idx})" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>
                 </div>
             </div>
 
-            ${e.description ? `<p class="npc-desc-box">${e.description}</p>` : ''}
+            ${e.description ? `<p class="npc-desc-box">${esc(e.description)}</p>` : ''}
 
             <div class="dm-mini-stats">
-                STR ${e.stats.str} | DEX ${e.stats.dex} | CON ${e.stats.con} |
-                INT ${e.stats.int} | WIS ${e.stats.wis} | CHA ${e.stats.cha}<br>
+                STR ${stat('str')} | DEX ${stat('dex')} | CON ${stat('con')} |
+                INT ${stat('int')} | WIS ${stat('wis')} | CHA ${stat('cha')}<br>
                 Geld: ${formatCopperCoins(e.copper || 0)}
             </div>
 
@@ -448,25 +501,25 @@ function renderDmEnemies() {
                 <div>
                     <strong>Gegenstände:</strong>
                     ${(e.items || []).length === 0 ? '<span class="muted">Keine</span>' : e.items.map((it, iIdx) =>
-        `<span class="inline-item-pill">${it.name} [📦 ${clampPackmass(it.packmass)}] (${it.action || '-'}) <b onclick="dmRemoveNpcItem(${idx}, 'items', ${iIdx})">×</b></span>`
+        `<span class="inline-item-pill">${esc(it.name)} [${icon('box')} ${esc(clampPackmass(it.packmass))}] (${esc(it.action || '-')}) <b onclick="dmRemoveNpcItem(${idx}, 'items', ${iIdx})">×</b></span>`
     ).join(' ')}
                 </div>
                 <div>
                     <strong>Attacken:</strong>
                     ${(e.attacks || []).length === 0 ? '<span class="muted">Keine</span>' : e.attacks.map((a, aIdx) =>
-        `<span class="inline-item-pill">${a.name} (${a.action || '-'}) ${a.usesExhaustion ? '⚡' : ''} <b onclick="dmRemoveNpcItem(${idx}, 'attacks', ${aIdx})">×</b></span>`
+        `<span class="inline-item-pill">${esc(a.name)} (${esc(a.action || '-')}) ${a.usesExhaustion ? icon('bolt') : ''} <b onclick="dmRemoveNpcItem(${idx}, 'attacks', ${aIdx})">×</b></span>`
     ).join(' ')}
                 </div>
                 <div>
                     <strong>Zauber:</strong>
                     ${(e.spells || []).length === 0 ? '<span class="muted">Keine</span>' : e.spells.map((sp, sIdx) =>
-        `<span class="inline-item-pill">✨ ${sp.name} [Anf: ${sp.requirement || 'Keine'}] (${sp.action || '-'}) ${sp.usesExhaustion ? '⚡' : ''} <b onclick="dmRemoveNpcItem(${idx}, 'spells', ${sIdx})">×</b></span>`
+        `<span class="inline-item-pill">${icon('spark')} ${esc(sp.name)} [Anf: ${esc(sp.requirement || 'Keine')}] (${esc(sp.action || '-')}) ${sp.usesExhaustion ? icon('bolt') : ''} <b onclick="dmRemoveNpcItem(${idx}, 'spells', ${sIdx})">×</b></span>`
     ).join(' ')}
                 </div>
                 <div>
                     <strong>Merkmale:</strong>
                     ${(e.affinities || []).length === 0 ? '<span class="muted">Keine</span>' : e.affinities.map((af, afIdx) =>
-        `<span class="inline-item-pill">${af.name} (${af.effect || '-'}) <b onclick="dmRemoveNpcItem(${idx}, 'affinities', ${afIdx})">×</b></span>`
+        `<span class="inline-item-pill">${esc(af.name)} (${esc(af.effect || '-')}) <b onclick="dmRemoveNpcItem(${idx}, 'affinities', ${afIdx})">×</b></span>`
     ).join(' ')}
                 </div>
             </div>
@@ -475,28 +528,28 @@ function renderDmEnemies() {
                 <div class="dm-assign-row">
                     <select id="npc-add-item-${idx}">
                         <option value="">+ Gegenstand (${gameState.customItems.length})</option>
-                        ${gameState.customItems.map((it, i) => `<option value="${i}">${it.name} (📦 ${clampPackmass(it.packmass)})</option>`).join('')}
+                        ${itemOptions}
                     </select>
                     <button onclick="dmGiveEnemyItem(${idx}, 'customItems', 'items', 'npc-add-item-${idx}')">+ Item</button>
                 </div>
                 <div class="dm-assign-row">
                     <select id="npc-add-atk-${idx}">
                         <option value="">+ Attacke (${gameState.customAttacks.length})</option>
-                        ${gameState.customAttacks.map((w, i) => `<option value="${i}">${w.name}</option>`).join('')}
+                        ${attackOptions}
                     </select>
                     <button onclick="dmGiveEnemyItem(${idx}, 'customAttacks', 'attacks', 'npc-add-atk-${idx}')">+ Attacke</button>
                 </div>
                 <div class="dm-assign-row">
                     <select id="npc-add-spell-${idx}">
                         <option value="">+ Zauber (${gameState.customSpells.length})</option>
-                        ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name}</option>`).join('')}
+                        ${spellOptions}
                     </select>
                     <button onclick="dmGiveEnemyItem(${idx}, 'customSpells', 'spells', 'npc-add-spell-${idx}')">+ Zauber</button>
                 </div>
                 <div class="dm-assign-row">
                     <select id="npc-add-aff-${idx}">
                         <option value="">+ Merkmal (${gameState.customAffinities.length})</option>
-                        ${gameState.customAffinities.map((af, i) => `<option value="${i}">${af.name}</option>`).join('')}
+                        ${affinityOptions}
                     </select>
                     <button onclick="dmGiveEnemyItem(${idx}, 'customAffinities', 'affinities', 'npc-add-aff-${idx}')">+ Merkmal</button>
                 </div>
@@ -511,24 +564,34 @@ function renderDmEnemies() {
                 <button class="btn-holy" onclick="dmModifyEnemy(${idx}, 'morality', 1)">+1 Heilig</button>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function dmGiveEnemyItem(enemyIdx, sourceKey, targetKey, selectId) {
     const select = document.getElementById(selectId);
     if (!select || select.value === "") return;
+    const enemy = gameState.enemies[enemyIdx];
     const item = gameState[sourceKey][parseInt(select.value)];
-    if (!gameState.enemies[enemyIdx][targetKey]) gameState.enemies[enemyIdx][targetKey] = [];
-    gameState.enemies[enemyIdx][targetKey].push({ ...item });
+    if (!enemy || !item) return;
+    if (!enemy[targetKey]) enemy[targetKey] = [];
+    enemy[targetKey].push({ ...item });
     broadcastState();
     renderDmEnemies();
 }
 
 function dmRemoveNpcItem(enemyIdx, targetKey, itemIdx) {
     const enemy = gameState.enemies[enemyIdx];
+    const enemyUid = enemy ? enemy._uid : null;
     const item = enemy?.[targetKey]?.[itemIdx];
+    const itemName = item ? item.name : undefined;
     openConfirmModal(`Möchtest du "${item?.name || 'diesen Eintrag'}" wirklich von "${enemy?.name}" entfernen?`, () => {
-        gameState.enemies[enemyIdx][targetKey].splice(itemIdx, 1);
+        // Über _uid neu suchen: die Liste kann sich seit dem Klick geändert haben
+        const current = gameState.enemies.find(e => e._uid === enemyUid);
+        const list = current ? current[targetKey] : null;
+        const target = Array.isArray(list) ? list[itemIdx] : null;
+        if (!target || target.name !== itemName) return;
+        list.splice(itemIdx, 1);
         broadcastState();
         renderDmEnemies();
     });
@@ -545,6 +608,13 @@ function renderDmTemplatesTab(container) {
     const eSpell = editingState.spell !== null ? gameState.customSpells[editingState.spell] : null;
     const eAff = editingState.affinity !== null ? gameState.customAffinities[editingState.affinity] : null;
 
+    const draftItemOptions = gameState.customItems.map((it, i) => `<option value="${i}">${esc(it.name)} (${esc(clampPackmass(it.packmass))})</option>`).join('');
+    const draftAttackOptions = gameState.customAttacks.map((a, i) => `<option value="${i}">${esc(a.name)}</option>`).join('');
+    const draftSpellOptions = gameState.customSpells.map((sp, i) => `<option value="${i}">${esc(sp.name)}</option>`).join('');
+    const draftAffinityOptions = gameState.customAffinities.map((af, i) => `<option value="${i}">${esc(af.name)}</option>`).join('');
+    const eStats = (eNpc && eNpc.stats) || {};
+    const eStat = (k) => esc(eStats[k] === undefined || eStats[k] === null ? 10 : eStats[k]);
+
     container.innerHTML = `
         <div class="templates-vertical-stack">
             
@@ -555,15 +625,15 @@ function renderDmTemplatesTab(container) {
                     <h3>1. Monster / NPC Vorlage</h3>
                     <select onchange="selectTemplateToEdit('npc', this.value)">
                         <option value="">-- Neu erstellen (oder Vorlage zum Bearbeiten wählen) --</option>
-                        ${gameState.npcTemplates.map((t, i) => `<option value="${i}" ${editingState.npc === i ? 'selected' : ''}>Bearbeiten: ${t.name}</option>`).join('')}
+                        ${gameState.npcTemplates.map((t, i) => `<option value="${i}" ${editingState.npc === i ? 'selected' : ''}>Bearbeiten: ${esc(t.name)}</option>`).join('')}
                     </select>
                 </div>
 
                 <div class="npc-creator-grid">
                     <div id="dm-npc-dropzone" class="drop-zone">
                         ${npcDraft.avatar
-        ? `<img src="${npcDraft.avatar}" class="drop-preview-img">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('npc', event)">X</button>`
+        ? `<img src="${esc(npcDraft.avatar)}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('npc', event)" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>`
         : `<div class="drop-zone-prompt"><strong>Monster/NPC Bild</strong><span>Hierher ziehen oder klicken</span></div>`
     }
                         <input type="file" id="dm-npc-file" accept="image/*" class="hidden">
@@ -572,53 +642,53 @@ function renderDmTemplatesTab(container) {
                     <div class="dm-stack">
                         <div class="form-row">
                             <label class="field-label">NAME
-                                <input type="text" id="dm-npc-name" placeholder="z.B. Gefallener Paladin" value="${eNpc ? eNpc.name : ''}">
+                                <input type="text" id="dm-npc-name" placeholder="z.B. Gefallener Paladin" value="${esc(eNpc ? eNpc.name : '')}">
                             </label>
                             <label class="field-label">KATEGORIEN (MIT KOMMA TRENNEN)
-                                <input type="text" id="dm-npc-cats" placeholder="z.B. Monster, Ritter, Boss" value="${eNpc ? (eNpc.categories || []).join(', ') : ''}">
+                                <input type="text" id="dm-npc-cats" placeholder="z.B. Monster, Ritter, Boss" value="${esc(eNpc ? (eNpc.categories || []).join(', ') : '')}">
                             </label>
                         </div>
 
                         <label class="field-label">BESCHREIBUNG & VERHALTEN
-                            <textarea id="dm-npc-desc" rows="2" placeholder="Beschreibung, Verhalten, Hintergrund...">${eNpc ? (eNpc.description || '') : ''}</textarea>
+                            <textarea id="dm-npc-desc" rows="2" placeholder="Beschreibung, Verhalten, Hintergrund...">${esc(eNpc ? eNpc.description : '')}</textarea>
                         </label>
 
                         <div class="npc-combat-inputs">
                             <label class="field-label">MAX HP
-                                <input type="number" id="dm-npc-hp" value="${eNpc ? eNpc.maxHp : 30}">
+                                <input type="number" id="dm-npc-hp" value="${esc(eNpc ? eNpc.maxHp : 30)}">
                             </label>
                             <label class="field-label">ARMOR CLASS
-                                <input type="number" id="dm-npc-ac" value="${eNpc ? eNpc.ac : 14}">
+                                <input type="number" id="dm-npc-ac" value="${esc(eNpc ? eNpc.ac : 14)}">
                             </label>
                             <label class="field-label">INITIATIVE
-                                <input type="number" id="dm-npc-init" value="${eNpc ? eNpc.initiative : 0}">
+                                <input type="number" id="dm-npc-init" value="${esc(eNpc ? eNpc.initiative : 0)}">
                             </label>
                             <label class="field-label">MORAL
-                                <input type="number" id="dm-npc-moral" value="${eNpc ? eNpc.morality : 0}">
+                                <input type="number" id="dm-npc-moral" value="${esc(eNpc ? eNpc.morality : 0)}">
                             </label>
                             <label class="field-label">GELD IN KUPFER (CP)
-                                <input type="number" id="dm-npc-copper" min="0" value="${eNpc ? (eNpc.copper || 0) : 0}">
+                                <input type="number" id="dm-npc-copper" min="0" value="${esc(eNpc ? (eNpc.copper || 0) : 0)}">
                             </label>
                         </div>
 
                         <div class="npc-stats-inputs">
                             <label class="field-label">STR
-                                <input type="number" id="dm-npc-str" value="${eNpc ? eNpc.stats.str : 10}">
+                                <input type="number" id="dm-npc-str" value="${eStat('str')}">
                             </label>
                             <label class="field-label">DEX
-                                <input type="number" id="dm-npc-dex" value="${eNpc ? eNpc.stats.dex : 10}">
+                                <input type="number" id="dm-npc-dex" value="${eStat('dex')}">
                             </label>
                             <label class="field-label">CON
-                                <input type="number" id="dm-npc-con" value="${eNpc ? eNpc.stats.con : 10}">
+                                <input type="number" id="dm-npc-con" value="${eStat('con')}">
                             </label>
                             <label class="field-label">INT
-                                <input type="number" id="dm-npc-int" value="${eNpc ? eNpc.stats.int : 10}">
+                                <input type="number" id="dm-npc-int" value="${eStat('int')}">
                             </label>
                             <label class="field-label">WIS
-                                <input type="number" id="dm-npc-wis" value="${eNpc ? eNpc.stats.wis : 10}">
+                                <input type="number" id="dm-npc-wis" value="${eStat('wis')}">
                             </label>
                             <label class="field-label">CHA
-                                <input type="number" id="dm-npc-cha" value="${eNpc ? eNpc.stats.cha : 10}">
+                                <input type="number" id="dm-npc-cha" value="${eStat('cha')}">
                             </label>
                         </div>
                     </div>
@@ -629,7 +699,7 @@ function renderDmTemplatesTab(container) {
                         <div class="dm-assign-row">
                             <select id="draft-select-item">
                                 <option value="">-- Gegenstand (${gameState.customItems.length}) --</option>
-                                ${gameState.customItems.map((it, i) => `<option value="${i}">${it.name} (📦 ${clampPackmass(it.packmass)})</option>`).join('')}
+                                ${draftItemOptions}
                             </select>
                             <button type="button" onclick="addToNpcDraft('customItems', 'items', 'draft-select-item')">+ Item</button>
                         </div>
@@ -637,7 +707,7 @@ function renderDmTemplatesTab(container) {
                         <div class="dm-assign-row">
                             <select id="draft-select-atk">
                                 <option value="">-- Attacke (${gameState.customAttacks.length}) --</option>
-                                ${gameState.customAttacks.map((a, i) => `<option value="${i}">${a.name}</option>`).join('')}
+                                ${draftAttackOptions}
                             </select>
                             <button type="button" onclick="addToNpcDraft('customAttacks', 'attacks', 'draft-select-atk')">+ Attacke</button>
                         </div>
@@ -645,7 +715,7 @@ function renderDmTemplatesTab(container) {
                         <div class="dm-assign-row">
                             <select id="draft-select-spell">
                                 <option value="">-- Zauber (${gameState.customSpells.length}) --</option>
-                                ${gameState.customSpells.map((sp, i) => `<option value="${i}">✨ ${sp.name}</option>`).join('')}
+                                ${draftSpellOptions}
                             </select>
                             <button type="button" onclick="addToNpcDraft('customSpells', 'spells', 'draft-select-spell')">+ Zauber</button>
                         </div>
@@ -653,7 +723,7 @@ function renderDmTemplatesTab(container) {
                         <div class="dm-assign-row">
                             <select id="draft-select-aff">
                                 <option value="">-- Merkmal (${gameState.customAffinities.length}) --</option>
-                                ${gameState.customAffinities.map((af, i) => `<option value="${i}">${af.name}</option>`).join('')}
+                                ${draftAffinityOptions}
                             </select>
                             <button type="button" onclick="addToNpcDraft('customAffinities', 'affinities', 'draft-select-aff')">+ Merkmal</button>
                         </div>
@@ -679,14 +749,14 @@ function renderDmTemplatesTab(container) {
                         <h3>2. Gegenstände</h3>
                         <select onchange="selectTemplateToEdit('item', this.value)">
                             <option value="">-- Neu / Bearbeiten --</option>
-                            ${gameState.customItems.map((it, i) => `<option value="${i}" ${editingState.item === i ? 'selected' : ''}>Bearbeiten: ${it.name}</option>`).join('')}
+                            ${gameState.customItems.map((it, i) => `<option value="${i}" ${editingState.item === i ? 'selected' : ''}>Bearbeiten: ${esc(it.name)}</option>`).join('')}
                         </select>
                     </div>
 
                     <div id="dm-item-dropzone" class="drop-zone drop-zone-small">
                         ${itemDraftAvatar
-        ? `<img src="${itemDraftAvatar}" class="drop-preview-img">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('item', event)">X</button>`
+        ? `<img src="${esc(itemDraftAvatar)}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('item', event)" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>`
         : `<div class="drop-zone-prompt"><strong>Bild (Gegenstand)</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="dm-item-file" accept="image/*" class="hidden">
@@ -694,20 +764,20 @@ function renderDmTemplatesTab(container) {
 
                     <div class="form-row">
                         <label class="field-label">NAME
-                            <input type="text" id="dm-item-name" placeholder="z.B. Schwarze Klinge" value="${eItem ? eItem.name : ''}">
+                            <input type="text" id="dm-item-name" placeholder="z.B. Schwarze Klinge" value="${esc(eItem ? eItem.name : '')}">
                         </label>
                         <label class="field-label">PACKMASS (1–10)
-                            <input type="number" id="dm-item-packmass" min="1" max="10" value="${eItem ? clampPackmass(eItem.packmass) : 1}">
+                            <input type="number" id="dm-item-packmass" min="1" max="10" value="${esc(eItem ? clampPackmass(eItem.packmass) : 1)}">
                         </label>
                     </div>
                     <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
-                        <input type="text" id="dm-item-cats" placeholder="z.B. Waffe, Schwert, Rüstung" value="${eItem ? (eItem.categories || []).join(', ') : ''}">
+                        <input type="text" id="dm-item-cats" placeholder="z.B. Waffe, Schwert, Rüstung" value="${esc(eItem ? (eItem.categories || []).join(', ') : '')}">
                     </label>
                     <label class="field-label">ANFORDERUNG
-                        <input type="text" id="dm-item-req" placeholder="z.B. STR 14, Moral -2" value="${eItem ? (eItem.requirement || '') : ''}">
+                        <input type="text" id="dm-item-req" placeholder="z.B. STR 14, Moral -2" value="${esc(eItem ? eItem.requirement : '')}">
                     </label>
                     <label class="field-label">AKTION
-                        <input type="text" id="dm-item-action" placeholder="z.B. 1d8 Schnitt / +2 AC" value="${eItem ? (eItem.action || '') : ''}">
+                        <input type="text" id="dm-item-action" placeholder="z.B. 1d8 Schnitt / +2 AC" value="${esc(eItem ? eItem.action : '')}">
                     </label>
                     
                     <div class="form-row">
@@ -724,27 +794,27 @@ function renderDmTemplatesTab(container) {
                         <h3>3. Attacken</h3>
                         <select onchange="selectTemplateToEdit('attack', this.value)">
                             <option value="">-- Neu / Bearbeiten --</option>
-                            ${gameState.customAttacks.map((a, i) => `<option value="${i}" ${editingState.attack === i ? 'selected' : ''}>Bearbeiten: ${a.name}</option>`).join('')}
+                            ${gameState.customAttacks.map((a, i) => `<option value="${i}" ${editingState.attack === i ? 'selected' : ''}>Bearbeiten: ${esc(a.name)}</option>`).join('')}
                         </select>
                     </div>
 
                     <div id="dm-atk-dropzone" class="drop-zone drop-zone-small">
                         ${attackDraftAvatar
-        ? `<img src="${attackDraftAvatar}" class="drop-preview-img">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('attack', event)">X</button>`
+        ? `<img src="${esc(attackDraftAvatar)}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('attack', event)" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>`
         : `<div class="drop-zone-prompt"><strong>Bild (Attacke)</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="dm-atk-file" accept="image/*" class="hidden">
                     </div>
 
                     <label class="field-label">NAME
-                        <input type="text" id="dm-atk-name" placeholder="z.B. Schwerthieb / Sturmangriff" value="${eAtk ? eAtk.name : ''}">
+                        <input type="text" id="dm-atk-name" placeholder="z.B. Schwerthieb / Sturmangriff" value="${esc(eAtk ? eAtk.name : '')}">
                     </label>
                     <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
-                        <input type="text" id="dm-atk-cats" placeholder="z.B. Nahkampf, Physisch" value="${eAtk ? (eAtk.categories || []).join(', ') : ''}">
+                        <input type="text" id="dm-atk-cats" placeholder="z.B. Nahkampf, Physisch" value="${esc(eAtk ? (eAtk.categories || []).join(', ') : '')}">
                     </label>
                     <label class="field-label">AKTION
-                        <input type="text" id="dm-atk-action" placeholder="z.B. 2d6+3 Schaden" value="${eAtk ? (eAtk.action || '') : ''}">
+                        <input type="text" id="dm-atk-action" placeholder="z.B. 2d6+3 Schaden" value="${esc(eAtk ? eAtk.action : '')}">
                     </label>
                     <label class="checkbox-inline-row">
                         <input type="checkbox" id="dm-atk-exh" ${eAtk && eAtk.usesExhaustion ? 'checked' : ''}>
@@ -765,30 +835,30 @@ function renderDmTemplatesTab(container) {
                         <h3>4. Zauber</h3>
                         <select onchange="selectTemplateToEdit('spell', this.value)">
                             <option value="">-- Neu / Bearbeiten --</option>
-                            ${gameState.customSpells.map((sp, i) => `<option value="${i}" ${editingState.spell === i ? 'selected' : ''}>Bearbeiten: ${sp.name}</option>`).join('')}
+                            ${gameState.customSpells.map((sp, i) => `<option value="${i}" ${editingState.spell === i ? 'selected' : ''}>Bearbeiten: ${esc(sp.name)}</option>`).join('')}
                         </select>
                     </div>
 
                     <div id="dm-spell-dropzone" class="drop-zone drop-zone-small">
                         ${spellDraftAvatar
-        ? `<img src="${spellDraftAvatar}" class="drop-preview-img">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('spell', event)">X</button>`
+        ? `<img src="${esc(spellDraftAvatar)}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('spell', event)" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>`
         : `<div class="drop-zone-prompt"><strong>Bild (Zauber)</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="dm-spell-file" accept="image/*" class="hidden">
                     </div>
 
                     <label class="field-label">NAME
-                        <input type="text" id="dm-spell-name" placeholder="z.B. Höllenfeuer / Lichtspeer" value="${eSpell ? eSpell.name : ''}">
+                        <input type="text" id="dm-spell-name" placeholder="z.B. Höllenfeuer / Lichtspeer" value="${esc(eSpell ? eSpell.name : '')}">
                     </label>
                     <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
-                        <input type="text" id="dm-spell-cats" placeholder="z.B. Feuer, Heilig, Dämonisch" value="${eSpell ? (eSpell.categories || []).join(', ') : ''}">
+                        <input type="text" id="dm-spell-cats" placeholder="z.B. Feuer, Heilig, Dämonisch" value="${esc(eSpell ? (eSpell.categories || []).join(', ') : '')}">
                     </label>
                     <label class="field-label">ANFORDERUNG
-                        <input type="text" id="dm-spell-req" placeholder="z.B. INT 14, Moral -3" value="${eSpell ? (eSpell.requirement || '') : ''}">
+                        <input type="text" id="dm-spell-req" placeholder="z.B. INT 14, Moral -3" value="${esc(eSpell ? eSpell.requirement : '')}">
                     </label>
                     <label class="field-label">AKTION
-                        <input type="text" id="dm-spell-action" placeholder="z.B. 3d6 Feuerschaden / +4 Heilung" value="${eSpell ? (eSpell.action || '') : ''}">
+                        <input type="text" id="dm-spell-action" placeholder="z.B. 3d6 Feuerschaden / +4 Heilung" value="${esc(eSpell ? eSpell.action : '')}">
                     </label>
                     <label class="checkbox-inline-row">
                         <input type="checkbox" id="dm-spell-exh" ${eSpell && eSpell.usesExhaustion ? 'checked' : ''}>
@@ -809,27 +879,27 @@ function renderDmTemplatesTab(container) {
                         <h3>5. Merkmale</h3>
                         <select onchange="selectTemplateToEdit('affinity', this.value)">
                             <option value="">-- Neu / Bearbeiten --</option>
-                            ${gameState.customAffinities.map((af, i) => `<option value="${i}" ${editingState.affinity === i ? 'selected' : ''}>Bearbeiten: ${af.name}</option>`).join('')}
+                            ${gameState.customAffinities.map((af, i) => `<option value="${i}" ${editingState.affinity === i ? 'selected' : ''}>Bearbeiten: ${esc(af.name)}</option>`).join('')}
                         </select>
                     </div>
 
                     <div id="dm-aff-dropzone" class="drop-zone drop-zone-small">
                         ${affinityDraftAvatar
-        ? `<img src="${affinityDraftAvatar}" class="drop-preview-img">
-                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('affinity', event)">X</button>`
+        ? `<img src="${esc(affinityDraftAvatar)}" class="drop-preview-img">
+                               <button type="button" class="btn-del drop-remove-btn" onclick="clearDraftAvatar('affinity', event)" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>`
         : `<div class="drop-zone-prompt"><strong>Bild (Merkmal)</strong><span>Drag & Drop oder Klick</span></div>`
     }
                         <input type="file" id="dm-aff-file" accept="image/*" class="hidden">
                     </div>
 
                     <label class="field-label">NAME
-                        <input type="text" id="dm-aff-name" placeholder="z.B. Paranoia / Dämonenflügel" value="${eAff ? eAff.name : ''}">
+                        <input type="text" id="dm-aff-name" placeholder="z.B. Paranoia / Dämonenflügel" value="${esc(eAff ? eAff.name : '')}">
                     </label>
                     <label class="field-label">KATEGORIEN (KOMMAGETRENNT)
-                        <input type="text" id="dm-aff-cats" placeholder="z.B. Psychose, Mutation, Segen" value="${eAff ? (eAff.categories || []).join(', ') : ''}">
+                        <input type="text" id="dm-aff-cats" placeholder="z.B. Psychose, Mutation, Segen" value="${esc(eAff ? (eAff.categories || []).join(', ') : '')}">
                     </label>
                     <label class="field-label">EFFEKT
-                        <input type="text" id="dm-aff-effect" placeholder="z.B. +2 Initiative, -2 WIS" value="${eAff ? (eAff.effect || '') : ''}">
+                        <input type="text" id="dm-aff-effect" placeholder="z.B. +2 Initiative, -2 WIS" value="${esc(eAff ? eAff.effect : '')}">
                     </label>
 
                     <div class="form-row">
@@ -845,7 +915,7 @@ function renderDmTemplatesTab(container) {
             <h2>Bibliothek (Alle erstellten Vorlagen)</h2>
             <div class="card">
                 <div class="form-row">
-                    <input type="text" id="lib-search-input" placeholder="Nach Name suchen..." value="${libSearchQuery}">
+                    <input type="text" id="lib-search-input" placeholder="Nach Name suchen..." value="${esc(libSearchQuery)}">
                     <select id="lib-type-select">
                         <option value="ALL" ${libSelectedType === 'ALL' ? 'selected' : ''}>Alle Typen</option>
                         <option value="npc" ${libSelectedType === 'npc' ? 'selected' : ''}>Monster & NPCs</option>
@@ -872,15 +942,17 @@ function renderDmTemplatesTab(container) {
         </div>
     `;
 
-    bindImageDropZone('dm-npc-dropzone', 'dm-npc-file', (b64) => { npcDraft.avatar = b64; renderDmView(); });
-    bindImageDropZone('dm-item-dropzone', 'dm-item-file', (b64) => { itemDraftAvatar = b64; renderDmView(); });
-    bindImageDropZone('dm-atk-dropzone', 'dm-atk-file', (b64) => { attackDraftAvatar = b64; renderDmView(); });
-    bindImageDropZone('dm-spell-dropzone', 'dm-spell-file', (b64) => { spellDraftAvatar = b64; renderDmView(); });
-    bindImageDropZone('dm-aff-dropzone', 'dm-aff-file', (b64) => { affinityDraftAvatar = b64; renderDmView(); });
+    bindImageDropZone('dm-npc-dropzone', 'dm-npc-file', (b64) => { npcDraft.avatar = b64; renderDmView({ preserveInputs: true }); });
+    bindImageDropZone('dm-item-dropzone', 'dm-item-file', (b64) => { itemDraftAvatar = b64; renderDmView({ preserveInputs: true }); });
+    bindImageDropZone('dm-atk-dropzone', 'dm-atk-file', (b64) => { attackDraftAvatar = b64; renderDmView({ preserveInputs: true }); });
+    bindImageDropZone('dm-spell-dropzone', 'dm-spell-file', (b64) => { spellDraftAvatar = b64; renderDmView({ preserveInputs: true }); });
+    bindImageDropZone('dm-aff-dropzone', 'dm-aff-file', (b64) => { affinityDraftAvatar = b64; renderDmView({ preserveInputs: true }); });
 
+    let libSearchTimer = null;
     document.getElementById('lib-search-input').addEventListener('input', (e) => {
         libSearchQuery = e.target.value;
-        renderLibraryResults();
+        clearTimeout(libSearchTimer);
+        libSearchTimer = setTimeout(renderLibraryResults, 150);
     });
     document.getElementById('lib-type-select').addEventListener('change', (e) => {
         libSelectedType = e.target.value;
@@ -900,16 +972,15 @@ function clearDraftAvatar(type, e) {
     e.stopPropagation();
     openConfirmModal("Möchtest du dieses Vorschaubild wirklich entfernen?", () => {
         if (type === 'npc') npcDraft.avatar = '';
-        if (type === 'item') itemDraftAvatar = '';
-        if (type === 'attack') attackDraftAvatar = '';
-        if (type === 'spell') spellDraftAvatar = '';
-        if (type === 'affinity') affinityDraftAvatar = '';
-        renderDmView();
+        resetDraftAvatar(type);
+        renderDmView({ preserveInputs: true });
     });
 }
 
 function selectTemplateToEdit(type, idxStr) {
-    const idx = idxStr === "" ? null : parseInt(idxStr);
+    let idx = idxStr === "" ? null : parseInt(idxStr);
+    const lib = LIB_TYPES[type];
+    if (idx !== null && (isNaN(idx) || !lib || !gameState[lib.list][idx])) idx = null;
     editingState[type] = idx;
 
     if (type === 'npc') {
@@ -942,10 +1013,10 @@ function renderNpcDraftPreview() {
     const itemsBox = document.getElementById('npc-draft-items-list');
     if (!itemsBox) return;
     itemsBox.innerHTML = `
-        <div><strong>Gegenstände:</strong> ${(npcDraft.items || []).map((it, i) => `<span class="inline-item-pill">${it.name} [📦 ${clampPackmass(it.packmass)}] <b onclick="removeFromNpcDraft('items', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
-        <div><strong>Attacken:</strong> ${(npcDraft.attacks || []).map((a, i) => `<span class="inline-item-pill">${a.name} <b onclick="removeFromNpcDraft('attacks', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
-        <div><strong>Zauber:</strong> ${(npcDraft.spells || []).map((sp, i) => `<span class="inline-item-pill">✨ ${sp.name} <b onclick="removeFromNpcDraft('spells', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
-        <div><strong>Merkmale:</strong> ${(npcDraft.affinities || []).map((af, i) => `<span class="inline-item-pill">${af.name} <b onclick="removeFromNpcDraft('affinities', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Gegenstände:</strong> ${(npcDraft.items || []).map((it, i) => `<span class="inline-item-pill">${esc(it.name)} [${icon('box')} ${esc(clampPackmass(it.packmass))}] <b onclick="removeFromNpcDraft('items', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Attacken:</strong> ${(npcDraft.attacks || []).map((a, i) => `<span class="inline-item-pill">${esc(a.name)} <b onclick="removeFromNpcDraft('attacks', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Zauber:</strong> ${(npcDraft.spells || []).map((sp, i) => `<span class="inline-item-pill">${icon('spark')} ${esc(sp.name)} <b onclick="removeFromNpcDraft('spells', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
+        <div><strong>Merkmale:</strong> ${(npcDraft.affinities || []).map((af, i) => `<span class="inline-item-pill">${esc(af.name)} <b onclick="removeFromNpcDraft('affinities', ${i})">×</b></span>`).join(' ') || '<span class="muted">Keine</span>'}</div>
     `;
 }
 
@@ -953,14 +1024,20 @@ function addToNpcDraft(sourceKey, targetKey, selectId) {
     const select = document.getElementById(selectId);
     if (!select || select.value === "") return;
     const item = gameState[sourceKey][parseInt(select.value)];
+    if (!item) return;
     if (!npcDraft[targetKey]) npcDraft[targetKey] = [];
     npcDraft[targetKey].push({ ...item });
     renderNpcDraftPreview();
 }
 
 function removeFromNpcDraft(targetKey, idx) {
+    const entry = (npcDraft[targetKey] || [])[idx];
+    const entryName = entry ? entry.name : undefined;
     openConfirmModal("Diesen Eintrag wirklich aus dem Vorlagen-Entwurf entfernen?", () => {
-        npcDraft[targetKey].splice(idx, 1);
+        const list = npcDraft[targetKey];
+        const target = Array.isArray(list) ? list[idx] : null;
+        if (!target || target.name !== entryName) return;
+        list.splice(idx, 1);
         renderNpcDraftPreview();
     });
 }
@@ -969,8 +1046,8 @@ function saveNpcTemplate(spawnImmediately) {
     const name = document.getElementById('dm-npc-name').value.trim();
     if (!name) return alert("Bitte einen Namen für das Monster / den NPC eingeben!");
 
-    const hp = parseInt(document.getElementById('dm-npc-hp').value) || 20;
-    const copper = Math.max(0, parseInt(document.getElementById('dm-npc-copper').value) || 0);
+    const hp = readNumberInput('dm-npc-hp', 20);
+    const copper = Math.max(0, readNumberInput('dm-npc-copper', 0));
 
     const newNpc = {
         name: name,
@@ -979,17 +1056,17 @@ function saveNpcTemplate(spawnImmediately) {
         description: document.getElementById('dm-npc-desc').value.trim(),
         hp: hp,
         maxHp: hp,
-        ac: parseInt(document.getElementById('dm-npc-ac').value) || 10,
-        initiative: parseInt(document.getElementById('dm-npc-init').value) || 0,
-        morality: parseInt(document.getElementById('dm-npc-moral').value) || 0,
+        ac: readNumberInput('dm-npc-ac', 10),
+        initiative: readNumberInput('dm-npc-init', 0),
+        morality: readNumberInput('dm-npc-moral', 0),
         copper: copper,
         stats: {
-            str: parseInt(document.getElementById('dm-npc-str').value) || 10,
-            dex: parseInt(document.getElementById('dm-npc-dex').value) || 10,
-            con: parseInt(document.getElementById('dm-npc-con').value) || 10,
-            int: parseInt(document.getElementById('dm-npc-int').value) || 10,
-            wis: parseInt(document.getElementById('dm-npc-wis').value) || 10,
-            cha: parseInt(document.getElementById('dm-npc-cha').value) || 10
+            str: readNumberInput('dm-npc-str', 10),
+            dex: readNumberInput('dm-npc-dex', 10),
+            con: readNumberInput('dm-npc-con', 10),
+            int: readNumberInput('dm-npc-int', 10),
+            wis: readNumberInput('dm-npc-wis', 10),
+            cha: readNumberInput('dm-npc-cha', 10)
         },
         items: JSON.parse(JSON.stringify(npcDraft.items || [])),
         attacks: JSON.parse(JSON.stringify(npcDraft.attacks || [])),
@@ -1006,11 +1083,32 @@ function saveNpcTemplate(spawnImmediately) {
 
     if (spawnImmediately) {
         const spawned = JSON.parse(JSON.stringify(newNpc));
-        spawned._uid = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        spawned._uid = makeNpcUid();
         gameState.enemies.push(spawned);
     }
 
     npcDraft = { avatar: '', items: [], attacks: [], spells: [], affinities: [] };
+    broadcastState();
+    renderDmView();
+}
+
+function resetDraftAvatar(type) {
+    if (type === 'item') itemDraftAvatar = '';
+    if (type === 'attack') attackDraftAvatar = '';
+    if (type === 'spell') spellDraftAvatar = '';
+    if (type === 'affinity') affinityDraftAvatar = '';
+}
+
+// Gemeinsamer Abschluss der Speichern-Funktionen: bearbeiten oder anhängen, Entwurf zurücksetzen, senden, rendern
+function commitLibraryEntry(type, obj) {
+    const list = gameState[LIB_TYPES[type].list];
+    if (editingState[type] !== null && editingState[type] < list.length) {
+        list[editingState[type]] = obj;
+    } else {
+        list.push(obj);
+    }
+    editingState[type] = null;
+    resetDraftAvatar(type);
     broadcastState();
     renderDmView();
 }
@@ -1032,15 +1130,7 @@ function saveCustomItem() {
         action: document.getElementById('dm-item-action').value.trim()
     };
 
-    if (editingState.item !== null) {
-        gameState.customItems[editingState.item] = obj;
-        editingState.item = null;
-    } else {
-        gameState.customItems.push(obj);
-    }
-    itemDraftAvatar = '';
-    broadcastState();
-    renderDmView();
+    commitLibraryEntry('item', obj);
 }
 
 function saveCustomAttack() {
@@ -1055,15 +1145,7 @@ function saveCustomAttack() {
         usesExhaustion: document.getElementById('dm-atk-exh').checked
     };
 
-    if (editingState.attack !== null) {
-        gameState.customAttacks[editingState.attack] = obj;
-        editingState.attack = null;
-    } else {
-        gameState.customAttacks.push(obj);
-    }
-    attackDraftAvatar = '';
-    broadcastState();
-    renderDmView();
+    commitLibraryEntry('attack', obj);
 }
 
 function saveCustomSpell() {
@@ -1080,15 +1162,7 @@ function saveCustomSpell() {
         usesExhaustion: document.getElementById('dm-spell-exh').checked
     };
 
-    if (editingState.spell !== null) {
-        gameState.customSpells[editingState.spell] = obj;
-        editingState.spell = null;
-    } else {
-        gameState.customSpells.push(obj);
-    }
-    spellDraftAvatar = '';
-    broadcastState();
-    renderDmView();
+    commitLibraryEntry('spell', obj);
 }
 
 function saveCustomAffinity() {
@@ -1102,15 +1176,7 @@ function saveCustomAffinity() {
         effect: document.getElementById('dm-aff-effect').value.trim()
     };
 
-    if (editingState.affinity !== null) {
-        gameState.customAffinities[editingState.affinity] = obj;
-        editingState.affinity = null;
-    } else {
-        gameState.customAffinities.push(obj);
-    }
-    affinityDraftAvatar = '';
-    broadcastState();
-    renderDmView();
+    commitLibraryEntry('affinity', obj);
 }
 
 function renderCategoryPills() {
@@ -1122,7 +1188,7 @@ function renderCategoryPills() {
         <button class="cat-pill ${libSelectedCategory === 'ALL' ? 'active' : ''}" onclick="selectLibCategory('ALL')">Alle Kategorien</button>
         ${allCats.map(cat => `
             <button class="cat-pill ${libSelectedCategory.toLowerCase() === cat.toLowerCase() ? 'active' : ''}"
-                onclick="selectLibCategory('${cat.replace(/'/g, "\\'")}')">${cat}</button>
+                onclick="selectLibCategory(${jsArg(cat)})">${esc(cat)}</button>
         `).join('')}
     `;
 }
@@ -1139,35 +1205,34 @@ function renderLibraryResults() {
     if (!listEl) return;
 
     let combined = [];
-    gameState.npcTemplates.forEach((item, idx) => combined.push({ ...item, _libType: 'npc', _typeLabel: 'Monster / NPC', _idx: idx }));
-    gameState.customItems.forEach((item, idx) => combined.push({ ...item, _libType: 'item', _typeLabel: 'Gegenstand', _idx: idx }));
-    gameState.customAttacks.forEach((item, idx) => combined.push({ ...item, _libType: 'attack', _typeLabel: 'Attacke', _idx: idx }));
-    gameState.customSpells.forEach((item, idx) => combined.push({ ...item, _libType: 'spell', _typeLabel: 'Zauber', _idx: idx }));
-    gameState.customAffinities.forEach((item, idx) => combined.push({ ...item, _libType: 'affinity', _typeLabel: 'Merkmal', _idx: idx }));
+    Object.keys(LIB_TYPES).forEach(type => {
+        gameState[LIB_TYPES[type].list].forEach((item, idx) => combined.push({ item, type, idx }));
+    });
 
     if (libSelectedType !== 'ALL') {
-        combined = combined.filter(item => item._libType === libSelectedType);
+        combined = combined.filter(entry => entry.type === libSelectedType);
     }
     if (libSelectedCategory !== 'ALL') {
-        combined = combined.filter(item =>
-            (item.categories || []).some(c => c.toLowerCase() === libSelectedCategory.toLowerCase())
+        combined = combined.filter(entry =>
+            (entry.item.categories || []).some(c => String(c).toLowerCase() === libSelectedCategory.toLowerCase())
         );
     }
+    const nameOf = (entry) => String(entry.item.name || '');
     if (libSearchQuery.trim() !== '') {
         const q = libSearchQuery.trim().toLowerCase();
-        combined = combined.filter(item => item.name.toLowerCase().includes(q));
+        combined = combined.filter(entry => nameOf(entry).toLowerCase().includes(q));
     }
 
     combined.sort((a, b) => {
         if (libSortBy === 'category') {
-            const catA = (a.categories && a.categories[0]) ? a.categories[0] : 'ZZZ';
-            const catB = (b.categories && b.categories[0]) ? b.categories[0] : 'ZZZ';
-            return catA.localeCompare(catB) || a.name.localeCompare(b.name);
+            const catA = (a.item.categories && a.item.categories[0]) ? String(a.item.categories[0]) : 'ZZZ';
+            const catB = (b.item.categories && b.item.categories[0]) ? String(b.item.categories[0]) : 'ZZZ';
+            return catA.localeCompare(catB) || nameOf(a).localeCompare(nameOf(b));
         }
         if (libSortBy === 'type') {
-            return a._typeLabel.localeCompare(b._typeLabel) || a.name.localeCompare(b.name);
+            return LIB_TYPES[a.type].label.localeCompare(LIB_TYPES[b.type].label) || nameOf(a).localeCompare(nameOf(b));
         }
-        return a.name.localeCompare(b.name);
+        return nameOf(a).localeCompare(nameOf(b));
     });
 
     if (combined.length === 0) {
@@ -1175,69 +1240,66 @@ function renderLibraryResults() {
         return;
     }
 
-    listEl.innerHTML = combined.map(item => `
+    listEl.innerHTML = combined.map(({ item, type, idx }) => `
         <div class="lib-item-card">
             <div class="dm-player-header">
                 <div class="char-identity">
-                    ${item.avatar ? `<img src="${item.avatar}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">${item.name[0]}</div>`}
+                    ${item.avatar ? `<img src="${esc(item.avatar)}" class="mini-avatar">` : `<div class="mini-avatar-placeholder">${esc(String(item.name || '')[0])}</div>`}
                     <div>
-                        <span class="tag">${item._typeLabel}</span>
-                        <strong>${item.name}</strong>
-                        ${item._libType === 'item' ? `<span class="packmass-pill">📦 Packmaß: ${clampPackmass(item.packmass)}</span>` : ''}
-                        ${(item._libType === 'attack' || item._libType === 'spell') && item.usesExhaustion ? `<span class="exh-badge">⚡ Exhaustion</span>` : ''}
+                        <span class="tag">${esc(LIB_TYPES[type].label)}</span>
+                        <strong>${esc(item.name)}</strong>
+                        ${type === 'item' ? `<span class="packmass-pill">${icon('box')} Packmaß: ${esc(clampPackmass(item.packmass))}</span>` : ''}
+                        ${(type === 'attack' || type === 'spell') && item.usesExhaustion ? `<span class="exh-badge">${icon('bolt')} Exhaustion</span>` : ''}
                         <div class="cat-badge-row">
-                            ${(item.categories || []).map(cat => `<span class="cat-tag">${cat}</span>`).join('')}
+                            ${(item.categories || []).map(cat => `<span class="cat-tag">${esc(cat)}</span>`).join('')}
                         </div>
                     </div>
                 </div>
                 <div class="dm-badges">
-                    <button onclick="selectTemplateToEdit('${item._libType}', '${item._idx}'); window.scrollTo({top: 0, behavior: 'smooth'});">Bearbeiten</button>
-                    ${item._libType === 'npc'
-        ? `<button class="btn-primary" onclick="dmSpawnNpcByIndex(${item._idx}); switchDmTab('gameplay');">Spawnen</button>`
+                    <button onclick="selectTemplateToEdit('${type}', '${idx}'); window.scrollTo({top: 0, behavior: 'smooth'});">Bearbeiten</button>
+                    ${type === 'npc'
+        ? `<button class="btn-primary" onclick="dmSpawnNpcByIndex(${idx}); switchDmTab('gameplay');">Spawnen</button>`
         : ''
     }
-                    <button class="btn-del" onclick="deleteLibraryItem('${item._libType}', ${item._idx})">X</button>
+                    <button class="btn-del" onclick="deleteLibraryItem('${type}', ${idx})" title="Entfernen" aria-label="Entfernen">${icon('x')}</button>
                 </div>
             </div>
 
-            ${item._libType === 'npc' ? `
-                ${item.description ? `<p class="npc-desc-box">${item.description}</p>` : ''}
-                <small class="muted">HP: ${item.maxHp} | AC: ${item.ac} | Init: ${item.initiative} | Moral: ${item.morality} | Geld: ${formatCopperCoins(item.copper || 0)}</small>
+            ${type === 'npc' ? `
+                ${item.description ? `<p class="npc-desc-box">${esc(item.description)}</p>` : ''}
+                <small class="muted">HP: ${esc(item.maxHp)} | AC: ${esc(item.ac)} | Init: ${esc(item.initiative)} | Moral: ${esc(item.morality)} | Geld: ${formatCopperCoins(item.copper || 0)}</small>
             ` : ''}
 
-            ${item._libType === 'item' ? `
-                <small class="muted"><strong>Anforderung:</strong> ${item.requirement || 'Keine'} | <strong>Aktion:</strong> ${item.action || '-'}</small>
+            ${type === 'item' ? `
+                <small class="muted"><strong>Anforderung:</strong> ${esc(item.requirement || 'Keine')} | <strong>Aktion:</strong> ${esc(item.action || '-')}</small>
             ` : ''}
 
-            ${item._libType === 'attack' ? `
-                <small class="muted"><strong>Aktion:</strong> ${item.action || '-'}</small>
+            ${type === 'attack' ? `
+                <small class="muted"><strong>Aktion:</strong> ${esc(item.action || '-')}</small>
             ` : ''}
 
-            ${item._libType === 'spell' ? `
-                <small class="muted"><strong>Anforderung:</strong> ${item.requirement || 'Keine'} | <strong>Aktion:</strong> ${item.action || '-'}</small>
+            ${type === 'spell' ? `
+                <small class="muted"><strong>Anforderung:</strong> ${esc(item.requirement || 'Keine')} | <strong>Aktion:</strong> ${esc(item.action || '-')}</small>
             ` : ''}
 
-            ${item._libType === 'affinity' ? `
-                <small class="muted"><strong>Effekt:</strong> ${item.effect || '-'}</small>
+            ${type === 'affinity' ? `
+                <small class="muted"><strong>Effekt:</strong> ${esc(item.effect || '-')}</small>
             ` : ''}
         </div>
     `).join('');
 }
 
 function deleteLibraryItem(libType, idx) {
-    let itemName = 'diese Vorlage';
-    if (libType === 'npc') itemName = gameState.npcTemplates[idx]?.name;
-    if (libType === 'item') itemName = gameState.customItems[idx]?.name;
-    if (libType === 'attack') itemName = gameState.customAttacks[idx]?.name;
-    if (libType === 'spell') itemName = gameState.customSpells[idx]?.name;
-    if (libType === 'affinity') itemName = gameState.customAffinities[idx]?.name;
+    const lib = LIB_TYPES[libType];
+    if (!lib) return;
+    const entry = gameState[lib.list][idx];
+    const itemName = entry?.name;
 
     openConfirmModal(`Möchtest du "${itemName}" wirklich dauerhaft aus der Bibliothek löschen?`, () => {
-        if (libType === 'npc') gameState.npcTemplates.splice(idx, 1);
-        if (libType === 'item') gameState.customItems.splice(idx, 1);
-        if (libType === 'attack') gameState.customAttacks.splice(idx, 1);
-        if (libType === 'spell') gameState.customSpells.splice(idx, 1);
-        if (libType === 'affinity') gameState.customAffinities.splice(idx, 1);
+        const list = gameState[lib.list];
+        // Nur löschen, wenn noch derselbe Eintrag an derselben Stelle steht
+        if (!entry || list[idx] !== entry) return;
+        list.splice(idx, 1);
         editingState[libType] = null;
         broadcastState();
         renderDmView();
@@ -1247,17 +1309,47 @@ function deleteLibraryItem(libType, idx) {
 // ============================================================================
 // DM TAB 3: TAKTISCHES KAMPFFELD
 // ============================================================================
-function resolveCombatant(entry) {
-    return resolveCombatantShared(entry);
+// Setzt den Zug-Zeiger nach dem Entfernen von Einträgen wieder auf denselben Kämpfer.
+// Wurde der aktive Eintrag selbst entfernt, rückt der nächste Kämpfer an seine Stelle.
+function restoreTurnPointer(activeKey, oldOrder, oldTurnIndex) {
+    const order = gameState.combat.order;
+    if (order.length === 0) {
+        gameState.combat.turnIndex = 0;
+        return;
+    }
+    if (activeKey !== undefined) {
+        const found = order.findIndex(e => e.key === activeKey);
+        if (found !== -1) {
+            gameState.combat.turnIndex = found;
+            return;
+        }
+    }
+    let before = 0;
+    for (let i = 0; i < oldTurnIndex && i < oldOrder.length; i++) {
+        if (order.includes(oldOrder[i])) before++;
+    }
+    gameState.combat.turnIndex = before >= order.length ? 0 : before;
 }
 
 function cleanStaleCombatants() {
     ensureEnemyUids();
     ensureBattlemapState();
-    gameState.combat.order = (gameState.combat.order || []).filter(entry => {
-        return resolveCombatant(entry) !== null;
+    const oldOrder = gameState.combat.order || [];
+    const oldTurnIndex = gameState.combat.turnIndex;
+    const activeKey = oldOrder[oldTurnIndex]?.key;
+    const teamNames = Object.keys(gameState.combat.teams || {});
+    gameState.combat.order = oldOrder.filter(entry => {
+        return resolveCombatantShared(entry) !== null;
     });
-    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
+    // Unbekannte Teams (z.B. nach Import) dem ersten vorhandenen Team zuordnen
+    if (teamNames.length > 0) {
+        gameState.combat.order.forEach(entry => {
+            if (!teamNames.includes(entry.teamName)) entry.teamName = teamNames[0];
+        });
+    }
+    if (gameState.combat.order.length !== oldOrder.length) {
+        restoreTurnPointer(activeKey, oldOrder, oldTurnIndex);
+    } else if (gameState.combat.turnIndex >= gameState.combat.order.length) {
         gameState.combat.turnIndex = 0;
     }
 }
@@ -1286,7 +1378,7 @@ function syncPlayersOnlyIntoCombat() {
                 key: key,
                 kind: 'player',
                 id: pid,
-                initiative: c.initiative || 10,
+                initiative: numOr(c.initiative, 10),
                 teamName: defaultPlayerTeam,
                 conditions: [],
                 row: free.row,
@@ -1321,7 +1413,7 @@ function addParticipantToSpecificTeam(val, teamName) {
                 key: key,
                 kind: 'player',
                 id: pid,
-                initiative: c.initiative || 10,
+                initiative: numOr(c.initiative, 10),
                 teamName: teamName,
                 conditions: [],
                 row: free.row,
@@ -1341,8 +1433,7 @@ function addParticipantToSpecificTeam(val, teamName) {
             gameState.combat.order.push({
                 key: uid,
                 kind: 'enemy',
-                idx: idx,
-                initiative: enemy.initiative || 10,
+                initiative: numOr(enemy.initiative, 10),
                 teamName: teamName,
                 conditions: [],
                 row: free.row,
@@ -1374,22 +1465,28 @@ function quickAddIntoTeamCard(selectEl, teamName) {
 
 function removeCombatantFromCombat(orderIdx) {
     const entry = gameState.combat.order[orderIdx];
-    const actor = resolveCombatant(entry);
+    const actor = resolveCombatantShared(entry);
     const name = actor ? actor.name : 'diesen Teilnehmer';
 
     openConfirmModal(`Möchtest du "${name}" wirklich aus dem laufenden Kampf und vom Spielfeld entfernen?`, () => {
+        const oldOrder = gameState.combat.order.slice();
+        const oldTurnIndex = gameState.combat.turnIndex;
+        const activeKey = oldOrder[oldTurnIndex]?.key;
         gameState.combat.order.splice(orderIdx, 1);
-        if (gameState.combat.turnIndex >= gameState.combat.order.length) {
-            gameState.combat.turnIndex = 0;
-        }
+        restoreTurnPointer(activeKey, oldOrder, oldTurnIndex);
         broadcastState();
         renderDmView();
     });
 }
 
 function sortCombatOrder() {
-    gameState.combat.order.sort((a, b) => b.initiative - a.initiative);
-    if (gameState.combat.turnIndex >= gameState.combat.order.length) {
+    const order = gameState.combat.order;
+    const activeKey = order[gameState.combat.turnIndex]?.key;
+    order.sort((a, b) => b.initiative - a.initiative);
+    const activeIdx = activeKey !== undefined ? order.findIndex(e => e.key === activeKey) : -1;
+    if (activeIdx !== -1) {
+        gameState.combat.turnIndex = activeIdx;
+    } else if (gameState.combat.turnIndex >= order.length) {
         gameState.combat.turnIndex = 0;
     }
 }
@@ -1397,16 +1494,16 @@ function sortCombatOrder() {
 function rollInitiativeFor(mode, btnEl) {
     cleanStaleCombatants();
     if (gameState.combat.order.length === 0) {
-        return alert("Es sind noch keine Kämpfer im Kampf! Nutze '🔄 Spieler-Sync' oder füge links Teilnehmer hinzu.");
+        return alert("Es sind noch keine Kämpfer im Kampf! Nutze 'Spieler-Sync' oder füge links Teilnehmer hinzu.");
     }
     gameState.combat.active = true;
 
     gameState.combat.order.forEach(entry => {
         if (mode === 'enemies' && entry.kind !== 'enemy') return;
-        const actor = resolveCombatant(entry);
+        const actor = resolveCombatantShared(entry);
         if (!actor) return;
 
-        const initBonus = parseInt(actor.initiative) || Math.floor(((actor.stats?.dex || 10) - 10) / 2);
+        const initBonus = numOr(actor.initiative, Math.floor(((actor.stats?.dex || 10) - 10) / 2));
         const modStr = initBonus >= 0 ? `+${initBonus}` : `${initBonus}`;
         const roll = triggerUniversalRoll(`1d20${modStr}`, 'Initiative', actor.name, btnEl);
         entry.initiative = roll.total;
@@ -1424,10 +1521,10 @@ function changeCombatTurn(delta) {
     let next = gameState.combat.turnIndex + delta;
     if (next >= len) {
         next = 0;
-        gameState.combat.round += 1;
+        gameState.combat.round = (gameState.combat.round || 1) + 1;
     } else if (next < 0) {
         next = len - 1;
-        gameState.combat.round = Math.max(1, gameState.combat.round - 1);
+        gameState.combat.round = Math.max(1, (gameState.combat.round || 1) - 1);
     }
 
     gameState.combat.turnIndex = next;
@@ -1491,9 +1588,9 @@ function deleteTeamByDm(teamName) {
 
 function applyCombatHpDelta(orderIdx, delta) {
     const entry = gameState.combat.order[orderIdx];
-    const actor = resolveCombatant(entry);
+    const actor = resolveCombatantShared(entry);
     if (!actor) return;
-    actor.hp += delta;
+    actor.hp = (Number(actor.hp) || 0) + delta;
     broadcastState();
     renderDmView();
 }
@@ -1511,6 +1608,8 @@ function addCombatCondition(orderIdx) {
     if (!select || !select.value) return;
     const cond = select.value;
     const entry = gameState.combat.order[orderIdx];
+    if (!entry) return;
+    if (!Array.isArray(entry.conditions)) entry.conditions = [];
     if (!entry.conditions.includes(cond)) {
         entry.conditions.push(cond);
     }
@@ -1519,9 +1618,13 @@ function addCombatCondition(orderIdx) {
 }
 
 function removeCombatCondition(orderIdx, condIdx) {
-    const condName = gameState.combat.order[orderIdx]?.conditions?.[condIdx] || 'diesen Zustand';
+    const entry = gameState.combat.order[orderIdx];
+    const cond = entry?.conditions?.[condIdx];
+    const condName = cond || 'diesen Zustand';
     openConfirmModal(`Zustand "${condName}" wirklich entfernen?`, () => {
-        gameState.combat.order[orderIdx].conditions.splice(condIdx, 1);
+        if (!entry || gameState.combat.order[orderIdx] !== entry) return;
+        if (!Array.isArray(entry.conditions) || entry.conditions[condIdx] !== cond) return;
+        entry.conditions.splice(condIdx, 1);
         broadcastState();
         renderDmView();
     });
@@ -1592,6 +1695,7 @@ function dmRemoveSelectedBlock() {
     if (!selected || selected.isDefault) return;
 
     openConfirmModal(`Möchtest du den Block "${selected.name}" wirklich aus der Block-Liste entfernen? Alle damit gesetzten Felder auf dem Spielfeld werden wieder Grau.`, () => {
+        if (!map.palette.includes(selected)) return;
         map.palette = map.palette.filter(b => b.id !== selected.id);
         Object.keys(map.cells).forEach(cellKey => {
             if (map.cells[cellKey] === selected.id) {
@@ -1689,6 +1793,7 @@ function dmDeleteBattlemapTemplate() {
     if (!tpl) return;
 
     openConfirmModal(`Möchtest du die Spielfeld-Vorlage "${tpl.name}" wirklich löschen?`, () => {
+        if (gameState.mapTemplates[idx] !== tpl) return;
         gameState.mapTemplates.splice(idx, 1);
         broadcastState();
         renderDmView();
@@ -1719,12 +1824,12 @@ function renderDmCombatTab(container) {
     const participantOptionsHtml = `
         ${availablePlayers.length > 0 ? `
             <optgroup label="Spieler (noch nicht im Kampf)">
-                ${availablePlayers.map(p => `<option value="player:${p.id}">🛡️ ${p.name} (HP ${p.hp}/${p.maxHp})</option>`).join('')}
+                ${availablePlayers.map(p => `<option value="${esc('player:' + p.id)}">${esc(p.name)} (HP ${esc(p.hp)}/${esc(p.maxHp)})</option>`).join('')}
             </optgroup>
         ` : ''}
         ${availableEnemies.length > 0 ? `
             <optgroup label="Monster & NPCs (noch nicht im Kampf)">
-                ${availableEnemies.map(e => `<option value="enemy:${e._uid}">👹 ${e.name} (HP ${e.hp}/${e.maxHp})</option>`).join('')}
+                ${availableEnemies.map(e => `<option value="${esc('enemy:' + e._uid)}">${esc(e.name)} (HP ${esc(e.hp)}/${esc(e.maxHp)})</option>`).join('')}
             </optgroup>
         ` : ''}
     `;
@@ -1732,7 +1837,7 @@ function renderDmCombatTab(container) {
     const teamsMap = {};
     teamNames.forEach(t => teamsMap[t] = []);
     order.forEach((entry, orderIdx) => {
-        const actor = resolveCombatant(entry);
+        const actor = resolveCombatantShared(entry);
         if (!actor) return;
         const t = entry.teamName || teamNames[0];
         if (!teamsMap[t]) teamsMap[t] = [];
@@ -1755,7 +1860,7 @@ function renderDmCombatTab(container) {
                     
                     <div class="card combat-side-card">
                         <div class="side-card-title-row">
-                            <h3>⚔️ Teilnehmer & Teams</h3>
+                            <h3>${icon('blade')} Teilnehmer & Teams</h3>
                         </div>
 
                         <label class="field-label">SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN
@@ -1767,7 +1872,7 @@ function renderDmCombatTab(container) {
 
                         <div class="dm-assign-row">
                             <select id="combat-add-team-select">
-                                ${teamNames.map(t => `<option value="${t}">In Team: ${t}</option>`).join('')}
+                                ${teamNames.map(t => `<option value="${esc(t)}">In Team: ${esc(t)}</option>`).join('')}
                             </select>
                             <button type="button" class="btn-primary" onclick="addSelectedParticipantToCombat()">+ Hinzufügen</button>
                         </div>
@@ -1777,7 +1882,7 @@ function renderDmCombatTab(container) {
                         <label class="field-label">NEUES TEAM ERSTELLEN
                             <div class="team-create-row">
                                 <input type="text" id="new-team-name-input" placeholder="Team-Name (z.B. Wachen)...">
-                                <input type="color" id="new-team-color-input" value="#a855f7" title="Teamfarbe wählen">
+                                <input type="color" id="new-team-color-input" value="#8a6fae" title="Teamfarbe wählen">
                                 <button type="button" class="btn-secondary" onclick="addNewTeamByDm()">+ Team</button>
                             </div>
                         </label>
@@ -1785,19 +1890,22 @@ function renderDmCombatTab(container) {
 
                     <div class="combat-teams-vertical-list">
                         ${teamNames.map(tName => {
-        const color = gameState.combat.teams[tName] || '#ffffff';
+        const color = safeColor(gameState.combat.teams[tName] || '#ffffff', '#ffffff');
         const members = teamsMap[tName] || [];
-        const safeTeamName = tName.replace(/'/g, "\\'");
+        const teamArg = jsArg(tName);
         return `
-                                <div class="card team-group-card" style="border-top: 4px solid ${color};">
-                                    <div class="team-group-header" style="color: ${color};">
-                                        <strong>${tName} (${members.length})</strong>
-                                        ${teamNames.length > 1 ? `<button type="button" class="btn-del btn-tiny-del" title="Team löschen" onclick="deleteTeamByDm('${safeTeamName}')">🗑️</button>` : ''}
+                                <div class="card team-group-card" style="--team-c: ${color};">
+                                    <div class="team-group-header">
+                                        <span class="team-identity">
+                                            <span class="team-color-dot" aria-hidden="true"></span>
+                                            <strong>${esc(tName)} (${members.length})</strong>
+                                        </span>
+                                        ${teamNames.length > 1 ? `<button type="button" class="btn-del btn-tiny-del" title="Team löschen" onclick="deleteTeamByDm(${teamArg})">${icon('trash')}</button>` : ''}
                                     </div>
 
                                     ${(availablePlayers.length + availableEnemies.length) > 0 ? `
-                                        <select class="team-quick-add-select" onchange="quickAddIntoTeamCard(this, '${safeTeamName}')">
-                                            <option value="">+ Kämpfer direkt in „${tName}“ setzen...</option>
+                                        <select class="team-quick-add-select" onchange="quickAddIntoTeamCard(this, ${teamArg})">
+                                            <option value="">+ Kämpfer direkt in „${esc(tName)}“ setzen...</option>
                                             ${participantOptionsHtml}
                                         </select>
                                     ` : ''}
@@ -1809,36 +1917,36 @@ function renderDmCombatTab(container) {
             const isTurn = orderIdx === gameState.combat.turnIndex;
             const isDead = actor.hp <= 0;
             return `
-                                                <div class="team-combatant-item ${isTurn ? 'active-turn-row' : ''} ${isDead ? 'combatant-down' : ''}" style="border-left: 4px solid ${color};">
+                                                <div class="team-combatant-item ${isTurn ? 'active-turn-row' : ''} ${isDead ? 'combatant-down' : ''}">
                                                     <div class="team-combatant-top">
                                                         <div class="char-identity">
                                                             ${actor.avatar
-                ? `<img src="${actor.avatar}" class="mini-avatar">`
-                : `<div class="mini-avatar-placeholder">${actor.name[0]}</div>`
+                ? `<img src="${esc(actor.avatar)}" class="mini-avatar">`
+                : `<div class="mini-avatar-placeholder">${esc(String(actor.name || '')[0])}</div>`
             }
                                                             <div>
                                                                 <div class="combat-name-line">
-                                                                    ${isTurn ? `<span class="turn-indicator-pill">▶ ZUG</span>` : ''}
-                                                                    <strong>${actor.name}</strong>
+                                                                    ${isTurn ? `<span class="turn-indicator-pill">${icon('turn')} ZUG</span>` : ''}
+                                                                    <strong>${esc(actor.name)}</strong>
                                                                 </div>
-                                                                <small class="muted">AC ${actor.ac} · Feld (${entry.row + 1},${entry.col + 1})</small>
+                                                                <small class="muted">AC ${esc(actor.ac)} · Feld (${esc(entry.row + 1)},${esc(entry.col + 1)})</small>
                                                             </div>
                                                         </div>
                                                         <div class="dm-badges">
-                                                            <span class="badge-hp">${actor.hp}/${actor.maxHp}</span>
+                                                            <span class="badge-hp">${esc(actor.hp)}/${esc(actor.maxHp)}</span>
                                                             ${entry.kind === 'player' && isDead ? `
-                                                                <button type="button" class="btn-death" onclick="dmKillPlayer('${actor.id}')">💀 Tot</button>
+                                                                <button type="button" class="btn-death" onclick="dmKillPlayer(${jsArg(actor.id)})">${icon('skull')} Tot</button>
                                                             ` : ''}
-                                                            <button type="button" class="btn-del" title="Aus Kampf & vom Spielfeld entfernen" onclick="removeCombatantFromCombat(${orderIdx})">✕</button>
+                                                            <button type="button" class="btn-del" title="Aus Kampf & vom Spielfeld entfernen" aria-label="Aus Kampf entfernen" onclick="removeCombatantFromCombat(${orderIdx})">${icon('x')}</button>
                                                         </div>
                                                     </div>
 
                                                     <div class="team-combatant-meta-row">
                                                         <label class="mini-inline-label">Init:
-                                                            <input type="number" value="${entry.initiative}" onchange="updateCombatantInit(${orderIdx}, this.value)">
+                                                            <input type="number" id="combat-init-${orderIdx}" value="${esc(entry.initiative)}" onchange="updateCombatantInit(${orderIdx}, this.value)">
                                                         </label>
-                                                        <select onchange="setCombatantTeam(${orderIdx}, this.value)" style="border-color: ${color}; color: ${color};">
-                                                            ${teamNames.map(t => `<option value="${t}" ${entry.teamName === t ? 'selected' : ''}>${t}</option>`).join('')}
+                                                        <select onchange="setCombatantTeam(${orderIdx}, this.value)" aria-label="Team">
+                                                            ${teamNames.map(t => `<option value="${esc(t)}" ${entry.teamName === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}
                                                         </select>
                                                     </div>
 
@@ -1857,7 +1965,7 @@ function renderDmCombatTab(container) {
 
                                                     <div class="cat-badge-row">
                                                         ${(entry.conditions || []).map((cond, cIdx) => `
-                                                            <span class="inline-item-pill">${cond} <b onclick="removeCombatCondition(${orderIdx}, ${cIdx})">×</b></span>
+                                                            <span class="inline-item-pill">${esc(cond)} <b onclick="removeCombatCondition(${orderIdx}, ${cIdx})">×</b></span>
                                                         `).join('')}
                                                     </div>
 
@@ -1886,16 +1994,16 @@ function renderDmCombatTab(container) {
                     <div class="battlemap-board-header">
                         <div>
                             <div class="combat-name-line">
-                                <h3>🗺️ Spielfeld (${map.rows} × ${map.cols} Grid)</h3>
+                                <h3>${icon('map')} Spielfeld (${esc(map.rows)} × ${esc(map.cols)} Grid)</h3>
                                 ${isBuildMode
-        ? `<span class="mode-status-pill mode-pill-build" onclick="dmSelectPaletteBlock('${selectedBlock.id}')" title="Klicken oder rechts denselben Block drücken, um in den Bewegungsmodus zu wechseln">🧱 Baumodus: ${selectedBlock.name} (✕ Beenden)</span>`
-        : `<span class="mode-status-pill mode-pill-move">🖐️ Verschieben- & Bewegungsmodus</span>`
+        ? `<span class="mode-status-pill mode-pill-build" onclick="dmSelectPaletteBlock(${jsArg(selectedBlock.id)})" title="Klicken oder rechts denselben Block drücken, um in den Bewegungsmodus zu wechseln">${icon('brick')} Baumodus: ${esc(selectedBlock.name)} · Beenden ${icon('x')}</span>`
+        : `<span class="mode-status-pill mode-pill-move">${icon('move')} Verschieben- & Bewegungsmodus</span>`
     }
                             </div>
                             <small class="muted">
                                 ${isBuildMode
         ? 'Baumodus aktiv: Halte die Maustaste über dem Grid gedrückt zum Malen · Klicke rechts denselben Block nochmal zum Verlassen.'
-        : 'Bewegungsmodus: Halte die Maustaste gedrückt zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger.'
+        : 'Bewegungsmodus: Halte die Maustaste gedrückt zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert.'
     }
                             </small>
                         </div>
@@ -1906,22 +2014,22 @@ function renderDmCombatTab(container) {
                             <button type="button" onclick="dmResizeBattlemap(-1, 0)" title="Zeile entfernen">− Zeile</button>
                             <button type="button" onclick="dmResizeBattlemap(0, 1)" title="Spalte hinzufügen">+ Spalte</button>
                             <button type="button" onclick="dmResizeBattlemap(0, -1)" title="Spalte entfernen">− Spalte</button>
-                            <button type="button" class="btn-del" onclick="dmClearBattlemapCells()" title="Alle Blöcke zurücksetzen">↺ Reset</button>
+                            <button type="button" class="btn-del" onclick="dmClearBattlemapCells()" title="Alle Blöcke zurücksetzen">${icon('refresh')} Reset</button>
                         </div>
                     </div>
 
                     <div class="battlemap-template-bar">
                         <div class="dm-assign-row">
                             <input type="text" id="dm-map-template-name" placeholder="Vorlagenname (z.B. Thronsaal)...">
-                            <button type="button" class="btn-secondary" onclick="dmSaveBattlemapTemplate()">💾 Spielfeld speichern</button>
+                            <button type="button" class="btn-secondary" onclick="dmSaveBattlemapTemplate()">${icon('save')} Spielfeld speichern</button>
                         </div>
                         <div class="dm-assign-row">
                             <select id="dm-map-template-select">
                                 <option value="">-- Gespeichertes Spielfeld laden (${gameState.mapTemplates.length}) --</option>
-                                ${gameState.mapTemplates.map((tpl, i) => `<option value="${i}">${tpl.name} (${tpl.rows}×${tpl.cols})</option>`).join('')}
+                                ${gameState.mapTemplates.map((tpl, i) => `<option value="${i}">${esc(tpl.name)} (${esc(tpl.rows)}×${esc(tpl.cols)})</option>`).join('')}
                             </select>
-                            <button type="button" class="btn-primary" onclick="dmLoadBattlemapTemplate()">📂 Laden</button>
-                            ${gameState.mapTemplates.length > 0 ? `<button type="button" class="btn-del" onclick="dmDeleteBattlemapTemplate()" title="Ausgewählte Vorlage löschen">🗑️</button>` : ''}
+                            <button type="button" class="btn-primary" onclick="dmLoadBattlemapTemplate()">${icon('folder')} Laden</button>
+                            ${gameState.mapTemplates.length > 0 ? `<button type="button" class="btn-del" onclick="dmDeleteBattlemapTemplate()" title="Ausgewählte Vorlage löschen">${icon('trash')}</button>` : ''}
                         </div>
                     </div>
 
@@ -1934,7 +2042,7 @@ function renderDmCombatTab(container) {
                              style="transform: translate(${battlemapPanX}px, ${battlemapPanY}px) scale(${battlemapZoom});">
                             <div id="active-battlemap-grid"
                                  class="battlemap-grid"
-                                 style="grid-template-columns: repeat(${map.cols}, 74px); grid-template-rows: repeat(${map.rows}, 74px);">
+                                 style="grid-template-columns: repeat(${parseInt(map.cols) || 6}, var(--cell-px)); grid-template-rows: repeat(${parseInt(map.rows) || 6}, var(--cell-px));">
                                 ${buildBattlemapGridCellsHtml(true)}
                             </div>
                         </div>
@@ -1943,30 +2051,29 @@ function renderDmCombatTab(container) {
 
                 <aside class="card battlemap-palette-card">
                     <div class="palette-top-header">
-                        <h3>🧱 Block-Arten</h3>
-                        <button type="button" class="btn-primary" style="width:100%;" onclick="dmToggleNewBlockCreator()">
-                            ${showNewBlockCreator ? '✕ Schließen' : '+ Neuer Block'}
+                        <h3>${icon('brick')} Block-Arten</h3>
+                        <button type="button" class="btn-primary btn-block" onclick="dmToggleNewBlockCreator()">
+                            ${showNewBlockCreator ? `${icon('x')} Schließen` : `${icon('plus')} Neuer Block`}
                         </button>
                     </div>
 
                     ${showNewBlockCreator ? `
                         <div class="palette-creator-popover">
                             <label class="field-label">BLOCK-FARBE WÄHLEN
-                                <input type="color" id="dm-new-block-color" value="${newBlockDraftColor}"
-                                    onchange="newBlockDraftColor = this.value"
-                                    style="width:100%; height:38px; padding:2px; cursor:pointer;">
+                                <input type="color" id="dm-new-block-color" value="${esc(safeColor(newBlockDraftColor, '#ef4444'))}"
+                                    onchange="newBlockDraftColor = this.value">
                             </label>
                             <label class="field-label">NAME (OPTIONAL)
-                                <input type="text" id="dm-new-block-name" placeholder="z.B. Lava, Wasser, Wand" value="${newBlockDraftName}"
+                                <input type="text" id="dm-new-block-name" placeholder="z.B. Lava, Wasser, Wand" value="${esc(newBlockDraftName)}"
                                      oninput="newBlockDraftName = this.value">
                             </label>
-                            <button type="button" class="btn-secondary" style="width:100%;" onclick="dmCreatePaletteBlock()">✓ Block erschaffen</button>
+                            <button type="button" class="btn-secondary btn-block" onclick="dmCreatePaletteBlock()">${icon('check')} Block erschaffen</button>
                         </div>
                     ` : ''}
 
                     ${selectedBlock && !selectedBlock.isDefault ? `
                         <button type="button" class="btn-del palette-remove-btn" onclick="dmRemoveSelectedBlock()">
-                            🗑️ Block entfernen („${selectedBlock.name}“)
+                            ${icon('trash')} Block entfernen („${esc(selectedBlock.name)}“)
                         </button>
                     ` : ''}
 
@@ -1978,12 +2085,12 @@ function renderDmCombatTab(container) {
         return `
                                 <div class="palette-block-entry ${isSelected ? 'palette-block-active' : ''}"
                                      draggable="true"
-                                     ondragstart="dmHandleBlockDragStart(event, '${b.id}')"
-                                     onclick="dmSelectPaletteBlock('${b.id}')">
-                                    <div class="palette-color-swatch" style="background-color: ${b.color};"></div>
+                                     ondragstart="dmHandleBlockDragStart(event, ${jsArg(b.id)})"
+                                     onclick="dmSelectPaletteBlock(${jsArg(b.id)})">
+                                    <div class="palette-color-swatch" style="background-color: ${safeColor(b.color)};"></div>
                                     <div class="palette-block-meta">
-                                        <strong>${b.name}</strong>
-                                        <small class="muted">${isSelected ? '🧱 Baumodus aktiv' : b.color}</small>
+                                        <strong>${esc(b.name)}</strong>
+                                        <small class="muted">${isSelected ? 'Baumodus aktiv' : esc(b.color)}</small>
                                     </div>
                                 </div>
                             `;
@@ -2009,39 +2116,39 @@ function renderDmNotesTab(container) {
         <div class="templates-vertical-stack">
             <div class="creator-header-row">
                 <div>
-                    <h2>📖 Dungeon Master Notizbuch</h2>
-                    <small class="muted">Alle Notizen hier sind nur für dich als DM sichtbar und werden beim Klick auf „💾 Session speichern“ in deiner Session-Datei mitgesichert.</small>
+                    <h2>${icon('tome')} Dungeon Master Notizbuch</h2>
+                    <small class="muted">Alle Notizen hier sind nur für dich als DM sichtbar und werden beim Klick auf „Session speichern“ in deiner Session-Datei mitgesichert.</small>
                 </div>
             </div>
 
             <div class="dm-notes-grid">
                 <div class="card">
-                    <h3>⚡ Schnell-Notizen & Aktuelle Session</h3>
+                    <h3>${icon('bolt')} Schnell-Notizen & Aktuelle Session</h3>
                     <small class="muted">Synchronisiert mit dem Schnell-Notizfeld oben im Gameplay-Tab.</small>
-                    <textarea id="dm-notes-quick" rows="7" placeholder="Was passiert gerade? Laufende Effekte, Versprechen an Spieler, spontane Einfälle...">${notes.quick || ''}</textarea>
+                    <textarea id="dm-notes-quick" rows="7" placeholder="Was passiert gerade? Laufende Effekte, Versprechen an Spieler, spontane Einfälle...">${esc(notes.quick)}</textarea>
                 </div>
 
                 <div class="card">
-                    <h3>📜 Kampagnen-Story & Roter Faden</h3>
+                    <h3>${icon('scroll')} Kampagnen-Story & Roter Faden</h3>
                     <small class="muted">Hauptquest, Akte, wichtige Meilensteine und Hintergrundgeschichte.</small>
-                    <textarea id="dm-notes-story" rows="7" placeholder="Wie geht die Geschichte weiter? Welche Entscheidungen haben die Spieler getroffen?">${notes.story || ''}</textarea>
+                    <textarea id="dm-notes-story" rows="7" placeholder="Wie geht die Geschichte weiter? Welche Entscheidungen haben die Spieler getroffen?">${esc(notes.story)}</textarea>
                 </div>
 
                 <div class="card">
-                    <h3>🕵️ Geheimnisse, Plots & Twists (Geheim)</h3>
+                    <h3>${icon('eye')} Geheimnisse, Plots & Twists (Geheim)</h3>
                     <small class="muted">Verräter, versteckte Hinweise, Fallen, wahre Motive von NPCs.</small>
-                    <textarea id="dm-notes-secrets" rows="7" placeholder="Was wissen die Spieler noch nicht? Welche Überraschungen lauern?">${notes.secrets || ''}</textarea>
+                    <textarea id="dm-notes-secrets" rows="7" placeholder="Was wissen die Spieler noch nicht? Welche Überraschungen lauern?">${esc(notes.secrets)}</textarea>
                 </div>
 
                 <div class="card">
-                    <h3>🏰 Orte, Fraktionen & Wichtige NPCs</h3>
+                    <h3>${icon('map')} Orte, Fraktionen & Wichtige NPCs</h3>
                     <small class="muted">Städte, Tavernen, Höllen-/Himmels-Ebenen, Anführer und Belohnungen.</small>
-                    <textarea id="dm-notes-world" rows="7" placeholder="Ortsbeschreibungen, Fraktions-Beziehungen, Händler-Inventare...">${notes.world || ''}</textarea>
+                    <textarea id="dm-notes-world" rows="7" placeholder="Ortsbeschreibungen, Fraktions-Beziehungen, Händler-Inventare...">${esc(notes.world)}</textarea>
                 </div>
             </div>
 
             <div class="card">
-                <h3>📌 Eigene Notiz-Karten (Rätsel, Boss-Phasen, Loot-Listen, Quests)</h3>
+                <h3>${icon('pin')} Eigene Notiz-Karten (Rätsel, Boss-Phasen, Loot-Listen, Quests)</h3>
                 <div class="dm-assign-row">
                     <input type="text" id="dm-new-note-title" placeholder="Titel der neuen Notiz-Karte (z.B. Rätsel im Thronsaal / Boss-Mechanik)...">
                     <button type="button" class="btn-primary" onclick="dmAddCustomNoteCard()">+ Neue Notiz-Karte anlegen</button>
@@ -2052,13 +2159,13 @@ function renderDmNotesTab(container) {
                     ${notes.entries.map((entry, idx) => `
                         <div class="card dm-custom-note-card">
                             <div class="creator-header-row">
-                                <input type="text" value="${entry.title || ''}" placeholder="Titel..."
-                                    onchange="dmUpdateCustomNoteCard(${idx}, 'title', this.value)"
-                                    style="font-weight: 800; font-size: 1rem;">
-                                <button type="button" class="btn-del" onclick="dmDeleteCustomNoteCard(${idx})">🗑️ Karte löschen</button>
+                                <input type="text" id="dm-note-title-${esc(entry.id || idx)}" value="${esc(entry.title)}" placeholder="Titel..."
+                                    class="note-title-input" aria-label="Titel der Notiz-Karte"
+                                    onchange="dmUpdateCustomNoteCard(${idx}, 'title', this.value)">
+                                <button type="button" class="btn-del" onclick="dmDeleteCustomNoteCard(${idx})">${icon('trash')} Karte löschen</button>
                             </div>
-                            <textarea rows="5" placeholder="Inhalt dieser Notiz-Karte..."
-                                oninput="dmUpdateCustomNoteCard(${idx}, 'content', this.value)">${entry.content || ''}</textarea>
+                            <textarea rows="5" id="dm-note-content-${esc(entry.id || idx)}" placeholder="Inhalt dieser Notiz-Karte..."
+                                oninput="dmUpdateCustomNoteCard(${idx}, 'content', this.value)">${esc(entry.content)}</textarea>
                         </div>
                     `).join('')}
                 </div>
@@ -2113,7 +2220,7 @@ function dmDeleteCustomNoteCard(idx) {
 function dmModifyStat(playerId, prop, delta) {
     const char = gameState.characters[playerId];
     if (!char) return;
-    char[prop] += delta;
+    char[prop] = (Number(char[prop]) || 0) + delta;
     broadcastState();
     renderDmView();
 }
@@ -2167,15 +2274,21 @@ function dmUpdatePlayerSpell(playerId, spellIdx, field, val) {
 }
 
 function dmModifyEnemy(idx, prop, delta) {
-    gameState.enemies[idx][prop] += delta;
+    const enemy = gameState.enemies[idx];
+    if (!enemy) return;
+    enemy[prop] = (Number(enemy[prop]) || 0) + delta;
     broadcastState();
     renderDmEnemies();
 }
 
 function dmRemoveEnemy(idx) {
     const enemy = gameState.enemies[idx];
+    const uid = enemy ? enemy._uid : null;
     openConfirmModal(`Möchtest du "${enemy ? enemy.name : 'dieses Monster'}" wirklich aus dem Spiel entfernen?`, () => {
-        gameState.enemies.splice(idx, 1);
+        // Über _uid neu suchen: die Liste kann sich seit dem Klick geändert haben
+        const currentIdx = gameState.enemies.findIndex(e => e._uid === uid);
+        if (currentIdx === -1) return;
+        gameState.enemies.splice(currentIdx, 1);
         cleanStaleCombatants();
         broadcastState();
         renderDmEnemies();

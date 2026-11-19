@@ -1,0 +1,1409 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&family=VT323&display=swap");
+
+/* ==========================================================================
+   AFTERLIFE — „Lost Place"
+   Event-Thema. Kein Geschmack, keine Gnade.
+   Hinter allem läuft ein endloser Backrooms-Flur (js/lostplace.js baut ihn).
+   UI: Absperrband, Kreppband-Asservate, Notausgangsgrün, Röhrenlicht.
+   Bebas Neue (Titel, Köpfe, Knöpfe) + Special Elite (Text)
+   + VT323 (Camcorder-Anzeige) + Permanent Marker (Graffiti).
+   Alles unter :root[data-theme="lostplace"].
+   ========================================================================== */
+
+/* TOKENS ================================================================== */
+:root[data-theme="lostplace"] {
+    color-scheme: dark;
+
+    --paper:     #1b1a0f;
+    --paper-hi:  #2a2816;
+    --paper-lo:  #12110a;
+    --field:     #0d0c06;
+
+    --ink:       #f1e9c4;
+    --ink-2:     #cbbf8c;
+    --ink-3:     #8f855c;
+    --rule:      rgba(240, 220, 120, 0.22);
+
+    --rubric:        #ff3b2f;
+    --rubric-fill:   #d81e12;
+    --azure:         #7fd8ff;
+    --azure-fill:    #1f6f9a;
+    --on-fill:       #fffbe8;
+    --ochre:         #ffd23f;
+    --ochre-wash:    #3a320c;
+    --verdigris:     #3dff8a;
+    --verdigris-wash:#0b2a17;
+    --violet:        #c79bff;
+    --copper:        #e0a050;
+
+    --block-ink:   #0a0905;
+    --block-paper: #efe4b0;
+
+    --hatch:      linear-gradient(transparent, transparent);
+    --hatch-soft: linear-gradient(transparent, transparent);
+
+    /* Lost-Place-Palette */
+    --hazard-y:  #ffd23f;
+    --hazard-k:  #121108;
+    --hazard:    repeating-linear-gradient(-45deg, var(--hazard-y) 0 12px, var(--hazard-k) 12px 24px);
+    --hazard-sm: repeating-linear-gradient(-45deg, var(--hazard-y) 0 6px, var(--hazard-k) 6px 12px);
+    --tape:      #e6d9a6;
+    --tube:      #fffbe3;
+    --exit:      #3dff8a;
+    --exit-deep: #06210f;
+    --wall:      #c4b15a;
+    --mold:      #3b3a1a;
+    --void:      #050402;
+    --hard:      5px 5px 0 #000;
+    --hard-sm:   3px 3px 0 #000;
+
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .5 0 0 0 .5 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mildew: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='m' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .15 0 0 0 0 .05 0 0 0 -3.2 1.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+    --carpet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .27 0 0 0 0 .09 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%237a6a32'/%3E%3Crect width='200' height='200' filter='url(%23c)'/%3E%3C/svg%3E");
+    --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23ffd23f'/%3E%3C/svg%3E");
+
+    /* Kulissen-Kacheln (eine Periode = 240px Tiefe) */
+    --bk-floor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='240'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .28 0 0 0 0 .23 0 0 0 0 .07 0 0 0 .7 0'/%3E%3C/filter%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005 .03' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .13 0 0 0 0 .02 0 0 0 -2.6 1.55'/%3E%3C/filter%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff2b0' stop-opacity='.42'/%3E%3Cstop offset='1' stop-color='%23fff2b0' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='1600' height='240' fill='%23837136'/%3E%3Cellipse cx='400' cy='120' rx='430' ry='118' fill='url(%23g)'/%3E%3Cellipse cx='1200' cy='120' rx='430' ry='118' fill='url(%23g)'/%3E%3Crect width='1600' height='240' filter='url(%23s)'/%3E%3Crect width='1600' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    --bk-ceil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='240'%3E%3Cfilter id='b' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='16'/%3E%3C/filter%3E%3Cfilter id='w' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .02' numOctaves='3' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .1 0 0 0 -3 1.6'/%3E%3C/filter%3E%3Crect width='1600' height='240' fill='%23cdc296'/%3E%3Crect width='1600' height='240' filter='url(%23w)'/%3E%3Cg fill='%23a39866'%3E%3Crect width='1600' height='4'/%3E%3Crect y='118' width='1600' height='4'/%3E%3Crect width='4' height='240'/%3E%3Crect x='200' width='4' height='240'/%3E%3Crect x='400' width='4' height='240'/%3E%3Crect x='600' width='4' height='240'/%3E%3Crect x='800' width='4' height='240'/%3E%3Crect x='1000' width='4' height='240'/%3E%3Crect x='1200' width='4' height='240'/%3E%3Crect x='1400' width='4' height='240'/%3E%3C/g%3E%3Cg fill='%23fff3b8' filter='url(%23b)' opacity='.95'%3E%3Crect x='270' y='30' width='260' height='100'/%3E%3Crect x='1070' y='30' width='260' height='100'/%3E%3C/g%3E%3Cg fill='%23fffef4'%3E%3Crect x='304' y='44' width='192' height='72'/%3E%3Crect x='1104' y='44' width='192' height='72'/%3E%3C/g%3E%3Cg fill='%23e8e2c4'%3E%3Crect x='304' y='78' width='192' height='3'/%3E%3Crect x='1104' y='78' width='192' height='3'/%3E%3C/g%3E%3C/svg%3E");
+    --bk-wall: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='960'%3E%3Cdefs%3E%3Cpattern id='p' width='24' height='960' patternUnits='userSpaceOnUse'%3E%3Crect width='11' height='960' fill='%23b8a44c'/%3E%3Crect x='11' width='1.5' height='960' fill='%23d8c56e'/%3E%3C/pattern%3E%3Cpattern id='d' width='24' height='44' patternUnits='userSpaceOnUse'%3E%3Cpath d='M17.5 8l3.5 6-3.5 6-3.5-6z' fill='%23a08d3a' opacity='.55'/%3E%3C/pattern%3E%3ClinearGradient id='l' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff8d0' stop-opacity='.45'/%3E%3Cstop offset='.42' stop-color='%23fff8d0' stop-opacity='0'/%3E%3Cstop offset='.7' stop-color='%233a2f0c' stop-opacity='0'/%3E%3Cstop offset='.93' stop-color='%233a2f0c' stop-opacity='.55'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .006' numOctaves='4' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .26 0 0 0 0 .06 0 0 0 -3 1.75'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='240' height='960' fill='%23c4b15a'/%3E%3Crect width='240' height='960' fill='url(%23p)'/%3E%3Crect width='240' height='960' fill='url(%23d)'/%3E%3Crect width='240' height='960' filter='url(%23s)'/%3E%3Crect width='240' height='960' fill='url(%23l)'/%3E%3Crect y='30' width='240' height='6' fill='%23e3d38a'/%3E%3Crect y='36' width='240' height='3' fill='%23786a2c'/%3E%3Crect y='898' width='240' height='62' fill='%23514520'/%3E%3Crect y='898' width='240' height='4' fill='%23d9c77a'/%3E%3Crect y='940' width='240' height='20' fill='%23362d12'/%3E%3C/svg%3E");
+    --bk-entity: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 520'%3E%3Cg fill='%23070602'%3E%3Cellipse cx='80' cy='40' rx='19' ry='30'/%3E%3Cpath d='M72 66h16l2 14 22 10c6 3 8 9 9 16l7 150c1 14 3 50 2 64l-4 2-6-60-6-88-4 40-1 50 8 230h-14l-14-210h-2l-14 210H51l8-230-1-50-4-40-6 88-6 60-4-2c-1-14 1-50 2-64l7-150c1-7 3-13 9-16l22-10z'/%3E%3C/g%3E%3Cg fill='%23fff6c8'%3E%3Ccircle cx='72' cy='38' r='2.6'/%3E%3Ccircle cx='88' cy='38' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
+
+    --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+    --font-head:    "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+    --font-body:    "Special Elite", "Courier New", monospace;
+    --font-osd:     "VT323", "Courier New", monospace;
+    --font-graffiti:"Permanent Marker", "Comic Sans MS", cursive;
+}
+
+/* KEYFRAMES =============================================================== */
+
+@keyframes lpHazardMove {
+    from { background-position: 0 0; }
+    to   { background-position: 34px 0; }
+}
+
+/* Absperrband im Kopf: läuft nur über transform (kein Neuzeichnen) */
+@keyframes lpTapeRun {
+    to { transform: translate3d(34px, 0, 0); }
+}
+
+/* BASIS =================================================================== */
+:root[data-theme="lostplace"] body {
+    background: var(--void);
+    font-size: 1.04rem;
+    line-height: 1.5;
+    counter-reset: lpexhibit;
+}
+
+/* Platz für die Scrollleiste immer reservieren: sonst springt beim Reiterwechsel
+   (kurze ↔ lange Seite) das ganze Layout samt Kulisse um 12px. */
+:root[data-theme="lostplace"] { scrollbar-gutter: stable; }
+
+/* Fallback, falls die Kulisse (JS) fehlt: schimmeliges Gelb */
+:root[data-theme="lostplace"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 120% 90% at 50% 45%, rgba(196, 177, 90, 0.35), transparent 70%),
+        var(--mildew),
+        #2a2612;
+}
+
+:root[data-theme="lostplace"] * { scrollbar-color: var(--hazard-y) #0a0905; }
+:root[data-theme="lostplace"] ::-webkit-scrollbar { width: 12px; height: 12px; }
+:root[data-theme="lostplace"] ::-webkit-scrollbar-track { background: #0a0905; }
+:root[data-theme="lostplace"] ::-webkit-scrollbar-thumb { background: var(--hazard-sm); border: 2px solid #0a0905; }
+:root[data-theme="lostplace"] ::-webkit-scrollbar-thumb:hover { background: var(--hazard-y); }
+
+:root[data-theme="lostplace"] ::selection { background: var(--hazard-y); color: #000; }
+
+:root[data-theme="lostplace"] :focus-visible { outline: 3px dashed var(--hazard-y); outline-offset: 3px; }
+:root[data-theme="lostplace"] input:focus-visible,
+:root[data-theme="lostplace"] textarea:focus-visible,
+:root[data-theme="lostplace"] select:focus-visible { outline: none; }
+
+:root[data-theme="lostplace"] h2 {
+    font-family: var(--font-head);
+    font-weight: 400;
+    font-size: 2.1rem;
+    letter-spacing: 0.06em;
+    color: var(--hazard-y);
+    text-shadow: 3px 3px 0 #000, 0 0 18px rgba(255, 210, 63, 0.25);
+}
+
+:root[data-theme="lostplace"] h2::first-letter { color: var(--rubric); }
+
+:root[data-theme="lostplace"] h3 {
+    font-family: var(--font-head);
+    font-weight: 400;
+    font-size: 1.45rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    text-shadow: 2px 2px 0 #000;
+    border-bottom: 6px solid transparent;
+    border-image: var(--hazard-sm) 6;
+    padding-bottom: 0.25rem;
+}
+
+:root[data-theme="lostplace"] .currency-header h3,
+:root[data-theme="lostplace"] .creator-header-row h3,
+:root[data-theme="lostplace"] .dm-player-header h3,
+:root[data-theme="lostplace"] .combat-name-line h3,
+:root[data-theme="lostplace"] .battlemap-board-header h3,
+:root[data-theme="lostplace"] .modal-card h3 { border-bottom: 0; border-image: none; padding-bottom: 0; }
+
+:root[data-theme="lostplace"] h3 small { color: var(--ink-2); letter-spacing: 0; font-family: var(--font-body); text-shadow: none; }
+:root[data-theme="lostplace"] h3 > .icon,
+:root[data-theme="lostplace"] h2 > .icon { color: var(--hazard-y); }
+
+:root[data-theme="lostplace"] code { border-bottom-color: var(--hazard-y); color: var(--exit); font-family: var(--font-osd); font-size: 1.15em; }
+:root[data-theme="lostplace"] .muted { color: var(--ink-2); }
+:root[data-theme="lostplace"] .icon { stroke-linecap: square; stroke-linejoin: miter; }
+
+/* GLITCH: Überschriften reißen kurz auseinander */
+/* KONTROLLEN ============================================================== */
+:root[data-theme="lostplace"] input,
+:root[data-theme="lostplace"] textarea,
+:root[data-theme="lostplace"] select {
+    background-color: var(--field);
+    color: var(--ink);
+    border: 2px solid #3a3618;
+    border-radius: 0;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    font-family: var(--font-body);
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+:where(:root[data-theme="lostplace"]) :is(input, textarea, select) { font-size: 1rem; }
+:where(:root[data-theme="lostplace"]) button { font-size: 1.05rem; }
+
+:root[data-theme="lostplace"] input::placeholder,
+:root[data-theme="lostplace"] textarea::placeholder { color: var(--ink-3); font-style: italic; }
+
+:root[data-theme="lostplace"] input:hover,
+:root[data-theme="lostplace"] textarea:hover,
+:root[data-theme="lostplace"] select:hover { border-color: #6d6430; }
+
+:root[data-theme="lostplace"] input:focus,
+:root[data-theme="lostplace"] textarea:focus,
+:root[data-theme="lostplace"] select:focus {
+    border-color: var(--hazard-y);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(255, 210, 63, 0.22), var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] select option { background: #1b1a0f; color: #f1e9c4; }
+
+/* Liniertes Protokollpapier, durchnässt */
+:root[data-theme="lostplace"] textarea {
+    background-color: var(--field);
+    background-image:
+        repeating-linear-gradient(transparent 0 calc(1.6em - 1px), rgba(255, 210, 63, 0.09) calc(1.6em - 1px) 1.6em),
+        linear-gradient(90deg, transparent 2.2rem, rgba(255, 59, 47, 0.35) 2.2rem, rgba(255, 59, 47, 0.35) calc(2.2rem + 1px), transparent calc(2.2rem + 1px));
+    background-position: 0 0.5rem, 0 0;
+    background-attachment: local;
+}
+
+:root[data-theme="lostplace"] input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2px solid var(--hazard-y);
+    border-radius: 0;
+    background-color: var(--field);
+    box-shadow: 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] input[type="checkbox"]:hover { border-color: #fff3a6; }
+:root[data-theme="lostplace"] input[type="checkbox"]::before { background: var(--hazard-y); }
+:root[data-theme="lostplace"] input[type="checkbox"]:checked { background-color: #2a2408; }
+:root[data-theme="lostplace"] input[type="checkbox"]:focus-visible { outline: 3px dashed var(--hazard-y); outline-offset: 3px; }
+
+/* Knöpfe: Betonschalter mit harter Kante */
+:root[data-theme="lostplace"] button {
+    background: linear-gradient(180deg, #34311b 0%, #1f1d0e 100%);
+    color: var(--ink);
+    border: 2px solid #000;
+    border-radius: 0;
+    clip-path: none;
+    font-family: var(--font-head);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    box-shadow: var(--hard-sm), inset 0 1px 0 rgba(255, 240, 180, 0.14);
+    text-shadow: 1px 1px 0 #000;
+    transition: background 0.1s, color 0.1s, box-shadow 0.1s, transform 0.08s;
+}
+
+:root[data-theme="lostplace"] button:hover {
+    background: var(--hazard-y);
+    color: #000;
+    text-shadow: none;
+    box-shadow: var(--hard), 0 0 18px rgba(255, 210, 63, 0.35);
+    transform: translate(-1px, -1px);
+}
+
+:root[data-theme="lostplace"] button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #000; }
+
+:root[data-theme="lostplace"] button:disabled,
+:root[data-theme="lostplace"] button:disabled:hover {
+    opacity: 0.4;
+    filter: grayscale(1);
+    background: repeating-linear-gradient(-45deg, #2a2816 0 6px, #1b1a0f 6px 12px);
+    color: var(--ink-2);
+    text-shadow: none;
+    box-shadow: var(--hard-sm);
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* Absperrband-Knopf */
+:root[data-theme="lostplace"] .btn-primary,
+:root[data-theme="lostplace"] .btn-d20 {
+    background:
+        linear-gradient(90deg, transparent 0 9px, var(--hazard-y) 9px),
+        var(--hazard-sm);
+    color: #000;
+    border-color: #000;
+    text-shadow: none;
+    box-shadow: var(--hard-sm), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme="lostplace"] .btn-primary { padding-left: calc(0.85rem + 9px); }
+:root[data-theme="lostplace"] .btn-d20 { background: var(--hazard-y); }
+
+:root[data-theme="lostplace"] .btn-primary:hover,
+:root[data-theme="lostplace"] .btn-d20:hover {
+    background: var(--hazard);
+    background-size: 34px 34px;
+    color: #000;
+    text-shadow: 0 0 2px var(--hazard-y), 0 0 4px var(--hazard-y), 0 0 6px var(--hazard-y), 0 0 8px var(--hazard-y);
+    animation: lpHazardMove 1.2s linear infinite;
+}
+
+:root[data-theme="lostplace"] .btn-primary:disabled:hover,
+:root[data-theme="lostplace"] .btn-d20:disabled:hover {
+    background: repeating-linear-gradient(-45deg, #2a2816 0 6px, #1b1a0f 6px 12px);
+    color: var(--ink-2);
+    text-shadow: none;
+}
+
+:root[data-theme="lostplace"] .btn-secondary {
+    background: transparent;
+    color: var(--hazard-y);
+    border-color: var(--hazard-y);
+    box-shadow: var(--hard-sm), inset 0 0 12px rgba(255, 210, 63, 0.12);
+}
+
+:root[data-theme="lostplace"] .btn-secondary:hover { background: var(--hazard-y); color: #000; }
+:root[data-theme="lostplace"] .btn-secondary:disabled:hover { background: transparent; color: var(--hazard-y); }
+
+:root[data-theme="lostplace"] .btn-demonic { color: var(--rubric); border-color: var(--rubric-fill); }
+:root[data-theme="lostplace"] .btn-demonic:hover {
+    background: var(--rubric-fill);
+    color: #fff;
+    box-shadow: var(--hard), 0 0 22px rgba(255, 40, 20, 0.6);
+}
+
+:root[data-theme="lostplace"] .btn-holy { color: var(--azure); border-color: var(--azure-fill); }
+:root[data-theme="lostplace"] .btn-holy:hover {
+    background: #bdf0ff;
+    color: #002233;
+    box-shadow: var(--hard), 0 0 22px rgba(127, 216, 255, 0.6);
+}
+
+:root[data-theme="lostplace"] .btn-del {
+    background: transparent;
+    color: var(--rubric);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+:root[data-theme="lostplace"] .btn-del:hover {
+    background: var(--rubric-fill);
+    color: #fff;
+    border-color: #000;
+    box-shadow: var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .btn-del:disabled:hover { background: transparent; color: var(--rubric); border-color: transparent; box-shadow: none; }
+
+:root[data-theme="lostplace"] .field-label {
+    font-family: var(--font-osd);
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--hazard-y);
+}
+
+/* KOPF & REITER =========================================================== */
+:root[data-theme="lostplace"] .top-bar {
+    z-index: 5;
+    isolation: isolate;
+    background: linear-gradient(180deg, #070603 0%, #15140a 100%);
+    border-bottom: 3px solid #000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="lostplace"] .top-bar button { transition: none; }
+
+/* Absperrband unter dem Kopf: eine Kachel (34px) breiter als der Kopf und
+   läuft endlos um genau diese Kachel nach rechts; der Kopf schneidet seitlich ab. */
+:root[data-theme="lostplace"] .top-bar { overflow-x: clip; }
+
+:root[data-theme="lostplace"] .top-bar::after {
+    left: -34px;
+    right: 0;
+    bottom: -14px;
+    height: 11px;
+    border: 0;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    background: var(--hazard);
+    background-size: 34px 34px;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    will-change: transform;
+    animation: lpTapeRun 1.2s linear infinite;
+}
+
+:root[data-theme="lostplace"] .top-bar h1 {
+    filter: none;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 2.6rem;
+    letter-spacing: 0.08em;
+    color: #fff3a6;
+    text-shadow: 0 0 10px rgba(255, 210, 63, 0.55), 3px 3px 0 #000;
+}
+
+:root[data-theme="lostplace"] .brand-mark { filter: none; }
+:root[data-theme="lostplace"] .brand-mark .mark-line { stroke: var(--hazard-y); }
+:root[data-theme="lostplace"] .brand-mark .mark-solid { fill: var(--hazard-y); }
+:root[data-theme="lostplace"] .brand-mark .mark-sand { fill: var(--rubric); }
+
+/* Raumcode als Notausgangsschild */
+:root[data-theme="lostplace"] #session-info {
+    border: 2px solid var(--exit);
+    border-radius: 0;
+    color: var(--exit);
+    outline: 0;
+    font-family: var(--font-osd);
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    background: var(--exit-deep);
+    text-shadow: 0 0 6px rgba(61, 255, 138, 0.7);
+    box-shadow: 0 0 10px rgba(61, 255, 138, 0.35), var(--hard-sm);
+    max-width: min(64ch, 100%);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:root[data-theme="lostplace"] .folder-tabs .tab-btn {
+    background: transparent;
+    color: var(--ink-2);
+    border: 0;
+    border-radius: 0;
+    clip-path: none;
+    box-shadow: none;
+    text-shadow: 1px 1px 0 #000;
+    font-family: var(--font-head);
+    font-weight: 400;
+    font-size: 1.3rem;
+    letter-spacing: 0.07em;
+}
+
+:root[data-theme="lostplace"] .tab-num {
+    border: 2px solid currentColor;
+    border-radius: 0;
+    color: var(--hazard-y);
+    font-family: var(--font-osd);
+    font-size: 1.05rem;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="lostplace"] .folder-tabs .tab-btn:hover {
+    background: rgba(255, 210, 63, 0.1);
+    text-shadow: 1px 1px 0 #000;
+    color: var(--hazard-y);
+    box-shadow: inset 0 -4px 0 var(--hazard-y);
+    transform: none;
+}
+
+:root[data-theme="lostplace"] .folder-tabs .tab-btn.active {
+    background: var(--hazard-y);
+    color: #000;
+    text-shadow: none;
+    box-shadow: var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .folder-tabs .tab-btn.active:hover { background: var(--hazard-y); color: #000; text-shadow: none; box-shadow: var(--hard-sm); }
+
+:root[data-theme="lostplace"] .folder-tabs .tab-btn.active .tab-num { color: #000; border-color: #000; background: transparent; }
+
+/* KARTEN: Asservate mit Kreppband und eigener Röhre =========================== */
+:root[data-theme="lostplace"] .card {
+    position: relative;
+    counter-increment: lpexhibit;
+    border: 2px solid #000;
+    border-radius: 0;
+    background:
+        linear-gradient(180deg, rgba(255, 246, 200, 0.07) 0, transparent 70px),
+        var(--mildew) 0 0 / 480px 480px,
+        linear-gradient(180deg, rgba(46, 43, 22, 0.94) 0%, rgba(24, 22, 11, 0.95) 100%);
+    box-shadow:
+        8px 8px 0 rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 240, 170, 0.08),
+        inset 0 0 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Kreppband mit Asservatennummer */
+:root[data-theme="lostplace"] .card::before {
+    content: "ASSERVAT Nº " counter(lpexhibit, decimal-leading-zero);
+    position: absolute;
+    top: -13px;
+    right: 18px;
+    z-index: 3;
+    padding: 3px 14px 2px;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: #2a2410;
+    background: linear-gradient(180deg, rgba(240, 228, 176, 0.92), rgba(222, 208, 150, 0.92));
+    clip-path: polygon(0 8%, 4% 0, 9% 10%, 15% 2%, 22% 9%, 30% 0, 38% 8%, 47% 1%, 55% 9%, 63% 0, 71% 8%, 79% 1%, 87% 10%, 94% 2%, 100% 9%, 99% 93%, 94% 100%, 88% 91%, 80% 99%, 72% 92%, 64% 100%, 55% 92%, 47% 100%, 39% 91%, 31% 99%, 23% 92%, 15% 100%, 8% 91%, 2% 99%, 0 90%);
+    transform: rotate(2.5deg);
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="lostplace"] .card:nth-of-type(3n+2)::before { right: auto; left: 22px; transform: rotate(-3deg); }
+:root[data-theme="lostplace"] .card:nth-of-type(3n)::before { right: 38%; transform: rotate(1deg); }
+
+/* Leuchtröhre an der Oberkante, jede flackert anders */
+:root[data-theme="lostplace"] .card::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 14%;
+    right: 14%;
+    height: 4px;
+    border-radius: 3px;
+    background: var(--tube);
+    box-shadow:
+        0 0 6px 1px rgba(255, 250, 220, 0.95),
+        0 0 22px 4px rgba(255, 238, 160, 0.45),
+        0 30px 60px 14px rgba(255, 235, 150, 0.08);
+    pointer-events: none;
+}
+
+:root[data-theme="lostplace"] .card:nth-of-type(3n)::after { left: 30%; right: 8%; }
+
+:root[data-theme="lostplace"] .card .card {
+    border: 1px dashed rgba(255, 210, 63, 0.28);
+    border-radius: 0;
+    background: rgba(5, 4, 2, 0.4);
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0;
+    counter-increment: none;
+}
+
+:root[data-theme="lostplace"] .card .card::before,
+:root[data-theme="lostplace"] .card .card::after { display: none; }
+
+:root[data-theme="lostplace"] .drop-zone {
+    background: rgba(5, 4, 2, 0.6);
+    border: 3px dashed var(--hazard-y);
+    border-radius: 0;
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="lostplace"] .drop-zone:hover,
+:root[data-theme="lostplace"] .drop-zone.drag-over {
+    border-style: solid;
+    border-image: var(--hazard) 3;
+    background: rgba(255, 210, 63, 0.08);
+}
+
+:root[data-theme="lostplace"] .drop-zone.file-loaded { border-color: var(--exit); border-image: none; background: var(--verdigris-wash); }
+:root[data-theme="lostplace"] .drop-zone-prompt .icon { color: var(--hazard-y); }
+:root[data-theme="lostplace"] .drop-remove-btn { border-color: var(--rubric-fill); }
+
+/* Scrollende Kampf-Spalte schneidet sonst das Kreppband der obersten Karte ab */
+:root[data-theme="lostplace"] .combat-left-col { padding-top: 14px; margin-top: -14px; }
+
+/* LOBBY =================================================================== */
+:root[data-theme="lostplace"] .lobby-title {
+    filter: none;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(3.4rem, 13vw, 9rem);
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: #fff3a6;
+    text-shadow: 0 0 6px #fffbe3, 0 0 22px rgba(255, 210, 63, 0.6), 0 0 60px rgba(255, 190, 40, 0.3), 5px 5px 0 #000;
+}
+
+:root[data-theme="lostplace"] .lobby-title::first-letter { color: inherit; }
+
+:root[data-theme="lostplace"] .lobby-rule {
+    font-family: var(--font-osd);
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--exit);
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 8px rgba(61, 255, 138, 0.8);
+}
+
+:root[data-theme="lostplace"] .lobby-rule::before,
+:root[data-theme="lostplace"] .lobby-rule::after {
+    height: 8px;
+    border: 0;
+    background: var(--hazard-sm);
+    box-shadow: 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] .lobby-grid {
+    position: relative;
+    border: 3px solid #000;
+    border-radius: 0;
+    background:
+        var(--mildew) 0 0 / 480px 480px,
+        linear-gradient(180deg, rgba(46, 43, 22, 0.95) 0%, rgba(22, 20, 10, 0.96) 100%);
+    box-shadow:
+        14px 14px 0 rgba(0, 0, 0, 0.65),
+        inset 0 0 0 1px rgba(255, 240, 170, 0.08),
+        inset 0 0 80px rgba(0, 0, 0, 0.5),
+        0 0 120px rgba(255, 210, 63, 0.08);
+}
+
+/* Absperrband quer über die Ecke */
+:root[data-theme="lostplace"] .lobby-grid::before {
+    content: "BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN · BETRETEN VERBOTEN";
+    position: absolute;
+    top: 30px;
+    right: -78px;
+    z-index: 4;
+    width: 330px;
+    padding: 4px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-family: var(--font-head);
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+    color: #000;
+    background: var(--hazard-y);
+    border-top: 3px solid #000;
+    border-bottom: 3px solid #000;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    transform: rotate(32deg);
+    transform-origin: 50% 50%;
+    pointer-events: none;
+}
+
+/* Graffiti an der Wand */
+:root[data-theme="lostplace"] .lobby-grid::after {
+    content: "ES GIBT KEINEN AUSGANG";
+    position: absolute;
+    right: -10px;
+    bottom: -46px;
+    z-index: 4;
+    font-family: var(--font-graffiti);
+    font-size: clamp(1.1rem, 3vw, 1.9rem);
+    color: #ff2a1a;
+    text-shadow: 0 0 2px rgba(255, 40, 20, 0.7), 0 0 18px rgba(255, 30, 10, 0.35);
+    transform: rotate(-6deg);
+    pointer-events: none;
+}
+
+:root[data-theme="lostplace"] .lobby-grid > .card {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    counter-increment: none;
+}
+
+:root[data-theme="lostplace"] .lobby-grid > .card::before { display: none; }
+:root[data-theme="lostplace"] .lobby-grid > .card::after { left: 20%; right: 20%; }
+
+:root[data-theme="lostplace"] .lobby-grid > .card + .card { border-left: 6px solid transparent; border-image: var(--hazard-sm) 6; }
+
+:root[data-theme="lostplace"] .lobby-grid > .card > p::first-letter {
+    font-family: var(--font-head);
+    font-weight: 400;
+    font-size: 3.6rem;
+    color: var(--hazard-y);
+    text-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 210, 63, 0.6);
+}
+
+:root[data-theme="lostplace"] .lobby-divider { color: var(--hazard-y); font-family: var(--font-head); letter-spacing: 0.2em; }
+:root[data-theme="lostplace"] .lobby-divider::before,
+:root[data-theme="lostplace"] .lobby-divider::after { border: 0; height: 3px; background: var(--hazard-y); box-shadow: 2px 2px 0 #000; }
+
+/* WÜRFELBANK ============================================================== */
+:root[data-theme="lostplace"] .dice-bar-container {
+    background: linear-gradient(180deg, rgba(8, 7, 3, 0.92) 0%, rgba(26, 24, 12, 0.88) 100%);
+    border-bottom: 3px solid #000;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="lostplace"] .quick-dice-btns button {
+    font-family: var(--font-head);
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+
+/* Wurfzettel: Beweisanhänger */
+:root[data-theme="lostplace"] .roll-pill {
+    background: #ece0ad;
+    color: #1a1708;
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: var(--hard-sm);
+    font-family: var(--font-body);
+    transform: rotate(-1.2deg);
+}
+
+:root[data-theme="lostplace"] .roll-pill:nth-child(even) { transform: rotate(1deg); }
+
+:root[data-theme="lostplace"] .roll-who { color: #8a1d10; font-family: var(--font-head); font-size: 1rem; letter-spacing: 0.05em; }
+:root[data-theme="lostplace"] .roll-what { color: #3d3618; }
+
+:root[data-theme="lostplace"] .roll-total {
+    background: #000;
+    color: var(--hazard-y);
+    font-family: var(--font-osd);
+    font-size: 1.5rem;
+    font-weight: 400;
+    text-shadow: 0 0 6px rgba(255, 210, 63, 0.8);
+    border-radius: 0;
+}
+
+:root[data-theme="lostplace"] .roll-detail { color: #3d3618; }
+:root[data-theme="lostplace"] .roll-kept { color: #000; font-weight: 700; }
+:root[data-theme="lostplace"] .roll-dropped { color: #8f855c; }
+
+/* Krit: Notausgang gefunden */
+:root[data-theme="lostplace"] .roll-pill.roll-crit {
+    background: var(--exit-deep);
+    color: var(--exit);
+    border-color: var(--exit);
+    box-shadow: 0 0 14px rgba(61, 255, 138, 0.6), inset 0 0 12px rgba(61, 255, 138, 0.35), var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .roll-pill.roll-crit .roll-detail,
+:root[data-theme="lostplace"] .roll-pill.roll-crit .roll-what,
+:root[data-theme="lostplace"] .roll-pill.roll-crit .roll-who,
+:root[data-theme="lostplace"] .roll-pill.roll-crit .roll-kept { color: var(--exit); text-shadow: 0 0 6px rgba(61, 255, 138, 0.7); }
+:root[data-theme="lostplace"] .roll-pill.roll-crit .roll-total { background: var(--exit); color: #002a10; text-shadow: none; }
+
+/* Patzer: Röhre durchgebrannt */
+:root[data-theme="lostplace"] .roll-pill.roll-fumble { background: #170504; color: #ff8a7a; border-color: var(--rubric-fill); filter: saturate(0.8); }
+:root[data-theme="lostplace"] .roll-pill.roll-fumble .roll-total { background: #000; color: #ff3b2f; text-shadow: 0 0 6px rgba(255, 59, 47, 0.8); }
+:root[data-theme="lostplace"] .roll-pill.roll-fumble .roll-who,
+:root[data-theme="lostplace"] .roll-pill.roll-fumble .roll-what,
+:root[data-theme="lostplace"] .roll-pill.roll-fumble .roll-detail { color: #ff8a7a; }
+
+:root[data-theme="lostplace"] .roll-pill.roll-secret { border: 2px dashed var(--violet); background: #120c18; color: var(--violet); }
+:root[data-theme="lostplace"] .roll-pill.roll-secret .roll-who,
+:root[data-theme="lostplace"] .roll-pill.roll-secret .roll-what,
+:root[data-theme="lostplace"] .roll-pill.roll-secret .roll-detail { color: var(--violet); }
+:root[data-theme="lostplace"] .roll-pill.roll-secret .roll-total { background: var(--violet); color: #12051c; text-shadow: none; }
+
+/* CHARAKTERBOGEN ========================================================== */
+:root[data-theme="lostplace"] .morality-banner {
+    background:
+        radial-gradient(ellipse 60% 120% at 0% 50%, rgba(255, 40, 20, 0.16), transparent 70%),
+        radial-gradient(ellipse 60% 120% at 100% 50%, rgba(127, 216, 255, 0.12), transparent 70%),
+        var(--mildew) 0 0 / 480px 480px,
+        linear-gradient(180deg, rgba(46, 43, 22, 0.95) 0%, rgba(24, 22, 11, 0.95) 100%);
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.6), inset 0 0 50px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="lostplace"] .soul-scale .scale-line { stroke: var(--hazard-y); }
+:root[data-theme="lostplace"] .soul-scale .scale-solid { fill: var(--hazard-y); }
+:root[data-theme="lostplace"] .soul-scale .scale-pivot { fill: #000; stroke: var(--hazard-y); }
+:root[data-theme="lostplace"] .soul-scale .scale-pan { stroke: var(--hazard-y); }
+:root[data-theme="lostplace"] .soul-scale .pan-demonic { fill: #ff2a1a; filter: drop-shadow(0 0 6px rgba(255, 40, 20, 0.9)); }
+:root[data-theme="lostplace"] .soul-scale .pan-holy { fill: #7fd8ff; filter: drop-shadow(0 0 6px rgba(127, 216, 255, 0.8)); }
+
+:root[data-theme="lostplace"] .morality-subtitle { font-family: var(--font-osd); font-size: 1.1rem; font-weight: 400; letter-spacing: 0.18em; color: var(--hazard-y); }
+:root[data-theme="lostplace"] .morality-score-big { font-family: var(--font-head); font-weight: 400; color: var(--ink); text-shadow: 3px 3px 0 #000; }
+:root[data-theme="lostplace"] .moral-is-demonic .morality-score-big { color: #ff3b2f; text-shadow: 3px 3px 0 #000, 0 0 22px rgba(255, 40, 20, 0.8); }
+:root[data-theme="lostplace"] .moral-is-holy .morality-score-big { color: var(--azure); text-shadow: 3px 3px 0 #000, 0 0 22px rgba(127, 216, 255, 0.7); }
+
+/* Werte-Raster: Fliesen mit schwarzer Fuge */
+:root[data-theme="lostplace"] .abilities-row-grid,
+:root[data-theme="lostplace"] .compact-stats-row,
+:root[data-theme="lostplace"] .currency-four-grid {
+    background: #000;
+    border-radius: 0;
+    box-shadow: 0 0 0 2px #000, 6px 6px 0 rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="lostplace"] .ability-shield,
+:root[data-theme="lostplace"] .stat-shield-box,
+:root[data-theme="lostplace"] .coin-box {
+    background:
+        linear-gradient(180deg, rgba(255, 246, 200, 0.08), transparent 40%),
+        linear-gradient(180deg, #2e2b16 0%, #1c1a0d 100%);
+    outline: 0;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="lostplace"] .ability-shield:hover,
+:root[data-theme="lostplace"] .stat-shield-box:hover {
+    background:
+        linear-gradient(180deg, rgba(255, 246, 200, 0.18), transparent 50%),
+        linear-gradient(180deg, #3a3619 0%, #22200f 100%);
+}
+
+:root[data-theme="lostplace"] .ability-label,
+:root[data-theme="lostplace"] .stat-box-title {
+    font-family: var(--font-osd);
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: 0.14em;
+    color: var(--hazard-y);
+}
+
+:root[data-theme="lostplace"] .ability-mod-big {
+    background: transparent;
+    border: 0;
+    clip-path: none;
+    box-shadow: none;
+    text-shadow: 3px 3px 0 #000;
+    font-family: var(--font-head);
+    font-weight: 400;
+    color: var(--ink);
+    animation: none;
+}
+
+:root[data-theme="lostplace"] .ability-mod-big .icon { color: var(--hazard-y); }
+
+:root[data-theme="lostplace"] .ability-mod-big:hover {
+    background: radial-gradient(circle, rgba(255, 210, 63, 0.25), transparent 70%);
+    color: var(--hazard-y);
+    border: 0;
+    box-shadow: none;
+    text-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 210, 63, 0.9);
+}
+
+:root[data-theme="lostplace"] .ability-score-oval,
+:root[data-theme="lostplace"] .hp-big-input,
+:root[data-theme="lostplace"] .compact-num-input {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: transparent;
+    border-radius: 0;
+    font-family: var(--font-head);
+}
+
+:root[data-theme="lostplace"] .ability-score-oval,
+:root[data-theme="lostplace"] .hp-big-input { border-bottom: 2px dashed #6d6430; }
+
+:root[data-theme="lostplace"] .ability-score-oval:hover,
+:root[data-theme="lostplace"] .hp-big-input:hover,
+:root[data-theme="lostplace"] .compact-num-input:hover { border-color: transparent; border-bottom-color: var(--hazard-y); }
+
+:root[data-theme="lostplace"] .ability-score-oval:focus,
+:root[data-theme="lostplace"] .hp-big-input:focus,
+:root[data-theme="lostplace"] .compact-num-input:focus {
+    background-color: rgba(0, 0, 0, 0.45);
+    border-color: transparent;
+    border-bottom: 2px solid var(--hazard-y);
+    box-shadow: 0 6px 14px -4px rgba(255, 210, 63, 0.45);
+}
+
+:root[data-theme="lostplace"] #p-hp { color: #fff3a6; text-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 210, 63, 0.6); }
+:root[data-theme="lostplace"] .hp-slash { color: var(--hazard-y); font-family: var(--font-head); }
+
+/* Lebensader: Leuchtstoffröhre */
+:root[data-theme="lostplace"] .life-vein {
+    height: 1.05rem;
+    border: 2px solid #000;
+    border-radius: 999px;
+    padding: 3px;
+    background: linear-gradient(180deg, #0a0905, #1b1a0f 50%, #0a0905);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .life-vein-fill {
+    border-radius: 999px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0 30%, transparent 30%),
+        linear-gradient(180deg, #fffef2, #fff0a0);
+    box-shadow: 0 0 8px 1px rgba(255, 248, 210, 0.9), 0 0 22px 4px rgba(255, 230, 140, 0.45);
+}
+
+:root[data-theme="lostplace"] .life-vein-fill.is-low {
+    background:
+        linear-gradient(180deg, rgba(255, 220, 210, 0.85) 0 30%, transparent 30%),
+        linear-gradient(180deg, #ff6a5a, #c4160c);
+    box-shadow: 0 0 10px 2px rgba(255, 50, 30, 0.9), 0 0 26px 6px rgba(255, 30, 10, 0.4);
+}
+
+:root[data-theme="lostplace"] .life-vein-fill.is-down { box-shadow: none; animation: none; background: #3a3618; }
+
+:root[data-theme="lostplace"] .compact-num-input { color: var(--ink); }
+
+:root[data-theme="lostplace"] .skill-chip { border-bottom: 1px dashed #6d6430; }
+:root[data-theme="lostplace"] .skill-chip:hover { color: var(--hazard-y); border-bottom: 1px solid var(--hazard-y); }
+:root[data-theme="lostplace"] .skill-chip.is-known { color: var(--hazard-y); font-weight: 700; text-shadow: 0 0 8px rgba(255, 210, 63, 0.5); }
+
+:root[data-theme="lostplace"] .story-details label { color: var(--ink-2); }
+
+/* GELD & INVENTAR ========================================================= */
+:root[data-theme="lostplace"] .coin-cp { --coin: #d08a54; --coin-a: #f2b98c; --coin-b: #6a3412; }
+:root[data-theme="lostplace"] .coin-sp { --coin: #d6d2c0; --coin-a: #f4f2e8; --coin-b: #6f6c5c; }
+:root[data-theme="lostplace"] .coin-gp { --coin: #ffd23f; --coin-a: #fff1a0; --coin-b: #9a7410; }
+:root[data-theme="lostplace"] .coin-pp { --coin: #9fe6ff; --coin-a: #e3f8ff; --coin-b: #3d82a4; }
+
+:root[data-theme="lostplace"] .coin-box span::before {
+    width: 0.95em;
+    height: 0.95em;
+    background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.85) 0 12%, transparent 38%),
+        linear-gradient(145deg, var(--coin-a, currentColor), var(--coin-b, currentColor));
+    box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.45), 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] .item-badge { border-bottom: 1px dashed rgba(255, 210, 63, 0.22); }
+:root[data-theme="lostplace"] .item-badge small strong { color: var(--hazard-y); }
+:root[data-theme="lostplace"] .item-icon { border: 2px solid #000; border-radius: 0; box-shadow: var(--hard-sm); background-color: #2a2816; }
+
+:root[data-theme="lostplace"] .tag,
+:root[data-theme="lostplace"] .cat-tag,
+:root[data-theme="lostplace"] .packmass-pill,
+:root[data-theme="lostplace"] .exh-badge,
+:root[data-theme="lostplace"] .inline-item-pill {
+    border: 2px solid #000;
+    border-radius: 0;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    box-shadow: 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] .tag { background: var(--hazard-y); color: #000; }
+:root[data-theme="lostplace"] .cat-tag { background: #2a2816; color: var(--ink-2); }
+:root[data-theme="lostplace"] .packmass-pill { background: #072433; color: var(--azure); }
+:root[data-theme="lostplace"] .exh-badge { background: var(--ochre-wash); color: var(--hazard-y); }
+:root[data-theme="lostplace"] .inline-item-pill { background: var(--tape); color: #1a1708; }
+:root[data-theme="lostplace"] .inline-item-pill b:hover { background: var(--rubric-fill); color: #fff; }
+
+:root[data-theme="lostplace"] .player-creator-box {
+    background: rgba(5, 4, 2, 0.55);
+    border-top: 6px solid transparent;
+    border-image: var(--hazard-sm) 6;
+    border-radius: 0;
+}
+
+:root[data-theme="lostplace"] .packmass-badge { border: 2px solid var(--hazard-y); border-radius: 0; color: var(--hazard-y); background: rgba(0, 0, 0, 0.4); font-family: var(--font-osd); font-size: 1.05rem; }
+:root[data-theme="lostplace"] .packmass-badge.packmass-full { border-color: #000; color: #fff; background: var(--rubric-fill); }
+
+:root[data-theme="lostplace"] .bag-progress-track {
+    border: 2px solid #000;
+    border-radius: 0;
+    padding: 2px;
+    background: #0a0905;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9), 2px 2px 0 #000;
+    height: 0.95rem;
+}
+
+:root[data-theme="lostplace"] .bag-progress-fill { border-radius: 0; background: var(--hazard-sm); }
+:root[data-theme="lostplace"] .bag-progress-fill.fill-full { background: repeating-linear-gradient(-45deg, #ff2a1a 0 6px, #120503 6px 12px); box-shadow: 0 0 10px rgba(255, 40, 20, 0.8); }
+
+/* DM ====================================================================== */
+:root[data-theme="lostplace"] .mini-avatar,
+:root[data-theme="lostplace"] .mini-avatar-placeholder {
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #0a0905;
+    color: var(--hazard-y);
+    font-family: var(--font-head);
+    box-shadow: var(--hard-sm);
+    filter: sepia(0.35) contrast(1.15);
+}
+
+:root[data-theme="lostplace"] .badge-hp,
+:root[data-theme="lostplace"] .badge-moral {
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] .badge-hp { background: var(--rubric-fill); color: #fff; }
+:root[data-theme="lostplace"] .badge-moral { color: var(--ink-2); background: rgba(0, 0, 0, 0.45); }
+
+/* Tod: Alarmblitz */
+:root[data-theme="lostplace"] .btn-death {
+    background-image: none;
+    background-color: #a8180c;
+    border-color: #000;
+    color: #fff;
+}
+
+:root[data-theme="lostplace"] .btn-death:hover {
+    animation: none;
+    background: #ff1a0d;
+    color: #fff;
+    box-shadow: var(--hard), 0 0 30px rgba(255, 30, 15, 0.9);
+}
+
+:root[data-theme="lostplace"] .dm-moral-bar { border-top: 2px dashed rgba(255, 210, 63, 0.3); border-bottom: 2px dashed rgba(255, 210, 63, 0.3); }
+:root[data-theme="lostplace"] .dm-mini-stats { border-top: 2px solid #000; border-bottom: 2px solid #000; }
+:root[data-theme="lostplace"] .dm-attacks-editor { border-left: 6px solid transparent; border-image: var(--hazard-sm) 6; }
+:root[data-theme="lostplace"] .atk-title { color: var(--hazard-y); font-family: var(--font-head); letter-spacing: 0.06em; font-size: 1.15em; }
+
+:root[data-theme="lostplace"] .npc-card,
+:root[data-theme="lostplace"] .lib-item-card {
+    background:
+        var(--mildew) 0 0 / 480px 480px,
+        linear-gradient(180deg, rgba(46, 43, 22, 0.94) 0%, rgba(26, 24, 12, 0.95) 100%);
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: var(--hard), inset 0 0 30px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="lostplace"] .npc-card { box-shadow: var(--hard), inset 7px 0 0 var(--rubric-fill), inset 0 0 30px rgba(0, 0, 0, 0.4); }
+:root[data-theme="lostplace"] .lib-item-card:hover { box-shadow: 7px 7px 0 #000, 0 0 0 2px var(--hazard-y); }
+
+:root[data-theme="lostplace"] .npc-library-picker {
+    background: rgba(5, 4, 2, 0.85);
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: var(--hard);
+}
+
+:root[data-theme="lostplace"] .npc-inventory-box { background: rgba(5, 4, 2, 0.55); border: 2px dashed rgba(255, 210, 63, 0.4); border-radius: 0; }
+:root[data-theme="lostplace"] .npc-desc-box { border-left: 4px solid var(--hazard-y); }
+
+:root[data-theme="lostplace"] .cat-pill { border: 2px solid #000; border-radius: 0; box-shadow: 2px 2px 0 #000; }
+:root[data-theme="lostplace"] .cat-pill.active { background: var(--hazard-y); color: #000; text-shadow: none; }
+
+/* KAMPF =================================================================== */
+:root[data-theme="lostplace"] .turn-active-card {
+    border: 3px solid var(--hazard-y);
+    border-left: 8px solid var(--team-c, var(--hazard-y));
+    border-radius: 0;
+    background:
+        linear-gradient(90deg, rgba(255, 210, 63, 0.16), rgba(10, 9, 5, 0.85) 60%);
+    box-shadow: var(--hard), 0 0 28px rgba(255, 210, 63, 0.3);
+}
+
+:root[data-theme="lostplace"] .turn-active-avatar,
+:root[data-theme="lostplace"] .turn-next-avatar { border: 2px solid #000; border-radius: 0; box-shadow: var(--hard-sm); filter: sepia(0.35) contrast(1.15); }
+
+:root[data-theme="lostplace"] .turn-avatar-placeholder { background: #0a0905; color: var(--hazard-y); font-family: var(--font-head); }
+:root[data-theme="lostplace"] .turn-active-info strong { color: var(--hazard-y); font-family: var(--font-head); font-weight: 400; font-size: 1.3em; letter-spacing: 0.05em; text-shadow: 2px 2px 0 #000; }
+:root[data-theme="lostplace"] .turn-arrow-sep { color: var(--hazard-y); }
+
+:root[data-theme="lostplace"] .turn-next-card {
+    border: 2px solid #000;
+    border-left: 6px solid var(--team-c, #6d6430);
+    border-radius: 0;
+    background: rgba(10, 9, 5, 0.7);
+    box-shadow: var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .turn-ellipsis-badge { border-color: #000; color: var(--ink-2); }
+
+:root[data-theme="lostplace"] .turn-indicator-pill {
+    background: var(--hazard-y);
+    color: #000;
+    border-radius: 0;
+    font-family: var(--font-head);
+    letter-spacing: 0.06em;
+    text-shadow: none;
+    box-shadow: 2px 2px 0 #000;
+}
+
+:root[data-theme="lostplace"] .round-badge {
+    border: 2px solid var(--exit);
+    border-radius: 0;
+    background: var(--exit-deep);
+    box-shadow: 0 0 14px rgba(61, 255, 138, 0.45), var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .round-badge span { font-family: var(--font-osd); color: var(--exit); font-size: 1.05rem; letter-spacing: 0.1em; }
+:root[data-theme="lostplace"] .round-badge strong { font-family: var(--font-osd); font-weight: 400; font-size: 1.8em; color: var(--exit); text-shadow: 0 0 10px rgba(61, 255, 138, 0.95); }
+
+:root[data-theme="lostplace"] .battlemap-vis-toggle { border: 2px solid #000; border-radius: 0; }
+:root[data-theme="lostplace"] .battlemap-vis-toggle.vis-on { border-color: var(--exit); color: var(--exit); background: var(--exit-deep); }
+:root[data-theme="lostplace"] .battlemap-vis-toggle.vis-on:hover { background: var(--exit); color: #002a10; }
+:root[data-theme="lostplace"] .battlemap-vis-toggle.vis-off { color: var(--ink-2); border-style: dashed; }
+
+:root[data-theme="lostplace"] .mode-status-pill { border-radius: 0; font-family: var(--font-osd); font-size: 1.05rem; letter-spacing: 0.08em; }
+:root[data-theme="lostplace"] .mode-pill-move { color: var(--exit); }
+:root[data-theme="lostplace"] .mode-pill-build { background: var(--azure-fill); color: var(--on-fill); border-color: #000; }
+:root[data-theme="lostplace"] .mode-pill-build:hover { background: var(--hazard-y); color: #000; }
+
+:root[data-theme="lostplace"] .side-card-divider { border-top: 2px dashed rgba(255, 210, 63, 0.3); }
+
+:root[data-theme="lostplace"] .team-group-header { font-family: var(--font-head); font-weight: 400; letter-spacing: 0.06em; color: var(--hazard-y); border-bottom-width: 3px; }
+:root[data-theme="lostplace"] .team-color-dot { border: 2px solid #000; border-radius: 0; box-shadow: 2px 2px 0 #000; }
+
+:root[data-theme="lostplace"] .team-combatant-item {
+    background: rgba(10, 9, 5, 0.7);
+    border-color: #000 #000 #000 var(--team-c, #6d6430);
+    border-radius: 0;
+}
+
+:root[data-theme="lostplace"] .active-turn-row {
+    box-shadow: 0 0 0 2px var(--hazard-y), 0 0 18px rgba(255, 210, 63, 0.5);
+    border-color: var(--hazard-y) var(--hazard-y) var(--hazard-y) var(--team-c, var(--hazard-y));
+}
+
+:root[data-theme="lostplace"] .combatant-down { background: #050402; opacity: 0.7; filter: grayscale(1) contrast(1.2); }
+:root[data-theme="lostplace"] .team-quick-add-select { border-style: dashed; }
+
+/* KAMPFFELD: Teppichboden von Level 0 ====================================== */
+:root[data-theme="lostplace"] .battlemap-template-bar { border-top: 2px dashed rgba(255, 210, 63, 0.3); border-bottom: 2px dashed rgba(255, 210, 63, 0.3); }
+
+:root[data-theme="lostplace"] .battlemap-stage-wrapper {
+    border: 4px solid #000;
+    border-radius: 0;
+    background-color: #7a6a32;
+    background-image:
+        linear-gradient(rgba(20, 16, 4, 0.35) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 16, 4, 0.35) 1px, transparent 1px),
+        radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255, 244, 190, 0.22), transparent 70%),
+        var(--mildew),
+        var(--carpet);
+    background-size: 26px 26px, 26px 26px, 100% 100%, 480px 480px, 200px 200px;
+    box-shadow: var(--hard), inset 0 0 90px rgba(0, 0, 0, 0.75);
+}
+
+:root[data-theme="lostplace"] .battlemap-stage-wrapper.stage-mode-build {
+    border-color: #000;
+    border-image: var(--hazard) 4;
+    box-shadow: var(--hard), inset 0 0 90px rgba(0, 0, 0, 0.75), 0 0 20px rgba(255, 210, 63, 0.4);
+}
+
+:root[data-theme="lostplace"] .battlemap-cell { border: 1px solid var(--block-ink); border-radius: 0; }
+:root[data-theme="lostplace"] .cell-drop-hover { outline: 3px dashed var(--hazard-y); }
+
+:root[data-theme="lostplace"] .battlemap-palette-card .palette-creator-popover { background: rgba(5, 4, 2, 0.9); border: 2px dashed var(--hazard-y); border-radius: 0; }
+:root[data-theme="lostplace"] .palette-remove-btn { border-color: var(--rubric-fill); }
+:root[data-theme="lostplace"] .palette-block-entry { border-bottom: 1px dashed rgba(255, 210, 63, 0.2); }
+:root[data-theme="lostplace"] .palette-block-entry:hover { background: rgba(255, 210, 63, 0.08); }
+
+:root[data-theme="lostplace"] .palette-block-entry.palette-block-active {
+    background: linear-gradient(90deg, rgba(255, 210, 63, 0.3), rgba(255, 210, 63, 0.04));
+    color: var(--hazard-y);
+    border-bottom-color: #000;
+    box-shadow: inset 5px 0 0 var(--hazard-y);
+}
+
+:root[data-theme="lostplace"] .palette-color-swatch { border: 2px solid #000; box-shadow: 2px 2px 0 #000; border-radius: 0; }
+
+:root[data-theme="lostplace"] .battlemap-token {
+    border-radius: 0;
+    outline: 2px solid #000;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="lostplace"] .battlemap-token.token-active-turn {
+    outline: 3px solid var(--hazard-y);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.7), 0 0 22px rgba(255, 210, 63, 0.9);
+}
+
+:root[data-theme="lostplace"] .token-initials { font-family: var(--font-head); font-weight: 400; letter-spacing: 0.04em; }
+:root[data-theme="lostplace"] .token-hp-text { color: #fff3a6; font-family: var(--font-osd); }
+:root[data-theme="lostplace"] .token-drag-floating-ghost { box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.6); }
+
+/* CHAT: Notausgangsschild ================================================== */
+:root[data-theme="lostplace"] .chat-widget {
+    padding: 0;
+    border: 3px solid #000;
+    border-radius: 0;
+    background: #12110a;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.7), 0 0 40px rgba(61, 255, 138, 0.1);
+    overflow: hidden;
+}
+
+:root[data-theme="lostplace"] .chat-header {
+    padding: 0.45rem 0.85rem;
+    background: linear-gradient(180deg, #0f5a2c 0%, #063d1b 100%);
+    color: #d6ffe6;
+    font-family: var(--font-head);
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    border-bottom: 3px solid #000;
+    text-shadow: 0 0 8px rgba(61, 255, 138, 0.95), 0 0 18px rgba(61, 255, 138, 0.6);
+    box-shadow: inset 0 0 18px rgba(61, 255, 138, 0.35);
+}
+
+:root[data-theme="lostplace"] .chat-header-right { color: #d6ffe6; }
+
+:root[data-theme="lostplace"] .chat-unread-badge {
+    background: var(--rubric-fill);
+    border-radius: 0;
+    border: 2px solid #000;
+    color: #fff;
+}
+
+:root[data-theme="lostplace"] .chat-messages-list {
+    background: var(--mildew) 0 0 / 480px 480px, linear-gradient(180deg, #0d0c06, #171509);
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="lostplace"] .chat-msg { border-bottom: 1px dashed rgba(255, 210, 63, 0.18); }
+:root[data-theme="lostplace"] .chat-msg.chat-whisper { border-left: 4px solid var(--violet); }
+:root[data-theme="lostplace"] .chat-msg-sender { font-family: var(--font-head); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--hazard-y); }
+:root[data-theme="lostplace"] .chat-whisper .chat-msg-sender { color: var(--violet); }
+:root[data-theme="lostplace"] .chat-controls { border-top: 3px solid #000; background: #171509; }
+
+/* MODAL: Sperrzone ========================================================= */
+:root[data-theme="lostplace"] .modal-backdrop {
+    background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.25) 0 2px, transparent 2px 4px),
+        radial-gradient(ellipse at 50% 50%, rgba(60, 50, 10, 0.55), rgba(3, 2, 1, 0.92) 70%);
+}
+
+:root[data-theme="lostplace"] .modal-card {
+    position: relative;
+    border: 3px solid #000;
+    border-top: 0;
+    border-radius: 0;
+    padding-top: 2.2rem;
+    background:
+        linear-gradient(180deg, rgba(255, 246, 200, 0.08) 0, transparent 90px),
+        var(--mildew) 0 0 / 480px 480px,
+        linear-gradient(180deg, #2e2b16 0%, #191709 100%);
+    box-shadow: 14px 14px 0 rgba(0, 0, 0, 0.7), 0 0 80px rgba(255, 210, 63, 0.12);
+}
+
+:root[data-theme="lostplace"] .modal-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -3px;
+    right: -3px;
+    height: 14px;
+    background: var(--hazard);
+    background-size: 34px 34px;
+    border: 3px solid #000;
+    pointer-events: none;
+}
+
+:root[data-theme="lostplace"] .modal-card h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 2.1rem;
+    color: #fff3a6;
+    text-shadow: 0 0 10px rgba(255, 210, 63, 0.7), 4px 4px 0 #000;
+}
+
+:root[data-theme="lostplace"] .modal-card .muted { color: var(--ink); }
+
+:root[data-theme="lostplace"] .modal-actions .btn-del {
+    background: var(--rubric-fill);
+    color: #fff;
+    border-color: #000;
+    box-shadow: var(--hard-sm);
+}
+
+/* THEMA-WÄHLER ============================================================ */
+:root[data-theme="lostplace"] .theme-picker { position: relative; display: inline-flex; }
+:root[data-theme="lostplace"] .theme-menu[hidden] { display: none; }
+
+:root[data-theme="lostplace"] .theme-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 1500;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 0.45rem;
+    width: 28rem;
+    max-width: calc(100vw - 24px);
+    max-height: min(75vh, 42rem);
+    overflow-y: auto;
+    padding: 0.8rem 0.6rem 0.6rem;
+    border: 3px solid #000;
+    border-radius: 0;
+    background: var(--mildew) 0 0 / 480px 480px, linear-gradient(180deg, #2e2b16 0%, #191709 100%);
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.7);
+    text-align: left;
+}
+
+:root[data-theme="lostplace"] .theme-menu-title {
+    grid-column: 1 / -1;
+    padding: 0 0.4rem 0.5rem;
+    margin-bottom: 0.25rem;
+    font-family: var(--font-osd);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--exit);
+    text-shadow: 0 0 8px rgba(61, 255, 138, 0.8);
+    border-bottom: 6px solid transparent;
+    border-image: var(--hazard-sm) 6;
+}
+
+:root[data-theme="lostplace"] .theme-option {
+    justify-content: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.45rem 0.45rem 0.55rem;
+    white-space: normal;
+    text-align: left;
+    background: transparent;
+    border: 2px solid transparent;
+    box-shadow: none;
+    text-shadow: none;
+    font-family: var(--font-body);
+    letter-spacing: 0;
+}
+
+:root[data-theme="lostplace"] .theme-option:hover {
+    background: rgba(255, 210, 63, 0.12);
+    border-color: #000;
+    box-shadow: var(--hard-sm);
+    color: var(--ink);
+    transform: none;
+}
+
+:root[data-theme="lostplace"] .theme-option.is-active {
+    background: var(--hazard-y);
+    border-color: #000;
+    color: #000;
+    box-shadow: var(--hard-sm);
+}
+
+:root[data-theme="lostplace"] .theme-option-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+:root[data-theme="lostplace"] .theme-option-text strong { font-family: var(--font-head); font-size: 1.25rem; font-weight: 400; letter-spacing: 0.06em; color: var(--hazard-y); }
+:root[data-theme="lostplace"] .theme-option-text small { font-size: 0.78rem; color: var(--ink-2); font-weight: 400; }
+:root[data-theme="lostplace"] .theme-option.is-active .theme-option-text strong,
+:root[data-theme="lostplace"] .theme-option.is-active .theme-option-text small { color: #000; }
+
+
+
+/* =========================================================================
+   KULISSE (wird von js/lostplace.js eingehängt)
+   Maße: Flur 1600 breit, 960 hoch; eine Schritt-Periode = 240.
+   Gezeichnet wird in WebGL – die --bk-*-Kacheln oben sind die Texturen.
+   ========================================================================= */
+.lp-scene,
+.lp-fx { display: none; }
+
+:root[data-theme="lostplace"] .lp-scene {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background: #2a2410;
+    contain: strict;
+}
+
+/* Der ganze Flur ist ein Canvas in Fenstergröße */
+:root[data-theme="lostplace"] .lp-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+:root[data-theme="lostplace"] .lp-scene.is-live .lp-canvas { opacity: 1; }
+
+/* Kein WebGL: Kulisse weg, der Schimmel-Fallback von body::before trägt */
+:root[data-theme="lostplace"] .lp-scene.lp-nogl { display: none; }
+
+/* ---------- EFFEKTE ÜBER DEM INHALT -------------------------------------- */
+:root[data-theme="lostplace"] .lp-fx {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+:root[data-theme="lostplace"] .lp-fx > * { position: absolute; pointer-events: none; }
+
+:root[data-theme="lostplace"] .lp-noise {
+    inset: 0;
+    background: var(--grain) 0 0 / 220px 220px;
+    opacity: 0.035;
+}
+
+:root[data-theme="lostplace"] .lp-vignette {
+    inset: 0;
+    background:
+        radial-gradient(ellipse 85% 80% at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+/* Camcorder-Anzeige */
+:root[data-theme="lostplace"] .lp-osd {
+    display: flex;
+    gap: 1.1rem;
+    font-family: var(--font-osd);
+    font-size: 1.35rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: #f4f4ec;
+    text-shadow: 2px 0 rgba(255, 0, 60, 0.6), -2px 0 rgba(0, 255, 230, 0.5), 0 0 6px rgba(255, 255, 255, 0.4);
+    opacity: 0.82;
+    white-space: nowrap;
+}
+
+:root[data-theme="lostplace"] .lp-osd-tl { left: 18px; bottom: 44px; }
+:root[data-theme="lostplace"] .lp-osd-bl { left: 18px; bottom: 16px; will-change: transform; }
+:root[data-theme="lostplace"] .lp-osd-tr {
+    left: 6px;
+    top: 50%;
+    writing-mode: vertical-rl;
+    transform: translateY(-50%) rotate(180deg);
+    font-size: 1.1rem;
+    opacity: 0.55;
+}
+
+:root[data-theme="lostplace"] .lp-rec { color: #ff3b2f; }
+:root[data-theme="lostplace"] .lp-level { color: var(--hazard-y); }
+
+
+/* BEWEGUNG ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme="lostplace"] *,
+    :root[data-theme="lostplace"] *::before,
+    :root[data-theme="lostplace"] *::after { animation: none !important; }
+    :root[data-theme="lostplace"] .lp-noise { display: none; }
+}
+
+/* RESPONSIVE ============================================================== */
+@media (max-width: 860px) {
+    :root[data-theme="lostplace"] .lobby-grid > .card + .card {
+        border-left: 0;
+        border-top: 6px solid transparent;
+        border-image: var(--hazard-sm) 6;
+    }
+    :root[data-theme="lostplace"] .lobby-grid::before { width: 220px; right: -58px; top: 18px; font-size: 0.85rem; }
+}
+
+@media (max-width: 640px) {
+    :root[data-theme="lostplace"] .theme-menu { right: auto; left: 0; }
+    :root[data-theme="lostplace"] .lp-osd { font-size: 1.1rem; }
+    :root[data-theme="lostplace"] .lp-osd-tr { display: none; }
+    :root[data-theme="lostplace"] .lp-osd-tl { display: none; }
+}
+
+@media (max-width: 520px) {
+    :root[data-theme="lostplace"] .top-bar h1 { font-size: 1.8rem; }
+    :root[data-theme="lostplace"] body { font-size: 1rem; }
+    :root[data-theme="lostplace"] .lobby-grid::after { right: 6px; bottom: -40px; }
+}

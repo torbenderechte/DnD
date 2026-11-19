@@ -1,12 +1,13 @@
 // 1. DM: Neue Session starten
+//    Ist der DM im Hauptmenü angemeldet, wird die Session automatisch im Konto gespeichert.
 document.getElementById('btn-host').addEventListener('click', () => {
-    hostGame(null);
+    hostGame(null, null, dmLobbyAccount);
 });
 
 // 2. DM: Gespeicherte Session-Datei (.json) per Drag & Drop im Hauptmenü einfügen
 bindJsonDropZone('lobby-dm-dropzone', 'lobby-dm-file', (parsed, filename) => {
     const stateObj = parsed.state || parsed;
-    if (!stateObj || !stateObj.characters || !stateObj.npcTemplates) {
+    if (!stateObj || typeof stateObj.characters !== 'object' || stateObj.characters === null || !Array.isArray(stateObj.npcTemplates)) {
         return alert("Ungültige Session-Datei! Bitte wähle eine vom DM gespeicherte Session-Datei (.json).");
     }
 
@@ -21,8 +22,8 @@ bindJsonDropZone('lobby-dm-dropzone', 'lobby-dm-file', (parsed, filename) => {
 
     dropZone.classList.add('file-loaded');
     dropText.innerHTML = `
-        <strong style="color:#4ade80">✔ Session geladen: ${filename}</strong>
-        <span>Raum-Code: ${pendingResumeSessionData.roomCode || 'Automatisch'} | Spieler: ${Object.keys(stateObj.characters).length} | Vorlagen: ${stateObj.npcTemplates.length}</span>
+        <strong class="drop-ok-line">${icon('check')} Session geladen: ${esc(filename)}</strong>
+        <span>Raum-Code: ${esc(pendingResumeSessionData.roomCode || 'Automatisch')} | Spieler: ${Object.keys(stateObj.characters).length} | Vorlagen: ${stateObj.npcTemplates.length}</span>
     `;
     resumeBtn.disabled = false;
     resumeBtn.textContent = `Session fortsetzen (Raum ${pendingResumeSessionData.roomCode || 'Neu'})`;
@@ -31,7 +32,8 @@ bindJsonDropZone('lobby-dm-dropzone', 'lobby-dm-file', (parsed, filename) => {
 // DM klickt auf "Session fortsetzen" (erst aktiv, nachdem eine Datei geladen wurde)
 document.getElementById('btn-resume-session').addEventListener('click', () => {
     if (!pendingResumeSessionData) return;
-    hostGame(pendingResumeSessionData);
+    // Angemeldet: Die Datei wird als neue Session ins Konto übernommen.
+    hostGame(pendingResumeSessionData, null, dmLobbyAccount);
 });
 
 // 3. SPIELER: Gespeicherte Charakter-Datei (.json) im Hauptmenü per Drag & Drop einfügen
@@ -42,32 +44,78 @@ bindJsonDropZone('lobby-player-dropzone', 'lobby-player-file', (parsed, filename
     }
 
     pendingPlayerCharData = charObj;
-    document.getElementById('input-player-name').value = charObj.name;
+    // Bei Konten ist der Name der Login – nicht mit dem Charakternamen überschreiben.
+    const nameInput = document.getElementById('input-player-name');
+    const passwordInput = document.getElementById('input-player-password');
+    if (!nameInput.value.trim() || !(passwordInput && passwordInput.value)) nameInput.value = charObj.name;
 
     const dropZone = document.getElementById('lobby-player-dropzone');
     const dropText = document.getElementById('lobby-player-drop-text');
     dropZone.classList.add('file-loaded');
     dropText.innerHTML = `
-        <strong style="color:#4ade80">✔ Charakter bereit: ${charObj.name} (Lvl ${charObj.level || 1})</strong>
-        <span>Datei: ${filename} — Werte, Bilder & Items werden beim Beitritt geladen!</span>
+        <strong class="drop-ok-line">${icon('check')} Charakter bereit: ${esc(charObj.name)} (Lvl ${esc(charObj.level || 1)})</strong>
+        <span>Datei: ${esc(filename)} — Werte, Bilder & Items werden beim Beitritt geladen!</span>
     `;
 });
 
 // 4. SPIELER: Session beitreten (überträgt automatisch den geladenen Charakter an den DM)
-document.getElementById('btn-join').addEventListener('click', () => {
+//    Mit Passwort: Anmelden bzw. Konto anlegen, Charakter aus der Datenbank laden & automatisch speichern.
+let joinInProgress = false;
+document.getElementById('btn-join').addEventListener('click', async () => {
+    if (joinInProgress) return;
     const name = document.getElementById('input-player-name').value.trim();
     const code = document.getElementById('input-room-code').value.trim();
+    const passwordInput = document.getElementById('input-player-password');
+    const password = passwordInput && !passwordInput.disabled ? passwordInput.value : '';
 
     if (!name || !code) {
-        alert("Bitte Charakternamen und Raum-Code eingeben!");
+        alert("Bitte Namen und Raum-Code eingeben!");
         return;
     }
 
-    if (pendingPlayerCharData) {
-        pendingPlayerCharData.name = name;
+    if (!password) {
+        if (pendingPlayerCharData) {
+            pendingPlayerCharData.name = name;
+        }
+        joinGame(code, name, pendingPlayerCharData);
+        return;
     }
-    joinGame(code, name, pendingPlayerCharData);
+
+    const joinBtn = document.getElementById('btn-join');
+    joinInProgress = true;
+    joinBtn.disabled = true;
+    try {
+        const account = await loginOrRegisterAccount(name, password);
+        if (!account) return;
+        // Eine bewusst hineingezogene Datei hat Vorrang vor dem gespeicherten Stand.
+        const character = pendingPlayerCharData || (isPlainObject(account.character) ? account.character : null);
+        passwordInput.value = '';
+        joinGame(code, account.name, character, null, account);
+    } catch (err) {
+        alert(`Anmeldung fehlgeschlagen: ${err.message}`);
+    } finally {
+        joinInProgress = false;
+        joinBtn.disabled = false;
+    }
 });
+
+// Enter im Passwortfeld = Beitreten
+document.getElementById('input-player-password')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btn-join').click();
+    }
+});
+
+document.getElementById('btn-dm-login')?.addEventListener('click', dmLobbyLogin);
+document.getElementById('input-dm-password')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        dmLobbyLogin();
+    }
+});
+
+checkAccountAvailability();
 
 // Enter-Taste im Chat-Eingabefeld sendet die Nachricht
 document.getElementById('chat-message-input')?.addEventListener('keydown', (e) => {
@@ -87,6 +135,9 @@ document.getElementById('dice-formula-input')?.addEventListener('keydown', (e) =
 
 // Tastatur-Shortcuts: 1–4, A/D und Pfeiltasten (Links/Rechts) für Spieler & DM
 window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    const confirmModal = document.getElementById('confirm-modal');
+    if (confirmModal && !confirmModal.classList.contains('hidden')) return;
     // Ignorieren, wenn gerade in einem Textfeld, einer Notiz oder einem Dropdown getippt wird
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) || document.activeElement?.isContentEditable) {
@@ -101,6 +152,26 @@ window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     const isPrev = key === 'a' || e.key === 'ArrowLeft';
     const isNext = key === 'd' || e.key === 'ArrowRight';
+
+    // Kampffeld-Zoom per Tastatur, solange das Spielfeld sichtbar ist
+    const battlemapStage = document.getElementById('battlemap-stage-wrapper');
+    if (battlemapStage && battlemapStage.offsetParent !== null) {
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            stepBattlemapZoom(1);
+            return;
+        }
+        if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            stepBattlemapZoom(-1);
+            return;
+        }
+        if (e.key === '0') {
+            e.preventDefault();
+            resetBattlemapZoom();
+            return;
+        }
+    }
 
     if (!currentPlayerId) {
         // --- DM TABS ---
@@ -137,3 +208,16 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// Einladungslink (…/?room=1234) füllt den Raum-Code im Hauptmenü vor.
+(function prefillRoomCodeFromUrl() {
+    let room = null;
+    try { room = new URLSearchParams(window.location.search).get('room'); } catch (e) { return; }
+    if (!room || !/^[A-Za-z0-9_-]{1,64}$/.test(room)) return;
+    const input = document.getElementById('input-room-code');
+    if (input && !input.value) input.value = room;
+    document.getElementById('input-player-name')?.focus();
+})();
+
+// Tab neu geladen? Dann die laufende Session (DM oder Spieler) automatisch fortsetzen.
+resumeStoredSession();

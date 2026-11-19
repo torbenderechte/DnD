@@ -1,0 +1,807 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=VT323&display=swap");
+
+/* ==========================================================================
+   AFTERLIFE — Theme „Phosphor"
+   Retro-Terminal: grüner Phosphor auf Schwarz, Bernstein als Akzent,
+   Scanlines, Vignette, blinkender Cursor. Alles unter :root[data-theme].
+   ========================================================================== */
+
+/* 1 — TOKENS ============================================================= */
+:root[data-theme="phosphor"] {
+    color-scheme: dark;
+
+    --paper:     #050a06;   /* Bildschirm */
+    --paper-hi:  #08120a;   /* Fenster / Panels */
+    --paper-lo:  #030703;   /* vertieft */
+    --field:     #030803;   /* Eingabefelder */
+
+    --ink:       #33ff66;   /* Phosphor */
+    --ink-2:     #2ed75a;   /* sekundär */
+    --ink-3:     #22a844;   /* gedämpft (>= 4.5:1 auf Panel) */
+    --rule:      rgba(51, 255, 102, 0.35);
+
+    --rubric:        #ff5f4a;
+    --rubric-fill:   #ff5f4a;
+    --azure:         #5ff2ff;
+    --azure-fill:    #5ff2ff;
+    --on-fill:       #050a06;
+    --ochre:         #ffb000;
+    --ochre-wash:    #ffb000;
+    --verdigris:     #33ff66;
+    --verdigris-wash:#0c2a14;
+    --violet:        #ff6bff;
+    --copper:        #ff9a3c;
+
+    --block-ink:   #050a06;
+    --block-paper: #d8ffe2;
+
+    /* Schraffur wird zu grünem Raster-Dither */
+    --hatch:      repeating-linear-gradient(0deg, rgba(51, 255, 102, 0.3) 0 1px, transparent 1px 3px);
+    --hatch-soft: repeating-linear-gradient(0deg, rgba(51, 255, 102, 0.14) 0 1px, transparent 1px 3px);
+
+    --grain: none;
+    --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%2333ff66'/%3E%3C/svg%3E");
+
+    --font-display: "VT323", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --font-head:    "VT323", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --font-body:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --glow:        0 0 4px rgba(51, 255, 102, 0.3);
+    --glow-strong: 0 0 6px rgba(51, 255, 102, 0.75), 0 0 16px rgba(51, 255, 102, 0.35);
+    --box-glow:    0 0 10px rgba(51, 255, 102, 0.14), inset 0 0 22px rgba(51, 255, 102, 0.04);
+}
+
+/* 2 — BASIS ============================================================== */
+:root[data-theme="phosphor"] body {
+    background: var(--paper);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    text-shadow: var(--glow);
+}
+
+/* Vignette */
+:root[data-theme="phosphor"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 8999;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Scanlines + leises Flackern; blockiert nie Klicks */
+:root[data-theme="phosphor"] body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 3px);
+    animation: phosphorFlicker 7s linear infinite;
+}
+
+@keyframes phosphorFlicker {
+    0%, 100% { opacity: 1; }
+    42%      { opacity: 1; }
+    43%      { opacity: 0.8; }
+    44%      { opacity: 1; }
+    76%      { opacity: 0.92; }
+    77%      { opacity: 1; }
+}
+
+@keyframes phosphorBlink {
+    0%, 55%   { opacity: 1; }
+    56%, 100% { opacity: 0; }
+}
+
+@keyframes phosphorPowerOn {
+    0%   { opacity: 0; transform: scaleY(0.004) scaleX(0.5); filter: brightness(5); }
+    35%  { opacity: 1; transform: scaleY(0.012) scaleX(1); filter: brightness(4); }
+    70%  { transform: scaleY(1.04); filter: brightness(2); }
+    100% { transform: none; filter: none; }
+}
+
+@keyframes phosphorBlip {
+    0%   { opacity: 0; }
+    50%  { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+:root[data-theme="phosphor"] ::selection { background: var(--ink); color: var(--paper); text-shadow: none; }
+
+:root[data-theme="phosphor"] h2 {
+    font-weight: 400;
+    font-size: 2.2rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] h2::first-letter { color: inherit; }
+
+:root[data-theme="phosphor"] h3 {
+    font-weight: 400;
+    font-size: 1.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom-style: dashed;
+    border-bottom-color: var(--ink-3);
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] h3::before {
+    content: "> ";
+    color: var(--ochre);
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
+}
+
+:root[data-theme="phosphor"] h3 small {
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    text-shadow: none;
+}
+
+:root[data-theme="phosphor"] h3 > .icon, :root[data-theme="phosphor"] h2 > .icon { color: var(--ochre); }
+
+:root[data-theme="phosphor"] code { border-bottom-color: var(--ink-3); color: var(--ochre); }
+:root[data-theme="phosphor"] .muted { color: var(--ink-2); font-size: 0.82rem; }
+
+/* 3 — KONTROLLEN ========================================================= */
+:where(:root[data-theme="phosphor"]) input,
+:where(:root[data-theme="phosphor"]) textarea,
+:where(:root[data-theme="phosphor"]) select {
+    caret-color: var(--ochre);
+    border: 1px solid var(--rule);
+    border-bottom: 2px solid var(--ink-3);
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+}
+
+:where(:root[data-theme="phosphor"]) input::placeholder,
+:where(:root[data-theme="phosphor"]) textarea::placeholder { color: var(--ink-3); font-style: normal; }
+
+:where(:root[data-theme="phosphor"]) input:hover,
+:where(:root[data-theme="phosphor"]) textarea:hover,
+:where(:root[data-theme="phosphor"]) select:hover { border-color: var(--ink-3); border-bottom-color: var(--ink); }
+
+:where(:root[data-theme="phosphor"]) input:focus,
+:where(:root[data-theme="phosphor"]) textarea:focus,
+:where(:root[data-theme="phosphor"]) select:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 10px rgba(51, 255, 102, 0.45), inset 0 0 8px rgba(51, 255, 102, 0.12);
+}
+
+:root[data-theme="phosphor"] :focus-visible { outline: 2px dashed var(--ochre); outline-offset: 2px; }
+:root[data-theme="phosphor"] input:focus-visible,
+:root[data-theme="phosphor"] textarea:focus-visible,
+:root[data-theme="phosphor"] select:focus-visible { outline: none; }
+
+:where(:root[data-theme="phosphor"]) textarea { background-image: none; line-height: 1.5; }
+
+:where(:root[data-theme="phosphor"]) select option { background: var(--paper-hi); color: var(--ink); }
+
+/* Ankreuzfeld als [ ] / [x] */
+:root[data-theme="phosphor"] input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+:root[data-theme="phosphor"] input[type="checkbox"]::before {
+    content: "[ ]";
+    width: auto;
+    height: auto;
+    background: none;
+    clip-path: none;
+    transform: none;
+    transition: none;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1;
+    color: var(--ink-2);
+    text-shadow: var(--glow);
+}
+
+:root[data-theme="phosphor"] input[type="checkbox"]:checked::before {
+    content: "[x]";
+    transform: none;
+    color: var(--ochre);
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
+}
+
+:root[data-theme="phosphor"] input[type="checkbox"]:focus-visible { outline: 2px dashed var(--ochre); }
+
+:root[data-theme="phosphor"] input[type="color"] { border: 1px solid var(--ink-3); background: var(--field); }
+
+:where(:root[data-theme="phosphor"]) button {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: var(--glow);
+}
+
+:where(:root[data-theme="phosphor"]) button:hover {
+    background: var(--ink);
+    color: var(--paper);
+    text-shadow: none;
+    box-shadow: 0 0 12px rgba(51, 255, 102, 0.55);
+}
+
+:where(:root[data-theme="phosphor"]) button:active { transform: none; filter: brightness(0.85); }
+:where(:root[data-theme="phosphor"]) button:disabled:hover { background: transparent; color: var(--ink); box-shadow: none; text-shadow: var(--glow); }
+
+:root[data-theme="phosphor"] .btn-primary {
+    background: var(--ochre);
+    color: var(--paper);
+    border-color: var(--ochre);
+    text-shadow: none;
+    box-shadow: 0 0 8px rgba(255, 176, 0, 0.35);
+}
+
+:root[data-theme="phosphor"] .btn-primary:hover {
+    background: transparent;
+    color: var(--ochre);
+    border-color: var(--ochre);
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
+    box-shadow: 0 0 12px rgba(255, 176, 0, 0.5);
+}
+
+:root[data-theme="phosphor"] .btn-primary:disabled:hover {
+    background: var(--ochre);
+    color: var(--paper);
+    box-shadow: 0 0 8px rgba(255, 176, 0, 0.35);
+    text-shadow: none;
+}
+
+:root[data-theme="phosphor"] .btn-secondary { background: var(--ink); color: var(--paper); text-shadow: none; }
+:root[data-theme="phosphor"] .btn-secondary:hover { background: transparent; color: var(--ink); text-shadow: var(--glow); }
+:root[data-theme="phosphor"] .btn-secondary:disabled:hover { background: var(--ink); color: var(--paper); text-shadow: none; }
+
+:root[data-theme="phosphor"] .btn-demonic { color: var(--rubric); border-color: var(--rubric); text-shadow: 0 0 5px rgba(255, 95, 74, 0.45); }
+:root[data-theme="phosphor"] .btn-demonic:hover { background: var(--rubric-fill); color: var(--on-fill); box-shadow: 0 0 12px rgba(255, 95, 74, 0.55); }
+:root[data-theme="phosphor"] .btn-holy { color: var(--azure); border-color: var(--azure); text-shadow: 0 0 5px rgba(95, 242, 255, 0.45); }
+:root[data-theme="phosphor"] .btn-holy:hover { background: var(--azure-fill); color: var(--on-fill); box-shadow: 0 0 12px rgba(95, 242, 255, 0.55); }
+
+:root[data-theme="phosphor"] .btn-del { background: transparent; color: var(--rubric); border-color: transparent; }
+:root[data-theme="phosphor"] .btn-del:hover { background: var(--rubric-fill); color: var(--on-fill); border-color: var(--rubric-fill); box-shadow: 0 0 12px rgba(255, 95, 74, 0.55); }
+
+:root[data-theme="phosphor"] .field-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+/* 4 — KOPF & REITER ====================================================== */
+:root[data-theme="phosphor"] .top-bar { border-bottom: 2px solid var(--ink); box-shadow: 0 6px 18px -10px rgba(51, 255, 102, 0.5); }
+:root[data-theme="phosphor"] .top-bar::after { display: none; }
+
+:root[data-theme="phosphor"] .top-bar h1 {
+    font-weight: 400;
+    font-size: 3rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    filter: none;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] .brand-mark .mark-sand { fill: var(--ochre); }
+:root[data-theme="phosphor"] .brand-mark { filter: drop-shadow(0 0 4px rgba(51, 255, 102, 0.6)); }
+
+:root[data-theme="phosphor"] #session-info {
+    border: 1px solid var(--ochre);
+    outline: none;
+    margin: 0;
+    color: var(--ochre);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.55);
+    box-shadow: 0 0 8px rgba(255, 176, 0, 0.2);
+}
+
+:root[data-theme="phosphor"] .folder-tabs .tab-btn {
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 0;
+    padding: 0.35rem 1rem 0.3rem;
+}
+
+:root[data-theme="phosphor"] .tab-num { color: var(--ochre); font-family: var(--font-body); border: 1px solid var(--ochre); text-shadow: none; }
+
+:root[data-theme="phosphor"] .folder-tabs .tab-btn:hover {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+:root[data-theme="phosphor"] .folder-tabs .tab-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    text-shadow: none;
+    box-shadow: 0 0 12px rgba(51, 255, 102, 0.5);
+}
+
+:root[data-theme="phosphor"] .folder-tabs .tab-btn.active .tab-num { color: var(--paper); border-color: var(--paper); }
+
+/* 5 — BLÄTTER ============================================================ */
+:root[data-theme="phosphor"] .card {
+    border: 1px solid var(--ink-3);
+    border-top: 3px double var(--ink);
+    background: var(--paper-hi);
+    box-shadow: var(--box-glow);
+}
+
+:root[data-theme="phosphor"] .card .card {
+    border: 1px dashed var(--ink-3);
+    background: var(--paper);
+    box-shadow: none;
+}
+
+:root[data-theme="phosphor"] .drop-zone { border: 1px dashed var(--ink-3); background: var(--paper); }
+:root[data-theme="phosphor"] .drop-zone:hover,
+:root[data-theme="phosphor"] .drop-zone.drag-over { border-color: var(--ochre); background: var(--hatch-soft), var(--paper); }
+:root[data-theme="phosphor"] .drop-zone.file-loaded { border-color: var(--verdigris); background: var(--verdigris-wash); }
+:root[data-theme="phosphor"] .drop-remove-btn { border-color: var(--rubric); background: var(--paper-hi); }
+
+/* 6 — LOBBY ============================================================== */
+:root[data-theme="phosphor"] .lobby-masthead { animation: phosphorPowerOn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 1; transform-origin: 50% 50%; }
+
+:root[data-theme="phosphor"] .lobby-title {
+    font-weight: 400;
+    font-size: clamp(3.6rem, 15vw, 9rem);
+    line-height: 0.95;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    filter: none;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] .lobby-title::first-letter { color: inherit; }
+
+:root[data-theme="phosphor"] .lobby-title::after {
+    content: "";
+    display: inline-block;
+    width: 0.4em;
+    height: 0.62em;
+    margin-left: 0.1em;
+    background: var(--ochre);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.7);
+    animation: phosphorBlink 1.1s steps(1, end) infinite;
+}
+
+:root[data-theme="phosphor"] .lobby-rule { font-size: 0.78rem; letter-spacing: 0.3em; color: var(--ink-2); }
+
+:root[data-theme="phosphor"] .lobby-rule::before,
+:root[data-theme="phosphor"] .lobby-rule::after {
+    height: 0;
+    border-top: 2px dashed var(--ink-3);
+    border-bottom: 0;
+}
+
+:root[data-theme="phosphor"] .lobby-grid {
+    padding: 0;
+    border: 2px solid var(--ink);
+    background: var(--paper-hi);
+    box-shadow: 0 0 18px rgba(51, 255, 102, 0.2), inset 0 0 30px rgba(51, 255, 102, 0.05);
+}
+
+:root[data-theme="phosphor"] .lobby-grid > .card {
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+
+:root[data-theme="phosphor"] .lobby-grid > .card + .card { border-left: 1px dashed var(--ink-3); }
+
+:root[data-theme="phosphor"] .lobby-grid > .card > p::first-letter {
+    float: none;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    padding: 0;
+    color: inherit;
+}
+
+:root[data-theme="phosphor"] .lobby-divider { color: var(--ink-2); letter-spacing: 0.2em; }
+:root[data-theme="phosphor"] .lobby-divider::before,
+:root[data-theme="phosphor"] .lobby-divider::after { border-bottom: 1px dashed var(--ink-3); }
+
+/* 7 — WÜRFELBANK ========================================================= */
+:root[data-theme="phosphor"] .dice-bar-container {
+    background: var(--paper-lo);
+    border-bottom: 1px solid var(--ink);
+}
+
+:root[data-theme="phosphor"] .quick-dice-btns button {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+}
+
+:root[data-theme="phosphor"] .btn-d20 { background: var(--ochre); color: var(--paper); border-color: var(--ochre); text-shadow: none; }
+:root[data-theme="phosphor"] .btn-d20:hover { background: transparent; color: var(--ochre); text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); box-shadow: 0 0 12px rgba(255, 176, 0, 0.5); }
+
+/* Wurfzettel als Logzeile */
+:root[data-theme="phosphor"] .roll-pill {
+    background: var(--paper-hi);
+    border: 1px solid var(--ink-3);
+    border-left: 3px solid var(--ink);
+    font-size: 0.82rem;
+}
+
+:root[data-theme="phosphor"] .roll-pill > :first-child::before { content: "> "; color: var(--ochre); }
+:root[data-theme="phosphor"] .roll-total {
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 400;
+    font-size: 1.6rem;
+    text-shadow: none;
+}
+
+:root[data-theme="phosphor"] .roll-detail { color: var(--ink-2); }
+:root[data-theme="phosphor"] .roll-kept { color: var(--ink); }
+:root[data-theme="phosphor"] .roll-dropped { color: var(--ink-3); }
+:root[data-theme="phosphor"] .roll-pill-latest { animation: phosphorBlip 0.3s steps(4, end); }
+
+:root[data-theme="phosphor"] .roll-pill.roll-crit {
+    background: var(--ochre);
+    border-color: var(--ochre);
+    color: var(--paper);
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+    text-shadow: none;
+}
+
+:root[data-theme="phosphor"] .roll-pill.roll-crit > * { color: var(--paper); }
+:root[data-theme="phosphor"] .roll-pill.roll-crit .roll-total { background: var(--paper); color: var(--ochre); text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); }
+:root[data-theme="phosphor"] .roll-pill.roll-crit .roll-detail,
+:root[data-theme="phosphor"] .roll-pill.roll-crit .roll-what { color: var(--paper); }
+:root[data-theme="phosphor"] .roll-pill.roll-crit > :first-child::before { color: var(--paper); }
+
+:root[data-theme="phosphor"] .roll-pill.roll-fumble { border-color: var(--rubric); border-left-color: var(--rubric); }
+:root[data-theme="phosphor"] .roll-pill.roll-fumble .roll-total { background: var(--rubric-fill); color: var(--on-fill); }
+:root[data-theme="phosphor"] .roll-pill.roll-fumble .roll-who { color: var(--rubric); }
+
+:root[data-theme="phosphor"] .roll-pill.roll-secret { border-style: dashed; border-color: var(--violet); border-left-width: 3px; }
+:root[data-theme="phosphor"] .roll-pill.roll-secret .roll-who { color: var(--violet); }
+:root[data-theme="phosphor"] .roll-pill.roll-secret > :first-child::before { color: var(--violet); }
+
+/* 8 — CHARAKTERBOGEN ===================================================== */
+:root[data-theme="phosphor"] .morality-banner {
+    border: 1px solid var(--ink);
+    background: var(--paper-hi);
+    box-shadow: var(--box-glow);
+}
+
+:root[data-theme="phosphor"] .soul-scale { filter: drop-shadow(0 0 3px rgba(51, 255, 102, 0.55)); }
+:root[data-theme="phosphor"] .soul-scale .scale-pivot { fill: var(--paper-hi); }
+:root[data-theme="phosphor"] .morality-subtitle { letter-spacing: 0.2em; }
+
+:root[data-theme="phosphor"] .morality-score-big {
+    font-weight: 400;
+    font-size: 3.8rem;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] .moral-is-demonic .morality-score-big { text-shadow: 0 0 8px rgba(255, 95, 74, 0.7); }
+:root[data-theme="phosphor"] .moral-is-holy .morality-score-big { text-shadow: 0 0 8px rgba(95, 242, 255, 0.7); }
+:root[data-theme="phosphor"] .morality-state-text { font-style: normal; }
+
+:root[data-theme="phosphor"] .abilities-row-grid,
+:root[data-theme="phosphor"] .compact-stats-row,
+:root[data-theme="phosphor"] .currency-four-grid { box-shadow: 0 0 0 1px var(--ink-3); background: var(--ink-3); }
+
+:root[data-theme="phosphor"] .ability-shield,
+:root[data-theme="phosphor"] .stat-shield-box,
+:root[data-theme="phosphor"] .coin-box { outline: 0; }
+
+:root[data-theme="phosphor"] .ability-label,
+:root[data-theme="phosphor"] .stat-box-title { letter-spacing: 0.2em; text-transform: uppercase; }
+
+:root[data-theme="phosphor"] .ability-mod-big {
+    border: 0;
+    font-weight: 400;
+    font-size: 2.9rem;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] .ability-mod-big .icon { color: var(--ochre); }
+:root[data-theme="phosphor"] .ability-mod-big:hover { background: var(--ink); color: var(--paper); box-shadow: none; text-shadow: none; }
+:root[data-theme="phosphor"] .ability-mod-big:hover .icon { color: inherit; }
+
+:root[data-theme="phosphor"] .ability-score-oval { border-color: transparent; border-bottom-color: var(--ink-3); }
+
+:root[data-theme="phosphor"] .hp-big-input {
+    font-weight: 400;
+    font-size: 3.1rem;
+    border-color: transparent;
+    border-bottom-color: var(--ink-3);
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] #p-hp { color: var(--rubric); text-shadow: 0 0 8px rgba(255, 95, 74, 0.6); }
+:root[data-theme="phosphor"] .hp-slash { font-size: 2.4rem; }
+
+/* Lebensader als Blockbalken ▮▮▮▯▯ */
+:root[data-theme="phosphor"] .life-vein {
+    height: 1.1rem;
+    border: 1px solid var(--ink-3);
+    background: repeating-linear-gradient(90deg, rgba(51, 255, 102, 0.14) 0 7px, transparent 7px 9px);
+}
+
+:root[data-theme="phosphor"] .life-vein-fill {
+    background: repeating-linear-gradient(90deg, var(--rubric-fill) 0 7px, transparent 7px 9px);
+    box-shadow: none;
+    filter: drop-shadow(0 0 4px rgba(255, 95, 74, 0.6));
+}
+
+:root[data-theme="phosphor"] .life-vein-fill.is-low {
+    background: repeating-linear-gradient(90deg, var(--rubric-fill) 0 4px, transparent 4px 9px);
+}
+
+:root[data-theme="phosphor"] .compact-num-input {
+    font-weight: 400;
+    font-size: 2.5rem;
+    text-shadow: var(--glow-strong);
+}
+
+:root[data-theme="phosphor"] .compact-num-input:hover { border-color: transparent; border-bottom-color: var(--ink); }
+:root[data-theme="phosphor"] .compact-num-input:focus { border-color: transparent; border-bottom-color: var(--ochre); }
+
+:root[data-theme="phosphor"] .skill-chip { border-bottom: 1px dotted var(--ink-3); font-size: 0.86rem; }
+:root[data-theme="phosphor"] .skill-chip:hover { color: var(--ink); background: rgba(51, 255, 102, 0.07); }
+:root[data-theme="phosphor"] .skill-chip.is-known { color: var(--ink); font-weight: 600; text-shadow: var(--glow-strong); }
+
+/* 9 — GELD & INVENTAR ==================================================== */
+:root[data-theme="phosphor"] .coin-cp { --coin: var(--copper); }
+:root[data-theme="phosphor"] .coin-sp { --coin: #b9ffcb; }
+:root[data-theme="phosphor"] .coin-gp { --coin: var(--ochre); }
+:root[data-theme="phosphor"] .coin-pp { --coin: var(--azure); }
+:root[data-theme="phosphor"] .coin-box span { letter-spacing: 0.08em; text-transform: uppercase; }
+:root[data-theme="phosphor"] .coin-box span::before { border-radius: 0; box-shadow: inset 0 0 0 2px currentColor, inset 0 0 0 4px var(--paper-hi); }
+
+:root[data-theme="phosphor"] .item-icon { border: 1px solid var(--ink-3); }
+
+:root[data-theme="phosphor"] .tag, :root[data-theme="phosphor"] .cat-tag,
+:root[data-theme="phosphor"] .packmass-pill, :root[data-theme="phosphor"] .exh-badge,
+:root[data-theme="phosphor"] .inline-item-pill { letter-spacing: 0.03em; }
+
+:root[data-theme="phosphor"] .tag { background: var(--ink); color: var(--paper); text-shadow: none; }
+:root[data-theme="phosphor"] .cat-tag { font-style: normal; }
+:root[data-theme="phosphor"] .exh-badge { background: var(--ochre); color: var(--paper); border-color: var(--ochre); text-shadow: none; }
+:root[data-theme="phosphor"] .inline-item-pill { background: var(--paper-hi); }
+:root[data-theme="phosphor"] .inline-item-pill b:hover { background: var(--rubric-fill); color: var(--on-fill); }
+
+:root[data-theme="phosphor"] .player-creator-box { background: var(--paper); border-top: 1px dashed var(--ink-3); }
+
+:root[data-theme="phosphor"] .packmass-badge { border: 1px solid var(--ink-3); }
+:root[data-theme="phosphor"] .packmass-badge.packmass-full { border-color: var(--rubric); color: var(--rubric); background: var(--hatch-soft); }
+
+:root[data-theme="phosphor"] .bag-progress-track {
+    height: 0.8rem;
+    border: 1px solid var(--ink-3);
+    background: repeating-linear-gradient(90deg, rgba(51, 255, 102, 0.12) 0 7px, transparent 7px 9px);
+}
+
+:root[data-theme="phosphor"] .bag-progress-fill {
+    background: repeating-linear-gradient(90deg, var(--ink) 0 7px, transparent 7px 9px);
+}
+
+:root[data-theme="phosphor"] .bag-progress-fill.fill-full {
+    background: repeating-linear-gradient(90deg, var(--rubric-fill) 0 7px, transparent 7px 9px);
+}
+
+/* 10 — DM ================================================================ */
+:root[data-theme="phosphor"] .mini-avatar,
+:root[data-theme="phosphor"] .mini-avatar-placeholder {
+    border: 1px solid var(--ink-3);
+    font-weight: 400;
+    font-size: 1.7rem;
+}
+
+:root[data-theme="phosphor"] .badge-hp, :root[data-theme="phosphor"] .badge-moral { border-width: 1px; }
+:root[data-theme="phosphor"] .badge-hp { text-shadow: none; }
+
+:root[data-theme="phosphor"] .btn-death { background: var(--ink); color: var(--paper); text-shadow: none; }
+:root[data-theme="phosphor"] .btn-death:hover { animation: none; background: var(--rubric-fill); color: var(--on-fill); }
+
+:root[data-theme="phosphor"] .dm-moral-bar { border-top: 1px dashed var(--rule); border-bottom: 1px dashed var(--rule); }
+:root[data-theme="phosphor"] .dm-mini-stats { border-top: 1px solid var(--ink-3); border-bottom: 1px solid var(--ink-3); }
+
+:root[data-theme="phosphor"] .dm-attacks-editor { border-left: 2px solid var(--ochre); }
+
+:root[data-theme="phosphor"] .npc-card, :root[data-theme="phosphor"] .lib-item-card { border: 1px solid var(--ink-3); background: var(--paper-hi); }
+:root[data-theme="phosphor"] .npc-card { border-left: 5px solid var(--rubric); }
+:root[data-theme="phosphor"] .npc-library-picker { border: 1px solid var(--ink-3); }
+:root[data-theme="phosphor"] .npc-inventory-box { border: 1px dashed var(--ink-3); }
+:root[data-theme="phosphor"] .npc-desc-box { border-left: 2px solid var(--rubric); font-style: normal; }
+
+:root[data-theme="phosphor"] .cat-pill { font-style: normal; border-width: 1px; letter-spacing: 0.03em; }
+:root[data-theme="phosphor"] .cat-pill.active { background: var(--ink); color: var(--paper); text-shadow: none; font-style: normal; }
+
+/* 11 — KAMPF ============================================================= */
+:root[data-theme="phosphor"] .turn-active-card { border: 1px solid var(--ink); border-left: 8px solid var(--team-c, var(--ink)); box-shadow: var(--box-glow); }
+:root[data-theme="phosphor"] .turn-active-avatar, :root[data-theme="phosphor"] .turn-next-avatar { border: 1px solid var(--ink-3); }
+:root[data-theme="phosphor"] .turn-avatar-placeholder { font-weight: 400; font-size: 1.5rem; }
+:root[data-theme="phosphor"] .turn-next-avatar.turn-avatar-placeholder { font-size: 1.1rem; }
+:root[data-theme="phosphor"] .turn-active-info strong { font-weight: 400; font-size: 1.5rem; letter-spacing: 0.05em; text-transform: uppercase; }
+:root[data-theme="phosphor"] .turn-next-card { border: 1px solid var(--ink-3); border-left: 5px solid var(--team-c, var(--ink)); }
+:root[data-theme="phosphor"] .turn-empty-pill { font-style: normal; }
+:root[data-theme="phosphor"] .turn-indicator-pill { text-shadow: none; letter-spacing: 0.14em; }
+
+:root[data-theme="phosphor"] .round-badge { border: 1px solid var(--ink); box-shadow: 0 0 8px rgba(51, 255, 102, 0.25); }
+:root[data-theme="phosphor"] .round-badge strong { font-weight: 400; font-size: 2.1rem; text-shadow: var(--glow-strong); }
+
+:root[data-theme="phosphor"] .battlemap-vis-toggle { border: 1px solid var(--ink-3); }
+:root[data-theme="phosphor"] .battlemap-vis-toggle.vis-on { border-color: var(--verdigris); color: var(--verdigris); background: var(--verdigris-wash); }
+:root[data-theme="phosphor"] .battlemap-vis-toggle.vis-off { color: var(--ink-2); border-style: dashed; }
+
+:root[data-theme="phosphor"] .mode-pill-build { background: var(--azure-fill); color: var(--on-fill); text-shadow: none; }
+:root[data-theme="phosphor"] .mode-pill-build:hover { background: var(--rubric-fill); border-color: var(--rubric-fill); }
+
+:root[data-theme="phosphor"] .side-card-divider { border-top: 1px dashed var(--ink-3); }
+
+:root[data-theme="phosphor"] .team-group-header { border-bottom: 3px solid var(--team-c, var(--ink)); font-size: 1.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
+:root[data-theme="phosphor"] .team-group-header strong { font-weight: 400; }
+:root[data-theme="phosphor"] .team-color-dot { border: 1px solid var(--ink); transform: none; }
+:root[data-theme="phosphor"] .team-quick-add-select { border-style: dashed; border-bottom-style: solid; }
+:root[data-theme="phosphor"] .team-combatant-item { border: 1px solid var(--ink-3); border-left: 5px solid var(--team-c, var(--ink)); background: var(--paper); }
+:root[data-theme="phosphor"] .team-combatant-item .mini-avatar,
+:root[data-theme="phosphor"] .team-combatant-item .mini-avatar-placeholder { font-size: 1.4rem; }
+:root[data-theme="phosphor"] .active-turn-row { box-shadow: 0 0 0 1px var(--rubric-fill), 0 0 12px rgba(255, 95, 74, 0.45); border-color: var(--rubric-fill); border-left-color: var(--team-c, var(--ink)); }
+:root[data-theme="phosphor"] .combatant-down { background: var(--hatch-soft), var(--paper); }
+
+/* 12 — KAMPFFELD ========================================================= */
+:root[data-theme="phosphor"] .battlemap-template-bar { border-top: 1px dashed var(--ink-3); border-bottom: 1px dashed var(--ink-3); }
+
+:root[data-theme="phosphor"] .battlemap-stage-wrapper {
+    border: 1px solid var(--ink);
+    background-color: var(--paper-lo);
+    background-image: radial-gradient(rgba(51, 255, 102, 0.55) 1px, transparent 1.3px);
+    background-size: 18px 18px;
+    box-shadow: inset 0 0 40px rgba(51, 255, 102, 0.06);
+}
+
+:root[data-theme="phosphor"] .battlemap-stage-wrapper.stage-mode-build { border-color: var(--azure); box-shadow: inset 0 0 0 1px var(--azure), inset 0 0 30px rgba(95, 242, 255, 0.12); }
+
+:root[data-theme="phosphor"] .battlemap-cell { border: 1px solid var(--block-ink); }
+:root[data-theme="phosphor"] .cell-drop-hover { outline: 2px solid var(--ochre); outline-offset: 1px; }
+
+:root[data-theme="phosphor"] .palette-creator-popover { border: 1px dashed var(--ink-3); }
+:root[data-theme="phosphor"] .palette-remove-btn { border-color: var(--rubric); }
+:root[data-theme="phosphor"] .palette-block-entry:hover { background: rgba(51, 255, 102, 0.08); }
+:root[data-theme="phosphor"] .palette-block-entry.palette-block-active { background: var(--ink); color: var(--paper); text-shadow: none; }
+:root[data-theme="phosphor"] .palette-color-swatch { border: 1px solid var(--block-paper); box-shadow: 0 0 0 1px var(--block-ink); }
+
+:root[data-theme="phosphor"] .battlemap-token { border: 3px solid var(--team-c, var(--block-ink)); outline: 1px solid var(--block-ink); text-shadow: none; }
+:root[data-theme="phosphor"] .token-initials { font-weight: 400; font-size: 1.6rem; }
+:root[data-theme="phosphor"] .token-label-bar { background: var(--block-ink); }
+:root[data-theme="phosphor"] .token-name-text { color: var(--block-paper); text-shadow: none; }
+:root[data-theme="phosphor"] .token-hp-text { color: #ff8f7e; text-shadow: none; }
+
+:root[data-theme="phosphor"] .battlemap-token.token-active-turn {
+    outline: 2px solid var(--ochre);
+    outline-offset: 2px;
+    box-shadow: 0 0 12px rgba(255, 176, 0, 0.7);
+}
+
+:root[data-theme="phosphor"] .token-drag-floating-ghost { box-shadow: 0 0 14px rgba(51, 255, 102, 0.7); }
+
+/* 13 — CHAT & MODAL ====================================================== */
+:root[data-theme="phosphor"] .chat-widget {
+    padding: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper-hi);
+    box-shadow: 0 0 16px rgba(51, 255, 102, 0.28), inset 0 0 20px rgba(51, 255, 102, 0.04);
+}
+
+:root[data-theme="phosphor"] .chat-header {
+    font-weight: 400;
+    font-size: 1.35rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: none;
+}
+
+:root[data-theme="phosphor"] .chat-header-right { letter-spacing: 0.04em; }
+:root[data-theme="phosphor"] .chat-unread-badge { text-shadow: none; }
+:root[data-theme="phosphor"] .chat-messages-list { background: var(--paper); }
+:root[data-theme="phosphor"] .chat-messages-list > .muted { font-style: normal; }
+:root[data-theme="phosphor"] .chat-msg { border-bottom: 1px dotted var(--ink-3); }
+:root[data-theme="phosphor"] .chat-msg.chat-whisper { border-left: 2px solid var(--violet); font-style: normal; }
+:root[data-theme="phosphor"] .chat-msg-sender::before { content: "<"; }
+:root[data-theme="phosphor"] .chat-msg-sender::after { content: ">"; }
+:root[data-theme="phosphor"] .chat-msg-sender { color: var(--ochre); }
+:root[data-theme="phosphor"] .chat-whisper .chat-msg-sender { color: var(--violet); }
+:root[data-theme="phosphor"] .chat-controls { border-top: 1px solid var(--ink); }
+
+:root[data-theme="phosphor"] .modal-backdrop { background: rgba(2, 6, 3, 0.82); }
+
+:root[data-theme="phosphor"] .modal-card {
+    border: 2px solid var(--ink);
+    background: var(--paper-hi);
+    box-shadow: 0 0 24px rgba(51, 255, 102, 0.35), inset 0 0 30px rgba(51, 255, 102, 0.06);
+}
+
+:root[data-theme="phosphor"] .modal-card h3 {
+    font-weight: 400;
+    font-size: 2.2rem;
+    border-bottom: 0;
+}
+
+:root[data-theme="phosphor"] .modal-card h3::first-letter { color: inherit; }
+:root[data-theme="phosphor"] .modal-card .muted { color: var(--ink); font-size: 0.9rem; }
+:root[data-theme="phosphor"] .modal-actions .btn-del { background: var(--rubric-fill); color: var(--on-fill); border-color: var(--rubric-fill); text-shadow: none; }
+:root[data-theme="phosphor"] .modal-actions .btn-del:hover { background: transparent; color: var(--rubric); }
+
+/* Erscheinungsbild-Menü */
+:root[data-theme="phosphor"] .theme-picker { position: relative; }
+
+:root[data-theme="phosphor"] .theme-menu {
+    z-index: 1500;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    background: var(--paper-hi);
+    color: var(--ink);
+    box-shadow: 0 0 18px rgba(51, 255, 102, 0.3), 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="phosphor"] .theme-menu-title {
+    grid-column: 1 / -1;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ochre);
+}
+
+:root[data-theme="phosphor"] .theme-option {
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0.02em;
+}
+
+:root[data-theme="phosphor"] .theme-option:hover { background: var(--ink); color: var(--paper); }
+:root[data-theme="phosphor"] .theme-option small { color: inherit; opacity: 0.85; text-shadow: none; }
+:root[data-theme="phosphor"] .theme-option.is-active { border-color: var(--ochre); }
+:root[data-theme="phosphor"] .theme-option.is-active strong::before { content: "> "; color: var(--ochre); }
+:root[data-theme="phosphor"] .theme-option.is-active:hover strong::before { color: var(--paper); }
+
+/* Scrollbars */
+:root[data-theme="phosphor"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+:root[data-theme="phosphor"] ::-webkit-scrollbar-track { background: var(--paper-lo); }
+:root[data-theme="phosphor"] ::-webkit-scrollbar-thumb { background: var(--ink-3); border: 1px solid var(--paper-lo); }
+:root[data-theme="phosphor"] ::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+
+/* 14 — BEWEGUNG & RESPONSIVE ============================================= */
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme="phosphor"] body::after,
+    :root[data-theme="phosphor"] .lobby-masthead,
+    :root[data-theme="phosphor"] .lobby-title::after { animation: none; }
+}
+
+@media (max-width: 860px) {
+    :root[data-theme="phosphor"] .lobby-grid > .card + .card { border-left: 0; border-top: 1px dashed var(--ink-3); }
+}
+
+@media (max-width: 520px) {
+    :root[data-theme="phosphor"] .top-bar h1 { font-size: 2.3rem; }
+    :root[data-theme="phosphor"] .folder-tabs .tab-btn { font-size: 1.25rem; padding: 0.3rem 0.6rem; }
+    :root[data-theme="phosphor"] .morality-score-big { font-size: 3rem; }
+}
+
+:root[data-theme="phosphor"] .lobby-grid button { white-space: normal; text-align: center; }

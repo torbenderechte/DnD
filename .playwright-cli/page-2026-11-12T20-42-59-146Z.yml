@@ -1,0 +1,267 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - navigation [ref=e39]:
+        - button "Gameplay" [ref=e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e41]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [ref=e42] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e43]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=e44] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e45]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=e46] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e47]: "4"
+          - text: DM-Notizen
+    - generic [ref=e3]:
+      - button "Session speichern" [ref=e48] [cursor=pointer]
+      - status [ref=e4]: "DM | Raum-Code: 7195 | 1 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - button "d4" [ref=e55] [cursor=pointer]
+        - button "d6" [ref=e56] [cursor=pointer]
+        - button "d8" [ref=e57] [cursor=pointer]
+        - button "d10" [ref=e58] [cursor=pointer]
+        - button "d12" [ref=e59] [cursor=pointer]
+        - button "d20" [ref=e60] [cursor=pointer]
+        - button "d100" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - textbox "Würfelformel" [ref=e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e65] [cursor=pointer]
+      - generic [ref=e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=e70]:
+      - generic [ref=e335]:
+        - generic [ref=e336]: DM
+        - generic [ref=e337]: "Würfel d20:"
+        - strong [ref=e338]: "15"
+        - generic [ref=e339]: "[15]"
+      - generic [ref=e340]:
+        - generic [ref=e341]: DM
+        - generic [ref=e342]: "Würfel d20:"
+        - strong [ref=e343]: "4"
+        - generic [ref=e344]: "[4]"
+        - text: ✦
+      - generic [ref=e345]:
+        - generic [ref=e346]: DM
+        - generic [ref=e347]: "Würfel d20:"
+        - strong [ref=e348]: "17"
+        - generic [ref=e349]: "[17]"
+      - generic [ref=e350]:
+        - generic [ref=e351]: DM
+        - generic [ref=e352]: "Würfel d20:"
+        - strong [ref=e353]: "16"
+        - generic [ref=e354]: "[16]"
+      - generic [ref=e355]:
+        - generic [ref=e356]: DM
+        - generic [ref=e357]: "Würfel d20:"
+        - strong [ref=e358]: "10"
+        - generic [ref=e359]: "[10]"
+      - generic [ref=e360]:
+        - generic [ref=e361]: DM
+        - generic [ref=e362]: "Würfel d20:"
+        - strong [ref=e363]: "17"
+        - generic [ref=e364]: "[17]"
+  - main [ref=e72]:
+    - generic [ref=e540]:
+      - generic [ref=e541]:
+        - generic [ref=e543]:
+          - generic [aria-hidden] [ref=e544]: M
+          - generic [ref=e545]:
+            - generic [ref=e546]: AM ZUG
+            - strong [ref=e549]: Musashi
+            - generic [ref=e550]: Helden · Init 0
+        - generic [ref=e551]:
+          - generic [ref=e552]:
+            - generic [ref=e553]: RUNDE
+            - strong [ref=e554]: "1"
+          - generic "Schaltet den 4. Tab (Kampffeld) für alle Spieler ein oder aus" [ref=e555] [cursor=pointer]:
+            - checkbox "Für Spieler ausgeblendet" [ref=e556]
+            - text: Für Spieler ausgeblendet
+          - button "Vorheriger Zug" [ref=e559] [cursor=pointer]
+          - button "Nächster Zug" [ref=e560] [cursor=pointer]
+          - button "Spieler-Sync" [ref=e563] [cursor=pointer]
+          - button "Monster-Init" [ref=e566] [cursor=pointer]
+          - button "Alle Init" [ref=e569] [cursor=pointer]
+          - button "Kampf beenden" [ref=e572] [cursor=pointer]
+      - generic [ref=e573]:
+        - complementary [ref=e574]:
+          - generic [ref=e575]:
+            - heading "Teilnehmer & Teams" [level=3] [ref=e577]
+            - generic [ref=e580]:
+              - text: SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN
+              - combobox "SPIELER ODER MONSTER ZUM KAMPF HINZUFÜGEN" [ref=e581] [cursor=pointer]:
+                - option "-- Kämpfer wählen (0 verfügbar) --" [selected]
+            - generic [ref=e582]:
+              - combobox [ref=e583] [cursor=pointer]:
+                - 'option "In Team: Helden" [selected]'
+                - 'option "In Team: Monster / Feinde"'
+                - 'option "In Team: Fraktion 3"'
+                - 'option "In Team: Fraktion 4"'
+              - button "+ Hinzufügen" [ref=e584] [cursor=pointer]
+            - generic [ref=e586]:
+              - text: NEUES TEAM ERSTELLEN
+              - generic [ref=e587]:
+                - 'textbox "NEUES TEAM ERSTELLEN #8a6fae + Team" [ref=e588]':
+                  - /placeholder: Team-Name (z.B. Wachen)...
+                - textbox "Teamfarbe wählen" [ref=e589] [cursor=pointer]: "#8a6fae"
+                - button "+ Team" [ref=e590] [cursor=pointer]
+          - generic [ref=e591]:
+            - generic [ref=e592]:
+              - generic [ref=e593]:
+                - strong [ref=e596]: Helden (1)
+                - button "Team löschen" [ref=e597] [cursor=pointer]
+              - generic [ref=e601]:
+                - generic [ref=e602]:
+                  - generic [ref=e603]:
+                    - generic [ref=e604]: M
+                    - generic [ref=e605]:
+                      - generic [ref=e606]:
+                        - generic [ref=e607]: ZUG
+                        - strong [ref=e610]: Musashi
+                      - text: AC 10 · Feld (1,1)
+                  - generic [ref=e611]:
+                    - generic [ref=e612]: 10/10
+                    - button "Aus Kampf entfernen" [ref=e613] [cursor=pointer]
+                - generic [ref=e616]:
+                  - generic [ref=e617]:
+                    - text: "Init:"
+                    - spinbutton "Init:" [ref=e618]: "0"
+                  - combobox "Team" [ref=e619] [cursor=pointer]:
+                    - option "Helden" [selected]
+                    - option "Monster / Feinde"
+                    - option "Fraktion 3"
+                    - option "Fraktion 4"
+                - generic [ref=e620]:
+                  - button "-5" [ref=e621] [cursor=pointer]
+                  - button "-1" [ref=e622] [cursor=pointer]
+                  - button "+1" [ref=e623] [cursor=pointer]
+                  - button "+5" [ref=e624] [cursor=pointer]
+                - generic [ref=e625]:
+                  - spinbutton "HP" [ref=e626]
+                  - button "-DMG" [ref=e627] [cursor=pointer]
+                  - button "+HEAL" [ref=e628] [cursor=pointer]
+                - combobox [ref=e629] [cursor=pointer]:
+                  - option "+ Zustand..." [selected]
+                  - option "Blutend"
+                  - option "Brennend"
+                  - option "Betäubt"
+                  - option "Vergiftet"
+                  - option "Verängstigt"
+                  - option "Dämonischer Rausch"
+                  - option "Heiliger Schutz"
+            - generic [ref=e630]:
+              - generic [ref=e631]:
+                - strong [ref=e634]: Monster / Feinde (0)
+                - button "Team löschen" [ref=e635] [cursor=pointer]
+              - generic [ref=e638]: Keine Kämpfer in diesem Team.
+            - generic [ref=e639]:
+              - generic [ref=e640]:
+                - strong [ref=e643]: Fraktion 3 (0)
+                - button "Team löschen" [ref=e644] [cursor=pointer]
+              - generic [ref=e647]: Keine Kämpfer in diesem Team.
+            - generic [ref=e648]:
+              - generic [ref=e649]:
+                - strong [ref=e652]: Fraktion 4 (0)
+                - button "Team löschen" [ref=e653] [cursor=pointer]
+              - generic [ref=e656]: Keine Kämpfer in diesem Team.
+        - generic [ref=e657]:
+          - generic [ref=e658]:
+            - generic [ref=e659]:
+              - generic [ref=e660]:
+                - heading "Spielfeld (6 × 6 Grid)" [level=3] [ref=e661]
+                - generic [ref=e664]: Verschieben- & Bewegungsmodus
+              - text: "Bewegungsmodus: Halte die Maustaste gedrückt zum freien Verschieben der Karte · Mausrad zoomt zum Mauszeiger · +/− zoomt, 0 zentriert."
+            - generic [ref=e667]:
+              - generic [ref=e668]:
+                - button "Rauszoomen (Taste −)" [ref=e669] [cursor=pointer]
+                - button "100%" [ref=e672] [cursor=pointer]
+                - button "Reinzoomen (Taste +)" [ref=e673] [cursor=pointer]
+              - button "+ Zeile" [ref=e676] [cursor=pointer]
+              - button "− Zeile" [ref=e677] [cursor=pointer]
+              - button "+ Spalte" [ref=e678] [cursor=pointer]
+              - button "− Spalte" [ref=e679] [cursor=pointer]
+              - button "Reset" [ref=e680] [cursor=pointer]
+          - generic [ref=e683]:
+            - generic [ref=e684]:
+              - textbox "Vorlagenname (z.B. Thronsaal)..." [ref=e685]
+              - button "Spielfeld speichern" [ref=e686] [cursor=pointer]
+            - generic [ref=e689]:
+              - combobox [ref=e690] [cursor=pointer]:
+                - option "-- Gespeichertes Spielfeld laden (0) --" [selected]
+              - button "Laden" [ref=e691] [cursor=pointer]
+          - generic [ref=e696]:
+            - generic "Pures Grau (1, 1)" [ref=e697]:
+              - generic: 1,1
+              - 'generic "Musashi (Helden) • HP: 10/10" [ref=e698]':
+                - generic: MU
+                - generic:
+                  - generic: Musashi
+                  - generic: 10/10
+            - generic "Pures Grau (1, 2)" [ref=e699]: 1,2
+            - generic "Pures Grau (1, 3)" [ref=e700]: 1,3
+            - generic "Pures Grau (1, 4)" [ref=e701]: 1,4
+            - generic "Pures Grau (1, 5)" [ref=e702]: 1,5
+            - generic "Pures Grau (1, 6)" [ref=e703]: 1,6
+            - generic "Pures Grau (2, 1)" [ref=e704]: 2,1
+            - generic "Pures Grau (2, 2)" [ref=e705]: 2,2
+            - generic "Pures Grau (2, 3)" [ref=e706]: 2,3
+            - generic "Pures Grau (2, 4)" [ref=e707]: 2,4
+            - generic "Pures Grau (2, 5)" [ref=e708]: 2,5
+            - generic "Pures Grau (2, 6)" [ref=e709]: 2,6
+            - generic "Pures Grau (3, 1)" [ref=e710]: 3,1
+            - generic "Pures Grau (3, 2)" [ref=e711]: 3,2
+            - generic "Pures Grau (3, 3)" [ref=e712]: 3,3
+            - generic "Pures Grau (3, 4)" [ref=e713]: 3,4
+            - generic "Pures Grau (3, 5)" [ref=e714]: 3,5
+            - generic "Pures Grau (3, 6)" [ref=e715]: 3,6
+            - generic "Pures Grau (4, 1)" [ref=e716]: 4,1
+            - generic "Pures Grau (4, 2)" [ref=e717]: 4,2
+            - generic "Pures Grau (4, 3)" [ref=e718]: 4,3
+            - generic "Pures Grau (4, 4)" [ref=e719]: 4,4
+            - generic "Pures Grau (4, 5)" [ref=e720]: 4,5
+            - generic "Pures Grau (4, 6)" [ref=e721]: 4,6
+            - generic "Pures Grau (5, 1)" [ref=e722]: 5,1
+            - generic "Pures Grau (5, 2)" [ref=e723]: 5,2
+            - generic "Pures Grau (5, 3)" [ref=e724]: 5,3
+            - generic "Pures Grau (5, 4)" [ref=e725]: 5,4
+            - generic "Pures Grau (5, 5)" [ref=e726]: 5,5
+            - generic "Pures Grau (5, 6)" [ref=e727]: 5,6
+            - generic "Pures Grau (6, 1)" [ref=e728]: 6,1
+            - generic "Pures Grau (6, 2)" [ref=e729]: 6,2
+            - generic "Pures Grau (6, 3)" [ref=e730]: 6,3
+            - generic "Pures Grau (6, 4)" [ref=e731]: 6,4
+            - generic "Pures Grau (6, 5)" [ref=e732]: 6,5
+            - generic "Pures Grau (6, 6)" [ref=e733]: 6,6
+        - complementary [ref=e734]:
+          - generic [ref=e735]:
+            - heading "Block-Arten" [level=3] [ref=e736]
+            - button "Neuer Block" [ref=e739] [cursor=pointer]
+          - generic [ref=e742]: "1× Klick = Baumodus an · 2× Klick auf denselben Block = Baumodus aus:"
+          - generic [ref=e746] [cursor=pointer]:
+            - strong [ref=e747]: Pures Grau
+            - generic [ref=e748]: "#3f3f46"
+  - complementary [ref=e99]:
+    - generic [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]: Session-Chat
+      - generic [ref=e104]: ▼
+    - generic [ref=e106]:
+      - paragraph [ref=e108]: Noch keine Nachrichten.
+      - generic [ref=e109]:
+        - combobox "Empfänger" [ref=e110] [cursor=pointer]:
+          - 'option "An: Alle" [selected]'
+          - 'option "Privat an: Musashi"'
+        - generic [ref=e111]:
+          - textbox "Nachricht" [ref=e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=e113] [cursor=pointer]

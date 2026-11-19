@@ -1,0 +1,116 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - navigation [ref=e39]:
+        - button "Gameplay" [ref=e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e41]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [ref=e42] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e43]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=e44] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e45]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=e46] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e47]: "4"
+          - text: DM-Notizen
+    - generic [ref=e3]:
+      - button "Session speichern" [ref=e48] [cursor=pointer]
+      - status [ref=e4]: "DM | Raum-Code: 7195 | 1 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - button "d4" [ref=e55] [cursor=pointer]
+        - button "d6" [ref=e56] [cursor=pointer]
+        - button "d8" [ref=e57] [cursor=pointer]
+        - button "d10" [ref=e58] [cursor=pointer]
+        - button "d12" [ref=e59] [cursor=pointer]
+        - button "d20" [ref=e60] [cursor=pointer]
+        - button "d100" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - textbox "Würfelformel" [ref=e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e65] [cursor=pointer]
+      - generic [ref=e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=e70]:
+      - generic [ref=e335]:
+        - generic [ref=e336]: DM
+        - generic [ref=e337]: "Würfel d20:"
+        - strong [ref=e338]: "15"
+        - generic [ref=e339]: "[15]"
+      - generic [ref=e340]:
+        - generic [ref=e341]: DM
+        - generic [ref=e342]: "Würfel d20:"
+        - strong [ref=e343]: "4"
+        - generic [ref=e344]: "[4]"
+        - text: ✦
+      - generic [ref=e345]:
+        - generic [ref=e346]: DM
+        - generic [ref=e347]: "Würfel d20:"
+        - strong [ref=e348]: "17"
+        - generic [ref=e349]: "[17]"
+      - generic [ref=e350]:
+        - generic [ref=e351]: DM
+        - generic [ref=e352]: "Würfel d20:"
+        - strong [ref=e353]: "16"
+        - generic [ref=e354]: "[16]"
+      - generic [ref=e355]:
+        - generic [ref=e356]: DM
+        - generic [ref=e357]: "Würfel d20:"
+        - strong [ref=e358]: "10"
+        - generic [ref=e359]: "[10]"
+      - generic [ref=e360]:
+        - generic [ref=e361]: DM
+        - generic [ref=e362]: "Würfel d20:"
+        - strong [ref=e363]: "17"
+        - generic [ref=e364]: "[17]"
+  - main [ref=e72]:
+    - generic [ref=e1209]:
+      - generic [ref=e1211]:
+        - heading "Dungeon Master Notizbuch" [level=2] [ref=e1212]
+        - text: Alle Notizen hier sind nur für dich als DM sichtbar und werden beim Klick auf „Session speichern“ in deiner Session-Datei mitgesichert.
+      - generic [ref=e1215]:
+        - generic [ref=e1216]:
+          - heading "Schnell-Notizen & Aktuelle Session" [level=3] [ref=e1217]
+          - generic [ref=e1220]: Synchronisiert mit dem Schnell-Notizfeld oben im Gameplay-Tab.
+          - textbox "Was passiert gerade? Laufende Effekte, Versprechen an Spieler, spontane Einfälle..." [ref=e1221]
+        - generic [ref=e1222]:
+          - heading "Kampagnen-Story & Roter Faden" [level=3] [ref=e1223]
+          - generic [ref=e1226]: Hauptquest, Akte, wichtige Meilensteine und Hintergrundgeschichte.
+          - textbox "Wie geht die Geschichte weiter? Welche Entscheidungen haben die Spieler getroffen?" [ref=e1227]
+        - generic [ref=e1228]:
+          - heading "Geheimnisse, Plots & Twists (Geheim)" [level=3] [ref=e1229]
+          - generic [ref=e1232]: Verräter, versteckte Hinweise, Fallen, wahre Motive von NPCs.
+          - textbox "Was wissen die Spieler noch nicht? Welche Überraschungen lauern?" [ref=e1233]
+        - generic [ref=e1234]:
+          - heading "Orte, Fraktionen & Wichtige NPCs" [level=3] [ref=e1235]
+          - generic [ref=e1238]: Städte, Tavernen, Höllen-/Himmels-Ebenen, Anführer und Belohnungen.
+          - textbox "Ortsbeschreibungen, Fraktions-Beziehungen, Händler-Inventare..." [ref=e1239]
+      - generic [ref=e1240]:
+        - heading "Eigene Notiz-Karten (Rätsel, Boss-Phasen, Loot-Listen, Quests)" [level=3] [ref=e1241]
+        - generic [ref=e1244]:
+          - textbox "Titel der neuen Notiz-Karte (z.B. Rätsel im Thronsaal / Boss-Mechanik)..." [ref=e1245]
+          - button "+ Neue Notiz-Karte anlegen" [ref=e1246] [cursor=pointer]
+        - paragraph [ref=e1248]: Noch keine eigenen Notiz-Karten angelegt.
+  - complementary [ref=e99]:
+    - generic [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]: Session-Chat
+      - generic [ref=e104]: ▼
+    - generic [ref=e106]:
+      - paragraph [ref=e108]: Noch keine Nachrichten.
+      - generic [ref=e109]:
+        - combobox "Empfänger" [ref=e110] [cursor=pointer]:
+          - 'option "An: Alle"'
+          - 'option "Privat an: Musashi" [selected]'
+        - generic [ref=e111]:
+          - textbox "Nachricht" [ref=e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=e113] [cursor=pointer]

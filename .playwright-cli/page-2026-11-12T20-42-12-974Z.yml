@@ -1,0 +1,194 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - heading "Afterlife" [level=1] [ref=f1e4]
+      - generic [ref=f1e9]:
+        - button "Gameplay" [ref=f1e10] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e11]: "1"
+          - text: Gameplay
+        - button "Story & Notizen" [ref=f1e12] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e13]: "2"
+          - text: Story & Notizen
+        - button "Ausrüstung" [ref=f1e14] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e15]: "3"
+          - text: Ausrüstung
+    - generic [ref=f1e16]:
+      - button "Charakter speichern" [ref=f1e17] [cursor=pointer]
+      - status [ref=f1e20]: Verbunden (Raum 4156)
+      - button "Erscheinungsbild wählen" [ref=f1e22] [cursor=pointer]
+  - generic [ref=f1e26]:
+    - generic [ref=f1e27]:
+      - generic [ref=f1e28]:
+        - button "d4" [ref=f1e29] [cursor=pointer]
+        - button "d6" [ref=f1e30] [cursor=pointer]
+        - button "d8" [ref=f1e31] [cursor=pointer]
+        - button "d10" [ref=f1e32] [cursor=pointer]
+        - button "d12" [ref=f1e33] [cursor=pointer]
+        - button "d20" [disabled] [ref=f1e34]
+        - button "d100" [ref=f1e35] [cursor=pointer]
+      - generic [ref=f1e36]:
+        - textbox "Würfelformel" [ref=f1e37]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=f1e38] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=f1e39] [cursor=pointer]
+    - generic [ref=f1e214]:
+      - generic [ref=f1e215]: Musashi
+      - generic [ref=f1e216]: "Würfel d20:"
+      - strong [ref=f1e217]: "19"
+      - generic [ref=f1e218]: "[19]"
+  - main [ref=f1e44]:
+    - generic [ref=f1e219]:
+      - generic [ref=f1e220]:
+        - generic [ref=f1e221]:
+          - generic [ref=f1e222]: STR
+          - button "STR-Check würfeln (1d20+0)" [ref=f1e223] [cursor=pointer]: "+0"
+          - spinbutton "STR-Wert" [ref=f1e226]: "10"
+        - generic [ref=f1e227]:
+          - generic [ref=f1e228]: DEX
+          - button "DEX-Check würfeln (1d20+0)" [ref=f1e229] [cursor=pointer]: "+0"
+          - spinbutton "DEX-Wert" [ref=f1e232]: "10"
+        - generic [ref=f1e233]:
+          - generic [ref=f1e234]: CON
+          - button "CON-Check würfeln (1d20+0)" [ref=f1e235] [cursor=pointer]: "+0"
+          - spinbutton "CON-Wert" [ref=f1e238]: "10"
+        - generic [ref=f1e239]:
+          - generic [ref=f1e240]: INT
+          - button "INT-Check würfeln (1d20+0)" [ref=f1e241] [cursor=pointer]: "+0"
+          - spinbutton "INT-Wert" [ref=f1e244]: "10"
+        - generic [ref=f1e245]:
+          - generic [ref=f1e246]: WIS
+          - button "WIS-Check würfeln (1d20+0)" [ref=f1e247] [cursor=pointer]: "+0"
+          - spinbutton "WIS-Wert" [ref=f1e250]: "10"
+        - generic [ref=f1e251]:
+          - generic [ref=f1e252]: CHA
+          - button "CHA-Check würfeln (1d20+0)" [ref=f1e253] [cursor=pointer]: "+0"
+          - spinbutton "CHA-Wert" [ref=f1e256]: "10"
+      - generic [ref=f1e257]:
+        - generic [ref=f1e258]:
+          - generic [ref=f1e259]: LEBENSPUNKTE (HIT POINTS)
+          - generic [ref=f1e260]:
+            - spinbutton "Aktuelle Lebenspunkte" [ref=f1e261]: "10"
+            - generic [ref=f1e262]: /
+            - spinbutton "Maximale Lebenspunkte" [ref=f1e263]: "10"
+            - generic [ref=f1e264]: Max HP
+          - 'generic "Lebensader: 10 von 10" [ref=f1e265]'
+          - generic [ref=f1e267]:
+            - button "-5 HP" [ref=f1e268] [cursor=pointer]
+            - button "-1 HP" [ref=f1e269] [cursor=pointer]
+            - button "+1 HP" [ref=f1e270] [cursor=pointer]
+            - button "+5 HP" [ref=f1e271] [cursor=pointer]
+        - generic [ref=f1e272]:
+          - generic [ref=f1e273]:
+            - generic [ref=f1e274]: ARMOR CLASS
+            - spinbutton [ref=f1e275]: "10"
+          - generic [ref=f1e276]:
+            - generic [ref=f1e277]: INITIATIVE
+            - spinbutton [ref=f1e278]: "0"
+          - generic [ref=f1e279]:
+            - generic [ref=f1e280]: LEVEL
+            - spinbutton [ref=f1e281]: "1"
+          - generic [ref=f1e282]:
+            - generic [ref=f1e283]: PROFICIENCY
+            - spinbutton [ref=f1e284]: "2"
+          - generic [ref=f1e285]:
+            - generic [ref=f1e286]: EXHAUSTION
+            - spinbutton [ref=f1e287]: "0"
+      - generic [ref=f1e288]:
+        - heading "Skills (Fertigkeiten)" [level=3] [ref=f1e289]
+        - generic [ref=f1e292]:
+          - generic [ref=f1e293] [cursor=pointer]:
+            - checkbox "Acrobatics (Dex)" [ref=f1e294]
+            - generic [ref=f1e295]: Acrobatics (Dex)
+          - generic [ref=f1e296] [cursor=pointer]:
+            - checkbox "Animal Handling (Wis)" [ref=f1e297]
+            - generic [ref=f1e298]: Animal Handling (Wis)
+          - generic [ref=f1e299] [cursor=pointer]:
+            - checkbox "Arcana (Int)" [ref=f1e300]
+            - generic [ref=f1e301]: Arcana (Int)
+          - generic [ref=f1e302] [cursor=pointer]:
+            - checkbox "Athletics (Str)" [ref=f1e303]
+            - generic [ref=f1e304]: Athletics (Str)
+          - generic [ref=f1e305] [cursor=pointer]:
+            - checkbox "Deception (Cha)" [ref=f1e306]
+            - generic [ref=f1e307]: Deception (Cha)
+          - generic [ref=f1e308] [cursor=pointer]:
+            - checkbox "History (Int)" [ref=f1e309]
+            - generic [ref=f1e310]: History (Int)
+          - generic [ref=f1e311] [cursor=pointer]:
+            - checkbox "Insight (Wis)" [ref=f1e312]
+            - generic [ref=f1e313]: Insight (Wis)
+          - generic [ref=f1e314] [cursor=pointer]:
+            - checkbox "Intimidation (Cha)" [ref=f1e315]
+            - generic [ref=f1e316]: Intimidation (Cha)
+          - generic [ref=f1e317] [cursor=pointer]:
+            - checkbox "Investigation (Int)" [ref=f1e318]
+            - generic [ref=f1e319]: Investigation (Int)
+          - generic [ref=f1e320] [cursor=pointer]:
+            - checkbox "Medicine (Wis)" [ref=f1e321]
+            - generic [ref=f1e322]: Medicine (Wis)
+          - generic [ref=f1e323] [cursor=pointer]:
+            - checkbox "Nature (Int)" [ref=f1e324]
+            - generic [ref=f1e325]: Nature (Int)
+          - generic [ref=f1e326] [cursor=pointer]:
+            - checkbox "Perception (Wis)" [ref=f1e327]
+            - generic [ref=f1e328]: Perception (Wis)
+          - generic [ref=f1e329] [cursor=pointer]:
+            - checkbox "Performance (Cha)" [ref=f1e330]
+            - generic [ref=f1e331]: Performance (Cha)
+          - generic [ref=f1e332] [cursor=pointer]:
+            - checkbox "Persuasion (Cha)" [ref=f1e333]
+            - generic [ref=f1e334]: Persuasion (Cha)
+          - generic [ref=f1e335] [cursor=pointer]:
+            - checkbox "Religion (Int)" [ref=f1e336]
+            - generic [ref=f1e337]: Religion (Int)
+          - generic [ref=f1e338] [cursor=pointer]:
+            - checkbox "Sleight of Hand (Dex)" [ref=f1e339]
+            - generic [ref=f1e340]: Sleight of Hand (Dex)
+          - generic [ref=f1e341] [cursor=pointer]:
+            - checkbox "Stealth (Dex)" [ref=f1e342]
+            - generic [ref=f1e343]: Stealth (Dex)
+          - generic [ref=f1e344] [cursor=pointer]:
+            - checkbox "Survival (Wis)" [ref=f1e345]
+            - generic [ref=f1e346]: Survival (Wis)
+      - generic [ref=f1e347]:
+        - generic [ref=f1e348]:
+          - heading "Merkmale (Affinitäten, Mutationen & Psychosen)" [level=3] [ref=f1e349]
+          - paragraph [ref=f1e353]: Keine Merkmale aktiv.
+          - generic [ref=f1e354]:
+            - generic [ref=f1e355]: "Eigenes Merkmal hinzufügen:"
+            - generic [ref=f1e356] [cursor=pointer]:
+              - generic:
+                - strong: Bild
+                - generic: Drag & Drop oder Klick
+            - generic [ref=f1e357]:
+              - textbox "Name" [ref=f1e358]
+              - textbox "Kategorien (Komma)" [ref=f1e359]
+            - textbox "Effekt" [ref=f1e360]
+            - button "+ Merkmal" [ref=f1e361] [cursor=pointer]
+        - generic [ref=f1e362]:
+          - generic [ref=f1e363]:
+            - generic [ref=f1e364]:
+              - heading "Charakter-Datei (.json) speichern & laden" [level=3] [ref=f1e365]
+              - text: Speichere deinen kompletten Charakter auf deinem Gerät oder ziehe eine gespeicherte Datei hier hinein.
+            - button "Charakter als Datei speichern" [ref=f1e366] [cursor=pointer]
+          - generic [ref=f1e369] [cursor=pointer]:
+            - generic:
+              - strong: Gespeicherte Charakter-Datei (.json) hierher ziehen (Drag & Drop)
+              - generic: Füllt alle Werte, Bilder & Notizen aus und fügt deine Items, Attacken & Zauber zur Session-Bibliothek hinzu
+  - complementary [ref=f1e197]:
+    - generic [ref=f1e198] [cursor=pointer]:
+      - generic [ref=f1e199]: Session-Chat
+      - generic [ref=f1e202]: ▼
+    - generic [ref=f1e204]:
+      - paragraph [ref=f1e206]: Noch keine Nachrichten.
+      - generic [ref=f1e207]:
+        - combobox "Empfänger" [ref=f1e208] [cursor=pointer]:
+          - 'option "An: Alle" [selected]'
+          - 'option "Privat an: DM"'
+        - generic [ref=f1e209]:
+          - textbox "Nachricht" [ref=f1e210]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=f1e211] [cursor=pointer]

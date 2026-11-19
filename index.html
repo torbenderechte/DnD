@@ -4,41 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Afterlife RPG</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e9e1cf">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 30'%3E%3Crect width='24' height='30' fill='%23f3eddd'/%3E%3Cpath d='M6 5h12c0 6-4.5 8-4.5 10s4.5 4 4.5 10H6c0-6 4.5-8 4.5-10S6 11 6 5Z' fill='none' stroke='%231a1613' stroke-width='1.8'/%3E%3Cpath d='M8 25c0-3 2.5-4.6 4-4.6s4 1.6 4 4.6Z' fill='%23b02a1b'/%3E%3Cpath d='M3 2h18v3H3zM3 25h18v3H3z' fill='%231a1613'/%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400..900&family=Texturina:opsz,wght@12..72,400..800&family=Vollkorn:ital,wght@0,400..800;1,400..700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/base.css">
+    <script src="js/themes.js"></script>
+    <script src="js/icons.js"></script>
 </head>
 <body>
 
+<!-- Druckbild: leicht ausgefranste Kanten für Titelschrift (nur dort — Filter sind teuer) -->
+<svg class="print-defs" aria-hidden="true" focusable="false">
+    <filter id="ink-rough" x="-2%" y="-8%" width="104%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="7" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+</svg>
+
 <header class="top-bar">
     <div class="header-left">
-        <h1>Afterlife</h1>
+        <h1>
+            <svg class="brand-mark" viewBox="0 0 24 30" aria-hidden="true">
+                <path class="mark-line" d="M6 5h12c0 6-4.5 8-4.5 10s4.5 4 4.5 10H6c0-6 4.5-8 4.5-10S6 11 6 5Z"/>
+                <path class="mark-sand" d="M8 25c0-3 2.5-4.6 4-4.6s4 1.6 4 4.6ZM9.3 8.5h5.4c-.7 1.6-1.8 2.6-2.7 3.4-.9-.8-2-1.8-2.7-3.4ZM11.6 14h.8v6h-.8z"/>
+                <path class="mark-solid" d="M3 2h18v3H3zM3 25h18v3H3z"/>
+            </svg>
+            Afterlife
+        </h1>
 
         <!-- 3 Ordner-Reiter für SPIELER (Shortcuts: Tasten 1, 2, 3,4) -->
         <!-- Navigation für Spieler (Exakt gleiches Layout & Effekte wie beim DM, Tab 4 startet ausgeblendet) -->
         <div id="player-header-tabs" class="folder-tabs hidden">
-            <button id="tab-btn-gameplay" class="tab-btn active" onclick="switchPlayerTab('gameplay')">1. Gameplay</button>
-            <button id="tab-btn-story" class="tab-btn" onclick="switchPlayerTab('story')">2. Story & Notizen</button>
-            <button id="tab-btn-equipment" class="tab-btn" onclick="switchPlayerTab('equipment')">3. Ausrüstung</button>
-            <button id="tab-btn-combat" class="tab-btn hidden" onclick="switchPlayerTab('combat')">4. Kampffeld</button>
+            <button id="tab-btn-gameplay" class="tab-btn active" onclick="switchPlayerTab('gameplay')"><span class="tab-num" aria-hidden="true">1</span>Gameplay</button>
+            <button id="tab-btn-story" class="tab-btn" onclick="switchPlayerTab('story')"><span class="tab-num" aria-hidden="true">2</span>Story & Notizen</button>
+            <button id="tab-btn-equipment" class="tab-btn" onclick="switchPlayerTab('equipment')"><span class="tab-num" aria-hidden="true">3</span>Ausrüstung</button>
+            <button id="tab-btn-combat" class="tab-btn hidden" onclick="switchPlayerTab('combat')"><span class="tab-num" aria-hidden="true">4</span>Kampffeld</button>
         </div>
 
 
 
         <!-- 3 Ordner-Reiter für den DUNGEON MASTER (Shortcuts: Tasten 1, 2, 3) -->
         <nav id="dm-header-tabs" class="folder-tabs hidden">
-            <button id="dm-tab-btn-gameplay" class="tab-btn active" onclick="switchDmTab('gameplay')" title="Shortcut: Taste 1">1. Gameplay</button>
-            <button id="dm-tab-btn-templates" class="tab-btn" onclick="switchDmTab('templates')" title="Shortcut: Taste 2">2. Vorlagen & Bibliothek</button>
-            <button id="dm-tab-btn-combat" class="tab-btn" onclick="switchDmTab('combat')" title="Shortcut: Taste 3">3. Kampfsystem</button>
-            <button id="dm-tab-btn-notes" class="tab-btn" onclick="switchDmTab('notes')">4. DM-Notizen</button>
+            <button id="dm-tab-btn-gameplay" class="tab-btn active" onclick="switchDmTab('gameplay')" title="Shortcut: Taste 1"><span class="tab-num" aria-hidden="true">1</span>Gameplay</button>
+            <button id="dm-tab-btn-templates" class="tab-btn" onclick="switchDmTab('templates')" title="Shortcut: Taste 2"><span class="tab-num" aria-hidden="true">2</span>Vorlagen & Bibliothek</button>
+            <button id="dm-tab-btn-combat" class="tab-btn" onclick="switchDmTab('combat')" title="Shortcut: Taste 3"><span class="tab-num" aria-hidden="true">3</span>Kampfsystem</button>
+            <button id="dm-tab-btn-notes" class="tab-btn" onclick="switchDmTab('notes')" title="Shortcut: Taste 4"><span class="tab-num" aria-hidden="true">4</span>DM-Notizen</button>
         </nav>
     </div>
 
     <!-- Speicher-Buttons & Raum-Info oben rechts -->
     <div class="header-right-bar">
-        <button id="btn-dm-save-session" class="btn-secondary hidden" onclick="exportDmSessionToFile()">💾 Session speichern</button>
-        <button id="btn-player-save-char" class="btn-secondary hidden" onclick="exportPlayerCharToFile()">💾 Charakter speichern</button>
-        <div id="session-info">Nicht verbunden</div>
+        <button id="btn-dm-save-session" class="btn-secondary hidden" onclick="exportDmSessionToFile()"><svg class="icon"><use href="#i-save"></use></svg> Session speichern</button>
+        <button id="btn-player-save-char" class="btn-secondary hidden" onclick="exportPlayerCharToFile()"><svg class="icon"><use href="#i-save"></use></svg> Charakter speichern</button>
+        <button id="btn-copy-invite" class="btn-secondary hidden" onclick="copyInviteLink()"><svg class="icon"><use href="#i-send"></use></svg> Einladungslink</button>
+        <div id="account-status" class="account-status hidden" role="status"></div>
+        <div id="session-info" role="status">Nicht verbunden</div>
     </div>
 </header>
 
@@ -57,13 +82,13 @@
             </div>
 
             <div class="custom-formula-box">
-                <input type="text" id="dice-formula-input" placeholder="Formel (z.B. 2d6+3 oder 1d20+4)">
-                <select id="dice-roll-mode">
+                <input type="text" id="dice-formula-input" placeholder="Formel (z.B. 2d6+3 oder 1d20+4)" aria-label="Würfelformel">
+                <select id="dice-roll-mode" aria-label="Wurfmodus">
                     <option value="normal">Normal</option>
-                    <option value="adv">Advantage (Vorteil)</option>
-                    <option value="dis">Disadvantage (Nachteil)</option>
+                    <option value="adv">Vorteil</option>
+                    <option value="dis">Nachteil</option>
                 </select>
-                <button type="button" class="btn-primary" onclick="rollFromFormulaInput(this)">Würfeln</button>
+                <button type="button" class="btn-primary" onclick="rollFromFormulaInput(this)"><svg class="icon"><use href="#i-dice"></use></svg> Würfeln</button>
             </div>
 
             <label id="dm-secret-roll-wrap" class="dm-checkbox-label hidden">
@@ -80,19 +105,34 @@
 
 <!-- 1. LOBBY-ANSICHT (Mit Drag & Drop für Session-Datei & Charakter-Datei) -->
 <main id="lobby-view" class="view-section">
+    <div class="lobby-masthead" aria-hidden="true">
+        <p class="lobby-title">Afterlife</p>
+        <p class="lobby-rule">Memento mori</p>
+    </div>
     <div class="lobby-grid">
 
         <!-- DM BOX: Neue Session starten ODER gespeicherte Session fortsetzen -->
         <div class="card">
             <h2>Dungeon Master</h2>
-            <p>Starte eine neue Session oder ziehe eine gespeicherte Session-Datei (<code>.json</code>) hinein, um mit allen Daten und exakt demselben Raum-Code fortzufahren.</p>
-            <button id="btn-host" class="btn-primary">Neue Session als DM starten</button>
+            <p>Starte eine neue Session, setze eine in deinem Konto gespeicherte fort oder ziehe eine Session-Datei (<code>.json</code>) hinein – mit allen Daten und exakt demselben Raum-Code.</p>
+            <button id="btn-host" class="btn-primary"><svg class="icon"><use href="#i-portal"></use></svg> Neue Session als DM starten</button>
 
-            <div class="lobby-divider"><span>ODER SESSION FORTSETZEN</span></div>
+            <div class="lobby-divider">MIT KONTO (DATENBANK)</div>
+
+            <div id="lobby-dm-login">
+                <input type="text" id="input-dm-name" placeholder="Name" aria-label="DM-Name" autocomplete="username">
+                <input type="password" id="input-dm-password" placeholder="Passwort" aria-label="DM-Passwort" autocomplete="current-password">
+                <small id="lobby-dm-account-hint" class="muted lobby-account-hint">Angemeldet werden deine Sessions automatisch gespeichert. Neuer Name legt ein Konto an.</small>
+                <button type="button" id="btn-dm-login" class="btn-secondary"><svg class="icon"><use href="#i-lock"></use></svg> Anmelden &amp; Sessions anzeigen</button>
+            </div>
+            <div id="lobby-dm-account" class="lobby-dm-account hidden"></div>
+
+            <div class="lobby-divider">ODER SESSION-DATEI</div>
 
             <div id="lobby-dm-dropzone" class="drop-zone drop-zone-small">
                 <div id="lobby-dm-drop-text" class="drop-zone-prompt">
-                    <strong>💾 Session-Datei (.json) hierher ziehen</strong>
+                    <svg class="icon"><use href="#i-folder"></use></svg>
+                    <strong>Session-Datei (.json) hierher ziehen</strong>
                     <span>oder klicken zum Auswählen</span>
                 </div>
                 <input type="file" id="lobby-dm-file" accept=".json,application/json" class="hidden">
@@ -103,20 +143,23 @@
         <!-- SPIELER BOX: Beitreten & optional Charakter-Datei per Drag & Drop laden -->
         <div class="card">
             <h2>Spieler beitreten</h2>
-            <p>Gib deinen Namen und den 4-stelligen Raum-Code ein – oder ziehe direkt deine gespeicherte Charakter-Datei hinein.</p>
+            <p>Gib deinen Namen und den 4-stelligen Raum-Code ein. Mit Passwort wird dein Charakter automatisch gespeichert und beim nächsten Mal wieder geladen – oder ziehe eine gespeicherte Charakter-Datei hinein.</p>
 
-            <input type="text" id="input-player-name" placeholder="Charaktername (z.B. Musashi)">
-            <input type="text" id="input-room-code" placeholder="4-stelliger Raum-Code (z.B. 4829)">
+            <input type="text" id="input-player-name" placeholder="Spielername (z.B. Musashi)" aria-label="Spielername" autocomplete="username">
+            <input type="password" id="input-player-password" placeholder="Passwort (optional – für Speichern in der Datenbank)" aria-label="Passwort" autocomplete="current-password">
+            <small id="lobby-account-hint" class="muted lobby-account-hint">Neuer Name + Passwort legt ein Konto an. Namen &amp; Passwörter gelten für alle Sessions.</small>
+            <input type="text" id="input-room-code" placeholder="Raum-Code (z.B. 482913)" aria-label="Raum-Code" inputmode="numeric" autocomplete="off">
 
             <div id="lobby-player-dropzone" class="drop-zone drop-zone-small">
                 <div id="lobby-player-drop-text" class="drop-zone-prompt">
-                    <strong>📂 Gespeicherten Charakter (.json) hierher ziehen</strong>
+                    <svg class="icon"><use href="#i-folder"></use></svg>
+                    <strong>Gespeicherten Charakter (.json) hierher ziehen</strong>
                     <span>Optional: Füllt alle Werte aus & ergänzt deine Items in der Session-Bibliothek</span>
                 </div>
                 <input type="file" id="lobby-player-file" accept=".json,application/json" class="hidden">
             </div>
 
-            <button id="btn-join" class="btn-primary">Session beitreten</button>
+            <button id="btn-join" class="btn-primary"><svg class="icon"><use href="#i-turn"></use></svg> Session beitreten</button>
         </div>
     </div>
 </main>
@@ -132,9 +175,9 @@
 </main>
 
 <!-- ZENTRALES BESTÄTIGUNGS-MODAL ("Bist du dir sicher?") -->
-<div id="confirm-modal" class="modal-backdrop hidden">
+<div id="confirm-modal" class="modal-backdrop hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
     <div class="modal-card">
-        <h3>Bist du dir sicher?</h3>
+        <h3 id="confirm-modal-title">Bist du dir sicher?</h3>
         <p id="confirm-modal-message" class="muted">Möchtest du diese Aktion wirklich durchführen?</p>
         <div class="modal-actions">
             <button type="button" id="btn-confirm-cancel">Abbrechen</button>
@@ -146,7 +189,7 @@
 <!-- LIVE MESSAGE BOX (CHAT ZWISCHEN DM & SPIELERN) -->
 <aside id="chat-widget" class="chat-widget hidden">
     <div class="chat-header" onclick="toggleChatWidget()">
-        <span>💬 Session-Chat</span>
+        <span><svg class="icon"><use href="#i-chat"></use></svg> Session-Chat</span>
         <div class="chat-header-right">
             <span id="chat-unread-badge" class="chat-unread-badge hidden">0</span>
             <span id="chat-toggle-icon">▼</span>
@@ -157,21 +200,23 @@
             <p class="muted">Noch keine Nachrichten.</p>
         </div>
         <div class="chat-controls">
-            <select id="chat-target-select">
+            <select id="chat-target-select" aria-label="Empfänger">
                 <option value="ALL">An: Alle</option>
             </select>
             <div class="chat-input-row">
-                <input type="text" id="chat-message-input" placeholder="Nachricht schreiben...">
-                <button type="button" class="btn-primary" onclick="sendChatMessage()">Senden</button>
+                <input type="text" id="chat-message-input" placeholder="Nachricht schreiben..." aria-label="Nachricht">
+                <button type="button" class="btn-primary" onclick="sendChatMessage()"><svg class="icon"><use href="#i-send"></use></svg> Senden</button>
             </div>
         </div>
     </div>
 </aside>
 
+<script src="js/lostplace.js"></script>
 <script src="js/state.js"></script>
 <script src="js/player-view.js"></script>
 <script src="js/dm-view.js"></script>
 <script src="js/network.js"></script>
+<script src="js/accounts.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

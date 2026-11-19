@@ -1,0 +1,629 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* ==========================================================================
+   OBSIDIAN — schlicht & dunkel. Neutrale Anthrazit-Flächen, ein Akzent (Indigo),
+   Inter, weiche Schatten, Haarlinien. Alles unter :root[data-theme="obsidian"].
+   ========================================================================== */
+
+:root[data-theme="obsidian"] {
+    color-scheme: dark;
+
+    --paper:     #121316;
+    --paper-hi:  #1a1c21;
+    --paper-lo:  #0e0f12;
+    --field:     #22252c;
+
+    --ink:       #e6e8ee;
+    --ink-2:     #a3a8b5;
+    --ink-3:     #848a9a;
+    --rule:      rgba(255, 255, 255, 0.1);
+
+    --rubric:        #f2555a;
+    --rubric-fill:   #d63a40;
+    --azure:         #6cb4f5;
+    --azure-fill:    #2a72bf;
+    --on-fill:       #ffffff;
+    --ochre:         #f0b73f;
+    --ochre-wash:    #3a2d10;
+    --verdigris:     #4fd08a;
+    --verdigris-wash:#12301f;
+    --violet:        #b79cff;
+    --copper:        #e08a52;
+
+    --accent:        #7c8cff;
+    --accent-hi:     #94a1ff;
+    --on-accent:     #0c0e1c;
+    --accent-soft:   rgba(124, 140, 255, 0.14);
+    --hairline:      rgba(255, 255, 255, 0.08);
+    --hairline-2:    rgba(255, 255, 255, 0.14);
+    --surface-2:     #22252c;
+    --surface-3:     #2a2e36;
+    --shadow-1:      0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.28);
+    --shadow-2:      0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 40px rgba(0, 0, 0, 0.5);
+
+    --block-ink:   #0b0c0e;
+    --block-paper: #eceef4;
+
+    --hatch:      linear-gradient(transparent, transparent);
+    --hatch-soft: linear-gradient(transparent, transparent);
+    --grain: none;
+    --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a3a8b5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+    --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-head:    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-body:    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --r-card: 12px;
+    --r-ctl: 8px;
+}
+
+/* ---- Basis ---- */
+:root[data-theme="obsidian"] body {
+    background: var(--paper);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-variant-numeric: normal;
+    -webkit-font-smoothing: antialiased;
+}
+:root[data-theme="obsidian"] * { scrollbar-color: rgba(255,255,255,0.22) transparent; }
+:root[data-theme="obsidian"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+:root[data-theme="obsidian"] ::-webkit-scrollbar-track { background: transparent; }
+:root[data-theme="obsidian"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+:root[data-theme="obsidian"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); background-clip: padding-box; border: 2px solid transparent; }
+:root[data-theme="obsidian"] ::selection { background: rgba(124, 140, 255, 0.45); color: #fff; }
+
+:root[data-theme="obsidian"] h2 { font-weight: 650; font-size: 1.5rem; letter-spacing: -0.02em; }
+:root[data-theme="obsidian"] h2::first-letter { color: inherit; }
+:root[data-theme="obsidian"] h3 { font-weight: 600; font-size: 1.02rem; letter-spacing: -0.01em; border-bottom: 1px solid var(--hairline); padding-bottom: 0.55rem; }
+:root[data-theme="obsidian"] h3 small { font-family: var(--font-body); font-weight: 400; color: var(--ink-2); }
+:root[data-theme="obsidian"] code { border-bottom: 0; background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 5px; }
+:root[data-theme="obsidian"] .icon { stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+:root[data-theme="obsidian"] h3 > .icon, :root[data-theme="obsidian"] h2 > .icon { color: var(--accent); }
+:root[data-theme="obsidian"] :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:root[data-theme="obsidian"] input:focus-visible, :root[data-theme="obsidian"] textarea:focus-visible, :root[data-theme="obsidian"] select:focus-visible { outline: none; }
+
+/* ---- Kontrollen ---- */
+:root[data-theme="obsidian"] input, :root[data-theme="obsidian"] textarea, :root[data-theme="obsidian"] select {
+    background-color: var(--field);
+    border: 1px solid var(--hairline-2);
+    border-radius: var(--r-ctl);
+    padding: 0.5rem 0.7rem;
+    font-size: 0.92rem;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+:root[data-theme="obsidian"] input::placeholder, :root[data-theme="obsidian"] textarea::placeholder { font-style: normal; color: var(--ink-3); }
+:root[data-theme="obsidian"] input:hover, :root[data-theme="obsidian"] textarea:hover, :root[data-theme="obsidian"] select:hover { border-color: rgba(255,255,255,0.24); background-color: #272a32; }
+:root[data-theme="obsidian"] input:focus, :root[data-theme="obsidian"] textarea:focus, :root[data-theme="obsidian"] select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.25);
+    background-color: var(--field);
+}
+:root[data-theme="obsidian"] select { background-position: right 0.75rem center; background-size: 0.7rem; padding-right: 2rem; }
+:root[data-theme="obsidian"] select option { background: #1a1c21; color: var(--ink); }
+:root[data-theme="obsidian"] textarea { background-image: none; line-height: 1.5; padding: 0.6rem 0.75rem; }
+
+:root[data-theme="obsidian"] input[type="checkbox"] {
+    width: 1.1rem; height: 1.1rem;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 5px;
+    background-color: var(--field);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+:root[data-theme="obsidian"] input[type="checkbox"]:hover { border-color: var(--accent); background-color: var(--field); }
+:root[data-theme="obsidian"] input[type="checkbox"]::before {
+    width: 0.75rem; height: 0.75rem;
+    background: var(--on-accent);
+    clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%);
+    transition: transform 0.12s ease;
+}
+:root[data-theme="obsidian"] input[type="checkbox"]:checked { background-color: var(--accent); border-color: var(--accent); }
+:root[data-theme="obsidian"] input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:root[data-theme="obsidian"] input[type="color"] { border-radius: var(--r-ctl); }
+
+:root[data-theme="obsidian"] button {
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--hairline-2);
+    border-radius: var(--r-ctl);
+    padding: 0.5rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 550;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+:root[data-theme="obsidian"] button:hover { background: var(--surface-3); border-color: rgba(255,255,255,0.22); color: #fff; }
+:root[data-theme="obsidian"] button:active { transform: scale(0.98); }
+:root[data-theme="obsidian"] button:disabled:hover { background: var(--surface-2); color: var(--ink); border-color: var(--hairline-2); }
+
+:root[data-theme="obsidian"] .btn-primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600; }
+:root[data-theme="obsidian"] .btn-primary:hover { background: var(--accent-hi); color: var(--on-accent); border-color: transparent; }
+:root[data-theme="obsidian"] .btn-primary:disabled:hover { background: var(--accent); color: var(--on-accent); }
+
+:root[data-theme="obsidian"] .btn-secondary { background: var(--surface-2); color: var(--ink); }
+:root[data-theme="obsidian"] .btn-secondary:hover { background: var(--surface-3); color: #fff; }
+:root[data-theme="obsidian"] .btn-secondary:disabled:hover { background: var(--surface-2); color: var(--ink); }
+
+:root[data-theme="obsidian"] .btn-demonic { color: var(--rubric); border-color: rgba(242, 85, 90, 0.4); background: rgba(242, 85, 90, 0.08); }
+:root[data-theme="obsidian"] .btn-demonic:hover { background: rgba(242, 85, 90, 0.18); color: #ff7a7e; border-color: rgba(242, 85, 90, 0.65); }
+:root[data-theme="obsidian"] .btn-holy { color: var(--azure); border-color: rgba(108, 180, 245, 0.4); background: rgba(108, 180, 245, 0.08); }
+:root[data-theme="obsidian"] .btn-holy:hover { background: rgba(108, 180, 245, 0.18); color: #9ccbf8; border-color: rgba(108, 180, 245, 0.65); }
+:root[data-theme="obsidian"] .btn-del { background: transparent; color: var(--rubric); border-color: transparent; padding: 0.4rem 0.55rem; }
+:root[data-theme="obsidian"] .btn-del:hover { background: rgba(242, 85, 90, 0.16); color: #ff7a7e; border-color: transparent; }
+:root[data-theme="obsidian"] .btn-icon { padding: 0.45rem; }
+
+:root[data-theme="obsidian"] .field-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+
+/* ---- Kopf & Reiter ---- */
+:root[data-theme="obsidian"] .top-bar {
+    padding: 0.85rem 2rem 0.7rem;
+    border-bottom: 1px solid var(--hairline);
+    background: rgba(18, 19, 22, 0.85);
+    gap: 0.7rem 1.5rem;
+}
+:root[data-theme="obsidian"] .top-bar::after { display: none; }
+:root[data-theme="obsidian"] .top-bar h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; filter: none; }
+:root[data-theme="obsidian"] .brand-mark .mark-line { stroke: var(--ink); }
+:root[data-theme="obsidian"] .brand-mark .mark-solid { fill: var(--ink); }
+:root[data-theme="obsidian"] .brand-mark .mark-sand { fill: var(--accent); }
+:root[data-theme="obsidian"] #session-info {
+    border: 1px solid var(--hairline-2);
+    outline: 0;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-hi);
+    padding: 0.3rem 0.85rem;
+    font-weight: 600;
+}
+
+:root[data-theme="obsidian"] .folder-tabs { gap: 0.2rem; padding: 0.2rem; background: var(--paper-lo); border: 1px solid var(--hairline); border-radius: 12px; justify-self: start; }
+:root[data-theme="obsidian"] .folder-tabs .tab-btn {
+    font-family: var(--font-head);
+    font-size: 0.9rem;
+    font-weight: 550;
+    color: var(--ink-2);
+    padding: 0.45rem 0.95rem;
+    border: 0;
+    border-radius: 9px;
+}
+:root[data-theme="obsidian"] .tab-num { border: 0; border-radius: 5px; background: rgba(255,255,255,0.08); color: var(--ink-2); font-size: 0.68rem; font-weight: 600; }
+:root[data-theme="obsidian"] .folder-tabs .tab-btn:hover { background: rgba(255,255,255,0.06); color: var(--ink); box-shadow: none; border: 0; }
+:root[data-theme="obsidian"] .folder-tabs .tab-btn.active { background: var(--accent); color: var(--on-accent); box-shadow: 0 1px 6px rgba(124, 140, 255, 0.35); }
+:root[data-theme="obsidian"] .folder-tabs .tab-btn.active .tab-num { background: rgba(12, 14, 28, 0.18); color: var(--on-accent); }
+
+/* ---- Karten ---- */
+:root[data-theme="obsidian"] .card {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    background: var(--paper-hi);
+    box-shadow: var(--shadow-1);
+    padding: 1.2rem 1.3rem;
+}
+:root[data-theme="obsidian"] .card .card { border-width: 1px; background: var(--paper-lo); box-shadow: none; }
+
+:root[data-theme="obsidian"] .drop-zone { background: var(--paper); border: 1.5px dashed rgba(255,255,255,0.18); border-radius: var(--r-card); }
+:root[data-theme="obsidian"] .drop-zone:hover, :root[data-theme="obsidian"] .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+:root[data-theme="obsidian"] .drop-zone.file-loaded { border-style: solid; border-color: rgba(79, 208, 138, 0.5); background: var(--verdigris-wash); }
+:root[data-theme="obsidian"] .drop-remove-btn { background: rgba(18,19,22,0.85); border-color: rgba(242, 85, 90, 0.5); }
+
+/* ---- Lobby ---- */
+:root[data-theme="obsidian"] .lobby-masthead { margin: 1.5rem 0 2.5rem; }
+:root[data-theme="obsidian"] .lobby-title {
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    font-size: clamp(3rem, 11vw, 6.5rem);
+    line-height: 1;
+    filter: none;
+    background: linear-gradient(180deg, #ffffff 20%, #9aa3c4 120%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--ink);
+}
+:root[data-theme="obsidian"] .lobby-title::first-letter { color: inherit; -webkit-text-fill-color: transparent; }
+:root[data-theme="obsidian"] .lobby-rule { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.2em; color: var(--ink-3); }
+:root[data-theme="obsidian"] .lobby-rule::before, :root[data-theme="obsidian"] .lobby-rule::after { height: 1px; border: 0; background: linear-gradient(90deg, transparent, var(--hairline-2)); }
+:root[data-theme="obsidian"] .lobby-rule::after { background: linear-gradient(270deg, transparent, var(--hairline-2)); }
+:root[data-theme="obsidian"] .lobby-grid {
+    padding: 0;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    background: var(--paper-hi);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+}
+:root[data-theme="obsidian"] .lobby-grid > .card { padding: 2rem 2.1rem; border: 0; border-radius: 0; background: none; box-shadow: none; }
+:root[data-theme="obsidian"] .lobby-grid > .card + .card { border-left: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .lobby-grid > .card > p::first-letter { float: none; font: inherit; padding: 0; color: inherit; line-height: inherit; }
+:root[data-theme="obsidian"] .lobby-divider { color: var(--ink-3); font-weight: 600; letter-spacing: 0.12em; }
+:root[data-theme="obsidian"] .lobby-divider::before, :root[data-theme="obsidian"] .lobby-divider::after { border-bottom: 1px solid var(--hairline-2); }
+
+/* ---- Würfelbank ---- */
+:root[data-theme="obsidian"] .dice-bar-container { background: var(--paper-lo); border-bottom: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .quick-dice-btns button { font-family: var(--font-display); font-size: 0.98rem; font-weight: 650; border-radius: 10px; }
+:root[data-theme="obsidian"] .btn-d20 { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+:root[data-theme="obsidian"] .btn-d20:hover { background: var(--accent-hi); color: var(--on-accent); }
+:root[data-theme="obsidian"] .roll-pill {
+    background: var(--paper-hi);
+    border: 1px solid var(--hairline-2);
+    border-radius: 999px;
+    overflow: hidden;
+    font-size: 0.84rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+:root[data-theme="obsidian"] .roll-pill > * { padding: 0.28rem 0.55rem; }
+:root[data-theme="obsidian"] .roll-who { font-weight: 600; padding-left: 0.8rem; }
+:root[data-theme="obsidian"] .roll-total {
+    background: var(--surface-3);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 2.3rem;
+}
+:root[data-theme="obsidian"] .roll-detail { color: var(--ink-2); font-variant-numeric: tabular-nums; padding-right: 0.85rem; }
+:root[data-theme="obsidian"] .roll-kept { text-decoration: none; color: var(--ink); font-weight: 700; }
+:root[data-theme="obsidian"] .roll-pill-latest { animation: stampDown 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1); border-color: rgba(124, 140, 255, 0.5); }
+:root[data-theme="obsidian"] .roll-pill.roll-crit { background: var(--ochre-wash); border-width: 1px; border-color: rgba(240, 183, 63, 0.55); }
+:root[data-theme="obsidian"] .roll-pill.roll-crit .roll-total { background: var(--ochre); color: #1c1403; }
+:root[data-theme="obsidian"] .roll-pill.roll-crit .roll-detail, :root[data-theme="obsidian"] .roll-pill.roll-crit .roll-what { color: #f1d28e; }
+:root[data-theme="obsidian"] .roll-pill.roll-fumble { border-color: rgba(242, 85, 90, 0.55); background: rgba(242, 85, 90, 0.08); }
+:root[data-theme="obsidian"] .roll-pill.roll-fumble .roll-total { background: var(--rubric-fill); color: #fff; }
+:root[data-theme="obsidian"] .roll-pill.roll-secret { border-style: solid; border-color: rgba(183, 156, 255, 0.55); background: rgba(183, 156, 255, 0.08); }
+:root[data-theme="obsidian"] .roll-pill.roll-secret .roll-total { background: #5b3fb0; color: #fff; }
+
+/* ---- Charakterbogen ---- */
+:root[data-theme="obsidian"] .morality-banner {
+    background: var(--paper-hi);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-1);
+    padding: 0.9rem 1.4rem;
+}
+:root[data-theme="obsidian"] .soul-scale .scale-line { stroke: var(--ink-2); stroke-linecap: round; }
+:root[data-theme="obsidian"] .soul-scale .scale-solid { fill: var(--ink-2); }
+:root[data-theme="obsidian"] .soul-scale .scale-pivot { fill: var(--paper-hi); stroke: var(--ink-2); }
+:root[data-theme="obsidian"] .soul-scale .scale-pan { stroke: rgba(255,255,255,0.25); stroke-linejoin: round; }
+:root[data-theme="obsidian"] .morality-subtitle { font-weight: 600; letter-spacing: 0.1em; color: var(--ink-2); }
+:root[data-theme="obsidian"] .morality-score-big { font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; font-size: 2.6rem; }
+:root[data-theme="obsidian"] .morality-state-text { font-style: normal; }
+
+:root[data-theme="obsidian"] .abilities-row-grid, :root[data-theme="obsidian"] .compact-stats-row, :root[data-theme="obsidian"] .currency-four-grid { gap: 0.6rem; padding: 0; box-shadow: none; }
+:root[data-theme="obsidian"] .ability-shield, :root[data-theme="obsidian"] .stat-shield-box, :root[data-theme="obsidian"] .coin-box {
+    background: var(--paper-hi);
+    outline: 0;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-1);
+}
+:root[data-theme="obsidian"] .ability-label, :root[data-theme="obsidian"] .stat-box-title { font-weight: 600; letter-spacing: 0.1em; color: var(--ink-2); }
+:root[data-theme="obsidian"] .ability-mod-big {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    border: 0;
+    background: transparent;
+    border-radius: 10px;
+}
+:root[data-theme="obsidian"] .ability-mod-big .icon { color: var(--accent); }
+:root[data-theme="obsidian"] .ability-mod-big:hover { background: var(--accent-soft); color: #fff; border: 0; }
+:root[data-theme="obsidian"] .ability-mod-big:hover .icon { color: var(--accent-hi); }
+:root[data-theme="obsidian"] .ability-score-oval { background-color: var(--field); border-color: var(--hairline); border-radius: 999px; }
+
+:root[data-theme="obsidian"] .hp-big-input, :root[data-theme="obsidian"] .compact-num-input {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    background-color: transparent;
+    border-color: transparent;
+}
+:root[data-theme="obsidian"] .hp-big-input { border-bottom-color: var(--hairline-2); }
+:root[data-theme="obsidian"] .hp-big-input:hover, :root[data-theme="obsidian"] .compact-num-input:hover { background-color: var(--field); border-color: var(--hairline-2); }
+:root[data-theme="obsidian"] .hp-big-input:focus, :root[data-theme="obsidian"] .compact-num-input:focus { border-color: var(--accent); background-color: var(--field); }
+:root[data-theme="obsidian"] .hp-slash { font-family: var(--font-display); color: var(--ink-3); font-weight: 500; }
+:root[data-theme="obsidian"] #p-hp { color: var(--rubric); }
+
+:root[data-theme="obsidian"] .life-vein { height: 0.7rem; border: 0; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+:root[data-theme="obsidian"] .life-vein-fill { border-radius: 999px; background: linear-gradient(90deg, #d63a40, #f2555a); box-shadow: none; transition: width 0.3s ease; }
+:root[data-theme="obsidian"] .life-vein-fill.is-low { background: linear-gradient(90deg, #e0762f, #f2555a); animation: obsPulse 1.6s ease-in-out infinite; }
+:root[data-theme="obsidian"] .life-vein-fill.is-down { background: #4a4e5a; animation: none; }
+@keyframes obsPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+
+:root[data-theme="obsidian"] .skill-grid { column-gap: 1.2rem; }
+:root[data-theme="obsidian"] .skill-chip { padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--hairline); border-radius: 6px; transition: background-color 0.15s ease, color 0.15s ease; }
+:root[data-theme="obsidian"] .skill-chip:hover { background: rgba(255,255,255,0.04); border-bottom-style: solid; }
+:root[data-theme="obsidian"] .skill-chip.is-known { font-weight: 600; }
+
+/* ---- Geld & Inventar ---- */
+:root[data-theme="obsidian"] .coin-box span::before { box-shadow: inset 0 0 0 2px var(--paper-hi); }
+:root[data-theme="obsidian"] .coin-box input { font-weight: 650; font-variant-numeric: tabular-nums; }
+:root[data-theme="obsidian"] .item-badge { border-bottom: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .item-icon { border: 1px solid var(--hairline-2); border-radius: 10px; }
+
+:root[data-theme="obsidian"] .tag, :root[data-theme="obsidian"] .cat-tag, :root[data-theme="obsidian"] .packmass-pill, :root[data-theme="obsidian"] .exh-badge, :root[data-theme="obsidian"] .inline-item-pill {
+    border: 1px solid var(--hairline-2);
+    border-radius: 999px;
+    padding: 0.08rem 0.6rem;
+    font-size: 0.74rem;
+    font-weight: 550;
+}
+:root[data-theme="obsidian"] .tag { background: var(--accent-soft); color: var(--accent-hi); border-color: rgba(124, 140, 255, 0.35); }
+:root[data-theme="obsidian"] .cat-tag { font-style: normal; color: var(--ink-2); background: rgba(255,255,255,0.04); }
+:root[data-theme="obsidian"] .packmass-pill { color: var(--azure); border-color: rgba(108, 180, 245, 0.4); background: rgba(108,180,245,0.08); }
+:root[data-theme="obsidian"] .exh-badge { background: var(--ochre-wash); color: var(--ochre); border-color: rgba(240, 183, 63, 0.4); }
+:root[data-theme="obsidian"] .inline-item-pill { background: var(--surface-2); padding: 0.15rem 0.6rem; }
+:root[data-theme="obsidian"] .inline-item-pill b { border-radius: 50%; }
+:root[data-theme="obsidian"] .inline-item-pill b:hover { background: rgba(242, 85, 90, 0.2); color: var(--rubric); }
+:root[data-theme="obsidian"] .player-creator-box { background: var(--paper-lo); border: 1px solid var(--hairline); border-top: 1px solid var(--hairline); border-radius: var(--r-card); }
+:root[data-theme="obsidian"] .packmass-badge { border: 1px solid var(--hairline-2); border-radius: 999px; padding: 0.25rem 0.8rem; background: var(--surface-2); }
+:root[data-theme="obsidian"] .packmass-badge.packmass-full { border-color: rgba(242, 85, 90, 0.5); color: var(--rubric); background: rgba(242, 85, 90, 0.1); }
+:root[data-theme="obsidian"] .bag-progress-track { height: 0.55rem; border: 0; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+:root[data-theme="obsidian"] .bag-progress-fill { background: var(--accent); border-radius: 999px; }
+:root[data-theme="obsidian"] .bag-progress-fill.fill-full { background: var(--rubric-fill); }
+
+/* ---- DM ---- */
+:root[data-theme="obsidian"] .mini-avatar, :root[data-theme="obsidian"] .mini-avatar-placeholder {
+    border: 1px solid var(--hairline-2);
+    border-radius: 10px;
+    background: var(--surface-2);
+    font-weight: 650;
+    font-size: 1.05rem;
+}
+:root[data-theme="obsidian"] .badge-hp, :root[data-theme="obsidian"] .badge-moral { border: 1px solid transparent; border-radius: 999px; padding: 0.15rem 0.65rem; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+:root[data-theme="obsidian"] .badge-hp { background: rgba(242, 85, 90, 0.16); color: #ff8a8e; border-color: rgba(242, 85, 90, 0.4); }
+:root[data-theme="obsidian"] .badge-moral { background: rgba(255,255,255,0.05); border-color: var(--hairline-2); color: var(--ink-2); }
+
+@keyframes deathToll {
+    0%, 100% { background: rgba(242, 85, 90, 0.16); color: #ff8a8e; }
+    50%      { background: var(--rubric-fill); color: #fff; }
+}
+:root[data-theme="obsidian"] .btn-death {
+    background: rgba(242, 85, 90, 0.16);
+    color: #ff8a8e;
+    border: 1px solid rgba(242, 85, 90, 0.5);
+    border-radius: 999px;
+    padding: 0.2rem 0.75rem;
+    animation: deathToll 1.6s ease-in-out infinite;
+}
+:root[data-theme="obsidian"] .btn-death:hover { animation: none; background: var(--rubric-fill); color: #fff; border-color: transparent; }
+:root[data-theme="obsidian"] .dm-moral-bar { border-color: var(--hairline); }
+:root[data-theme="obsidian"] .dm-mini-stats { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); letter-spacing: 0; }
+:root[data-theme="obsidian"] .dm-attacks-editor { border-left: 2px solid var(--accent); }
+:root[data-theme="obsidian"] .npc-card, :root[data-theme="obsidian"] .lib-item-card {
+    background: var(--paper-hi);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-1);
+}
+:root[data-theme="obsidian"] .card .npc-card, :root[data-theme="obsidian"] .card .lib-item-card { background: var(--surface-2); box-shadow: none; }
+:root[data-theme="obsidian"] .npc-card { border-left-width: 4px; }
+:root[data-theme="obsidian"] .npc-library-picker { background: var(--paper-lo); border: 1px solid var(--hairline); border-radius: var(--r-card); }
+:root[data-theme="obsidian"] .npc-inventory-box { background: var(--paper-lo); border: 1px dashed var(--hairline-2); border-radius: 10px; }
+:root[data-theme="obsidian"] .npc-desc-box { border-left: 2px solid var(--rubric); font-style: normal; }
+:root[data-theme="obsidian"] .cat-pill { border: 1px solid var(--hairline-2); border-radius: 999px; font-style: normal; padding: 0.25rem 0.8rem; background: transparent; }
+:root[data-theme="obsidian"] .cat-pill:hover { background: var(--surface-3); }
+:root[data-theme="obsidian"] .cat-pill.active { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
+/* ---- Kampf ---- */
+:root[data-theme="obsidian"] .turn-active-card {
+    border: 1px solid var(--hairline-2);
+    border-left: 6px solid var(--team-c, var(--accent));
+    border-radius: 10px;
+    background: var(--paper-lo);
+}
+:root[data-theme="obsidian"] .turn-active-avatar, :root[data-theme="obsidian"] .turn-next-avatar { border: 1px solid var(--hairline-2); border-radius: 8px; }
+:root[data-theme="obsidian"] .turn-avatar-placeholder { background: var(--surface-2); font-weight: 650; }
+:root[data-theme="obsidian"] .turn-active-info strong { font-weight: 600; }
+:root[data-theme="obsidian"] .turn-next-card { border: 1px solid var(--hairline); border-left: 4px solid var(--team-c, var(--ink-3)); border-radius: 8px; background: var(--paper-lo); }
+:root[data-theme="obsidian"] .turn-ellipsis-badge { border: 1px dashed var(--hairline-2); border-radius: 999px; }
+:root[data-theme="obsidian"] .turn-indicator-pill { border-radius: 999px; background: var(--accent); color: var(--on-accent); letter-spacing: 0.08em; padding: 0.08rem 0.55rem; }
+:root[data-theme="obsidian"] .round-badge {
+    border: 1px solid var(--hairline-2);
+    box-shadow: none;
+    border-radius: 10px;
+    background: var(--paper-lo);
+    padding: 0.3rem 0.95rem;
+}
+:root[data-theme="obsidian"] .round-badge span { font-weight: 600; letter-spacing: 0.12em; }
+:root[data-theme="obsidian"] .round-badge strong { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+:root[data-theme="obsidian"] .battlemap-vis-toggle { border: 1px solid var(--hairline-2); border-radius: 999px; }
+:root[data-theme="obsidian"] .battlemap-vis-toggle.vis-on { border-color: rgba(79, 208, 138, 0.5); color: var(--verdigris); background: var(--verdigris-wash); }
+:root[data-theme="obsidian"] .battlemap-vis-toggle.vis-off { border-style: solid; }
+:root[data-theme="obsidian"] .mode-status-pill { border-radius: 999px; padding: 0.15rem 0.7rem; }
+:root[data-theme="obsidian"] .mode-pill-move { background: var(--verdigris-wash); }
+:root[data-theme="obsidian"] .mode-pill-build { background: var(--azure-fill); border-color: transparent; }
+:root[data-theme="obsidian"] .mode-pill-build:hover { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+:root[data-theme="obsidian"] .side-card-divider { border-top: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .team-group-header { border-bottom: 2px solid var(--team-c, var(--hairline-2)); font-weight: 600; font-size: 0.98rem; }
+:root[data-theme="obsidian"] .team-color-dot { transform: none; border-radius: 50%; border: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.15); }
+:root[data-theme="obsidian"] .team-quick-add-select { border-style: solid; }
+:root[data-theme="obsidian"] .team-combatant-item {
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-left: 4px solid var(--team-c, var(--ink-3));
+    border-radius: 10px;
+}
+:root[data-theme="obsidian"] .active-turn-row { box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); border-left-color: var(--team-c, var(--accent)); }
+:root[data-theme="obsidian"] .combatant-down { background: var(--paper-lo); opacity: 0.8; }
+:root[data-theme="obsidian"] .combatant-down strong { text-decoration-thickness: 1px; }
+
+/* ---- Kampffeld ---- */
+:root[data-theme="obsidian"] .battlemap-board-card, :root[data-theme="obsidian"] .battlemap-palette-card { border-radius: var(--r-card); }
+:root[data-theme="obsidian"] .battlemap-zoom-bar button { border-radius: 0; }
+:root[data-theme="obsidian"] .battlemap-zoom-bar button:first-child { border-radius: var(--r-ctl) 0 0 var(--r-ctl); }
+:root[data-theme="obsidian"] .battlemap-zoom-bar button:last-child { border-radius: 0 var(--r-ctl) var(--r-ctl) 0; }
+:root[data-theme="obsidian"] .battlemap-zoom-bar button + button { margin-left: -1px; }
+:root[data-theme="obsidian"] .battlemap-template-bar { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .battlemap-stage-wrapper {
+    border: 1px solid var(--hairline-2);
+    border-radius: 10px;
+    background-color: #0c0d10;
+    background-image: radial-gradient(rgba(255,255,255,0.13) 1px, transparent 1.3px);
+    background-size: 20px 20px;
+    box-shadow: inset 0 2px 14px rgba(0,0,0,0.5);
+}
+:root[data-theme="obsidian"] .battlemap-stage-wrapper.stage-mode-build { border-color: var(--azure); box-shadow: inset 0 0 0 1px var(--azure), inset 0 2px 14px rgba(0,0,0,0.5); }
+:root[data-theme="obsidian"] .battlemap-cell { border: 1px solid rgba(0,0,0,0.55); border-radius: 6px; }
+:root[data-theme="obsidian"] .cell-drop-hover { outline: 2px solid var(--accent); outline-offset: 0; }
+:root[data-theme="obsidian"] .palette-creator-popover { background: var(--paper-lo); border: 1px dashed var(--hairline-2); border-radius: 10px; }
+:root[data-theme="obsidian"] .palette-remove-btn { border-color: rgba(242, 85, 90, 0.45); color: var(--rubric); }
+:root[data-theme="obsidian"] .palette-block-entry { border-bottom: 1px solid var(--hairline); border-radius: 8px; }
+:root[data-theme="obsidian"] .palette-block-entry:hover { background: rgba(255,255,255,0.05); }
+:root[data-theme="obsidian"] .palette-block-entry.palette-block-active { background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(124, 140, 255, 0.5); border-bottom-color: transparent; }
+:root[data-theme="obsidian"] .palette-color-swatch { border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; box-shadow: none; }
+
+:root[data-theme="obsidian"] .battlemap-token {
+    border: 3px solid var(--team-c, var(--block-paper));
+    outline: 1px solid rgba(0,0,0,0.6);
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+:root[data-theme="obsidian"] .battlemap-token.token-can-drag:hover { transform: translateY(-2px) scale(1.04); }
+:root[data-theme="obsidian"] .battlemap-token.token-active-turn { outline: 2px solid var(--accent); outline-offset: 2px; box-shadow: 0 0 0 5px rgba(124, 140, 255, 0.25), 0 2px 6px rgba(0,0,0,0.5); }
+:root[data-theme="obsidian"] .token-initials { font-weight: 700; font-size: 1.05rem; padding-bottom: 0.8rem; }
+:root[data-theme="obsidian"] .token-label-bar { background: rgba(8, 9, 11, 0.82); }
+:root[data-theme="obsidian"] .token-hp-text { color: #ff9a9d; }
+:root[data-theme="obsidian"] .token-drag-floating-ghost { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5); border-radius: 14px; }
+
+/* ---- Chat ---- */
+:root[data-theme="obsidian"] .chat-widget {
+    padding: 0;
+    border: 1px solid var(--hairline-2);
+    border-radius: 14px;
+    background: var(--paper-hi);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+}
+:root[data-theme="obsidian"] .chat-header { background: var(--surface-2); color: var(--ink); font-size: 0.92rem; font-weight: 600; padding: 0.65rem 0.95rem; border-bottom: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .chat-header:hover { background: var(--surface-3); }
+:root[data-theme="obsidian"] .chat-header-right { font-family: var(--font-body); }
+:root[data-theme="obsidian"] .chat-unread-badge { background: var(--accent); color: var(--on-accent); border-radius: 999px; padding: 0.05rem 0.5rem; }
+:root[data-theme="obsidian"] .chat-messages-list { background: var(--paper); padding: 0.4rem 0.9rem; }
+:root[data-theme="obsidian"] .chat-msg { border-bottom: 1px solid var(--hairline); padding: 0.55rem 0; }
+:root[data-theme="obsidian"] .chat-msg.chat-whisper { border-left: 2px solid var(--violet); font-style: normal; background: rgba(183, 156, 255, 0.06); border-radius: 0 6px 6px 0; }
+:root[data-theme="obsidian"] .chat-msg-sender { color: var(--accent-hi); font-weight: 600; }
+:root[data-theme="obsidian"] .chat-whisper .chat-msg-sender { color: var(--violet); }
+:root[data-theme="obsidian"] .chat-controls { border-top: 1px solid var(--hairline); background: var(--paper-hi); }
+
+/* ---- Modal ---- */
+:root[data-theme="obsidian"] .modal-backdrop { background: rgba(5, 6, 8, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+:root[data-theme="obsidian"] .modal-card {
+    background: var(--paper-hi);
+    border: 1px solid var(--hairline-2);
+    border-radius: 16px;
+    box-shadow: var(--shadow-2);
+    padding: 1.8rem 1.6rem 1.4rem;
+}
+:root[data-theme="obsidian"] .modal-card h3 { font-family: var(--font-head); font-size: 1.3rem; font-weight: 650; letter-spacing: -0.02em; }
+:root[data-theme="obsidian"] .modal-card h3::first-letter { color: inherit; }
+:root[data-theme="obsidian"] .modal-card .muted { font-size: 0.92rem; color: var(--ink-2); }
+:root[data-theme="obsidian"] .modal-actions .btn-del { background: var(--rubric-fill); color: #fff; border-color: transparent; }
+:root[data-theme="obsidian"] .modal-actions .btn-del:hover { background: #e8484e; color: #fff; }
+
+/* ---- Theme-Auswahl ---- */
+:root[data-theme="obsidian"] .theme-picker { position: relative; }
+:root[data-theme="obsidian"] .theme-menu {
+    background: var(--paper-hi);
+    border: 1px solid var(--hairline-2);
+    border-radius: 14px;
+    box-shadow: var(--shadow-2);
+    padding: 0.4rem;
+    color: var(--ink);
+}
+:root[data-theme="obsidian"] .theme-menu-title {
+    grid-column: 1 / -1; color: var(--ink-3); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.5rem 0.65rem 0.35rem; }
+:root[data-theme="obsidian"] .theme-option {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.7rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+    white-space: normal;
+}
+:root[data-theme="obsidian"] .theme-option:hover { background: rgba(255,255,255,0.06); border-color: transparent; }
+:root[data-theme="obsidian"] .theme-option.is-active { background: var(--accent-soft); border-color: rgba(124, 140, 255, 0.4); }
+:root[data-theme="obsidian"] .theme-option-text { display: flex; flex-direction: column; line-height: 1.25; }
+:root[data-theme="obsidian"] .theme-option-text strong { font-weight: 600; font-size: 0.88rem; }
+:root[data-theme="obsidian"] .theme-option-text small { color: var(--ink-2); font-weight: 400; font-size: 0.74rem; }
+
+@media (max-width: 860px) {
+    :root[data-theme="obsidian"] .lobby-grid > .card + .card { border-left: 0; border-top: 1px solid var(--hairline); }
+    :root[data-theme="obsidian"] .abilities-row-grid, :root[data-theme="obsidian"] .compact-stats-row { gap: 0.5rem; }
+}
+@media (max-width: 640px) {
+    :root[data-theme="obsidian"] .folder-tabs { justify-self: stretch; }
+    :root[data-theme="obsidian"] .folder-tabs .tab-btn { flex: 1; padding: 0.45rem 0.4rem; }
+}
+@media (max-width: 520px) {
+    :root[data-theme="obsidian"] .top-bar { padding: 0.7rem 0.75rem; }
+    :root[data-theme="obsidian"] .card { padding: 1rem; }
+    :root[data-theme="obsidian"] .chat-widget { border-radius: 12px; }
+}
+
+/* ==== Komponenten-Varianten: überstimmen die generischen input/button/h3-Regeln oben ==== */
+:root[data-theme="obsidian"] .hp-big-input,
+:root[data-theme="obsidian"] .compact-num-input {
+    padding: 0.1rem 0.25rem;
+    border-radius: 10px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    box-shadow: none;
+}
+:root[data-theme="obsidian"] .hp-big-input { width: 5.2rem; font-size: 2.4rem; line-height: 1.1; }
+:root[data-theme="obsidian"] .compact-num-input { width: 4.2rem; font-size: 2rem; line-height: 1.1; }
+:root[data-theme="obsidian"] .hp-big-input:hover, :root[data-theme="obsidian"] .compact-num-input:hover { background-color: var(--field); border-color: var(--hairline-2); }
+:root[data-theme="obsidian"] .hp-big-input:focus, :root[data-theme="obsidian"] .compact-num-input:focus { background-color: var(--field); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.25); }
+:root[data-theme="obsidian"] #p-hp { color: var(--rubric); }
+:root[data-theme="obsidian"] .ability-score-oval { width: 3.6rem; padding: 0.15rem 0.2rem; font-size: 0.95rem; font-weight: 700; text-align: center; border-radius: 999px; background-color: var(--field); border: 1px solid var(--hairline); }
+:root[data-theme="obsidian"] .note-title-input { font-size: 1.05rem; font-weight: 650; }
+:root[data-theme="obsidian"] .coin-box input { font-size: 1.05rem; font-weight: 650; padding: 0.3rem 0.5rem; }
+:root[data-theme="obsidian"] .npc-stats-inputs input, :root[data-theme="obsidian"] .npc-combat-inputs input { text-align: center; font-weight: 700; padding: 0.42rem 0.3rem; }
+:root[data-theme="obsidian"] .mini-inline-label input { width: 3.4rem; padding: 0.15rem 0.3rem; text-align: center; font-size: 0.85rem; }
+:root[data-theme="obsidian"] .combat-custom-dmg input { width: 4.5rem; text-align: center; padding: 0.4rem 0.3rem; }
+:root[data-theme="obsidian"] .dm-bag-inputs input[type="number"] { width: 4.8rem; text-align: center; font-weight: 700; }
+:root[data-theme="obsidian"] .team-combatant-meta-row select { width: auto; max-width: 160px; font-size: 0.82rem; padding: 0.25rem 1.7rem 0.25rem 0.5rem; }
+:root[data-theme="obsidian"] .team-quick-add-select { font-size: 0.86rem; }
+:root[data-theme="obsidian"] #dice-formula-input { min-width: 280px; }
+:root[data-theme="obsidian"] input[type="checkbox"] { padding: 0; width: 1.1rem; height: 1.1rem; }
+:root[data-theme="obsidian"] input[type="color"] { height: 2.3rem; padding: 3px; }
+
+:root[data-theme="obsidian"] .ability-mod-big { padding: 0.1rem 0.6rem; gap: 0.3rem; }
+:root[data-theme="obsidian"] .quick-dice-btns button { min-width: 2.9rem; height: 2.5rem; padding: 0 0.6rem; }
+:root[data-theme="obsidian"] .hp-quick-btns button { padding: 0.45rem 0.2rem; }
+:root[data-theme="obsidian"] .dm-quick-actions button, :root[data-theme="obsidian"] .enemy-controls button { padding: 0.4rem 0.65rem; }
+:root[data-theme="obsidian"] .modal-actions button { flex: 1; padding: 0.65rem 1rem; }
+:root[data-theme="obsidian"] .btn-tiny-del { padding: 0.15rem 0.4rem; font-size: 0.8rem; }
+:root[data-theme="obsidian"] .btn-death { padding: 0.2rem 0.75rem; font-size: 0.84rem; }
+:root[data-theme="obsidian"] .battlemap-zoom-bar button { padding: 0.4rem 0.6rem; font-size: 0.86rem; }
+:root[data-theme="obsidian"] .battlemap-vis-toggle { padding: 0.4rem 0.8rem; font-size: 0.86rem; }
+:root[data-theme="obsidian"] .cat-pill { padding: 0.25rem 0.8rem; font-size: 0.84rem; }
+:root[data-theme="obsidian"] .palette-remove-btn { width: 100%; font-size: 0.82rem; white-space: normal; }
+:root[data-theme="obsidian"] .btn-icon { padding: 0.45rem; }
+:root[data-theme="obsidian"] .btn-del { padding: 0.4rem 0.55rem; }
+:root[data-theme="obsidian"] .folder-tabs .tab-btn { padding: 0.45rem 0.95rem; }
+:root[data-theme="obsidian"] .theme-option { padding: 0.5rem 0.65rem; }
+:root[data-theme="obsidian"] .btn-block { width: 100%; }
+
+:root[data-theme="obsidian"] .currency-header h3, :root[data-theme="obsidian"] .creator-header-row h3, :root[data-theme="obsidian"] .dm-player-header h3,
+:root[data-theme="obsidian"] .combat-name-line h3, :root[data-theme="obsidian"] .battlemap-board-header h3, :root[data-theme="obsidian"] .modal-card h3 { border-bottom: 0; padding-bottom: 0; }
+
+@media (max-width: 640px) {
+    :root[data-theme="obsidian"] .folder-tabs .tab-btn { flex: 1; padding: 0.45rem 0.4rem; }
+}
+@media (max-width: 520px) {
+    :root[data-theme="obsidian"] .folder-tabs .tab-btn { padding: 0.45rem 0.4rem; font-size: 0.86rem; }
+}

@@ -1,0 +1,1168 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
+
+/* ==========================================================================
+   AFTERLIFE — „Grimoire"
+   Ein ledergebundenes Zauberbuch bei Kerzenlicht: oxblutbraunes Leder,
+   Blattgold-Rahmen, Wachssiegel in Karmesin, Saphir, Smaragd, Amethyst.
+   Cinzel (Titel, Reiter, Ziffern) + EB Garamond (Text).
+   Alles unter :root[data-theme="grimoire"].
+   ========================================================================== */
+
+/* TOKENS ================================================================== */
+:root[data-theme="grimoire"] {
+    color-scheme: dark;
+
+    --paper:     #1a120d;
+    --paper-hi:  #241912;
+    --paper-lo:  #130d09;
+    --field:     #120c08;
+
+    --ink:       #ead9b5;
+    --ink-2:     #c2ad86;
+    --ink-3:     #9b876a;
+    --rule:      rgba(201, 164, 92, 0.3);
+
+    --rubric:        #e8706e;
+    --rubric-fill:   #a3242c;
+    --azure:         #8fb8f2;
+    --azure-fill:    #2d5da8;
+    --on-fill:       #f8ecd2;
+    --ochre:         #e8c77a;
+    --ochre-wash:    #4b3912;
+    --verdigris:     #62cba2;
+    --verdigris-wash:#17382b;
+    --violet:        #c9a0ec;
+    --copper:        #dd9860;
+
+    --block-ink:   #1a120d;
+    --block-paper: #f3e7c8;
+
+    --hatch:      linear-gradient(transparent, transparent);
+    --hatch-soft: linear-gradient(transparent, transparent);
+
+    --gold:      #c9a45c;
+    --gold-hi:   #e8c77a;
+    --gold-lo:   #8a6d32;
+    --gold-line: rgba(201, 164, 92, 0.45);
+    --leather:   #2c1f16;
+    --leather-hi:#3a2a1c;
+    --seal:      radial-gradient(circle at 32% 22%, #cf4147 0%, #a3242c 52%, #771a20 100%);
+
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .3 0 0 0 0 .17 0 0 0 1.1 -.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23c9a45c'/%3E%3C/svg%3E");
+
+    --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --font-head: "Cinzel", Georgia, serif;
+    --font-body: "EB Garamond", "Iowan Old Style", Georgia, serif;
+}
+
+@keyframes grimoireFlicker {
+    0%   { opacity: 0.88; }
+    22%  { opacity: 1; }
+    41%  { opacity: 0.93; }
+    63%  { opacity: 1; }
+    82%  { opacity: 0.9; }
+    100% { opacity: 0.88; }
+}
+
+@keyframes grimoireGrave {
+    0%, 100% { background-color: #4a1015; box-shadow: 0 0 0 rgba(200, 50, 55, 0), inset 0 1px 0 rgba(255, 190, 170, 0.15); }
+    50%      { background-color: #a3242c; box-shadow: 0 0 12px rgba(200, 50, 55, 0.55), inset 0 1px 0 rgba(255, 190, 170, 0.3); }
+}
+
+/* BASIS =================================================================== */
+:root[data-theme="grimoire"] body {
+    background: var(--paper) var(--grain);
+    font-size: 1.08rem;
+    line-height: 1.4;
+}
+
+/* Kerzenlicht: warmer Schein oben, Vignette an den Rändern */
+:root[data-theme="grimoire"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255, 176, 84, 0.16), transparent 70%),
+        radial-gradient(ellipse 120% 100% at 50% 40%, transparent 35%, rgba(6, 3, 2, 0.7) 100%);
+    animation: grimoireFlicker 9s ease-in-out infinite;
+}
+
+:root[data-theme="grimoire"] * { scrollbar-color: var(--gold-lo) transparent; }
+:root[data-theme="grimoire"] ::-webkit-scrollbar { width: 9px; height: 9px; }
+:root[data-theme="grimoire"] ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.25); }
+:root[data-theme="grimoire"] ::-webkit-scrollbar-thumb { background: var(--gold-lo); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+:root[data-theme="grimoire"] ::-webkit-scrollbar-thumb:hover { background: var(--gold); background-clip: padding-box; border: 2px solid transparent; }
+
+:root[data-theme="grimoire"] ::selection { background: #a3242c; color: #f8ecd2; }
+
+:root[data-theme="grimoire"] :focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+:root[data-theme="grimoire"] input:focus-visible,
+:root[data-theme="grimoire"] textarea:focus-visible,
+:root[data-theme="grimoire"] select:focus-visible { outline: none; }
+
+:root[data-theme="grimoire"] h2 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #f4dc9a 0%, #c9a45c 55%, #9c7a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--gold);
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(232, 199, 122, 0.22));
+}
+
+:root[data-theme="grimoire"] h2::first-letter { color: var(--gold-hi); }
+:root[data-theme="grimoire"] h2 > .icon { -webkit-text-fill-color: initial; }
+
+:root[data-theme="grimoire"] h3 {
+    font-family: var(--font-head);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--gold-hi);
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--gold) 0%, rgba(201, 164, 92, 0.05) 100%) 1;
+}
+
+:root[data-theme="grimoire"] .currency-header h3,
+:root[data-theme="grimoire"] .creator-header-row h3,
+:root[data-theme="grimoire"] .dm-player-header h3,
+:root[data-theme="grimoire"] .combat-name-line h3,
+:root[data-theme="grimoire"] .battlemap-board-header h3,
+:root[data-theme="grimoire"] .modal-card h3 { border-bottom: 0; border-image: none; }
+
+:root[data-theme="grimoire"] h3 small { color: var(--ink-2); letter-spacing: 0; }
+:root[data-theme="grimoire"] h3 > .icon,
+:root[data-theme="grimoire"] h2 > .icon { color: var(--gold); }
+
+:root[data-theme="grimoire"] code { border-bottom-color: var(--gold-lo); color: var(--gold-hi); }
+:root[data-theme="grimoire"] .muted { color: var(--ink-2); }
+:root[data-theme="grimoire"] .icon { stroke-linecap: round; stroke-linejoin: round; }
+
+/* KONTROLLEN ============================================================== */
+:root[data-theme="grimoire"] input,
+:root[data-theme="grimoire"] textarea,
+:root[data-theme="grimoire"] select {
+    background-color: var(--field);
+    color: var(--ink);
+    border: 1px solid rgba(201, 164, 92, 0.22);
+    border-bottom: 1.5px solid var(--gold);
+    border-radius: 2px 2px 0 0;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+/* niedrige Spezifität: Klassen mit eigener Schriftgröße gewinnen weiterhin */
+:where(:root[data-theme="grimoire"]) :is(input, textarea, select) { font-size: 1rem; }
+:where(:root[data-theme="grimoire"]) button { font-size: 1rem; }
+
+:root[data-theme="grimoire"] input::placeholder,
+:root[data-theme="grimoire"] textarea::placeholder { color: var(--ink-3); }
+
+:root[data-theme="grimoire"] input:hover,
+:root[data-theme="grimoire"] textarea:hover,
+:root[data-theme="grimoire"] select:hover { border-color: rgba(201, 164, 92, 0.45); border-bottom-color: var(--gold-hi); }
+
+:root[data-theme="grimoire"] input:focus,
+:root[data-theme="grimoire"] textarea:focus,
+:root[data-theme="grimoire"] select:focus {
+    border-color: rgba(232, 199, 122, 0.6);
+    border-bottom-color: var(--gold-hi);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(232, 199, 122, 0.18), 0 4px 14px -2px rgba(232, 199, 122, 0.35);
+}
+
+:root[data-theme="grimoire"] select option { background: #241912; color: #ead9b5; }
+
+:root[data-theme="grimoire"] textarea {
+    background-color: var(--field);
+    background-image: repeating-linear-gradient(transparent 0 calc(1.6em - 1px), rgba(201, 164, 92, 0.13) calc(1.6em - 1px) 1.6em);
+    background-position: 0 0.5rem;
+    background-attachment: local;
+}
+
+:root[data-theme="grimoire"] input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    background-color: var(--field);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="grimoire"] input[type="checkbox"]:hover { border-color: var(--gold-hi); }
+
+:root[data-theme="grimoire"] input[type="checkbox"]::before {
+    width: 0.8rem;
+    height: 0.8rem;
+    background: var(--gold-hi);
+    clip-path: polygon(8% 54%, 24% 38%, 41% 56%, 78% 14%, 94% 30%, 41% 90%);
+    filter: drop-shadow(0 0 3px rgba(232, 199, 122, 0.7));
+}
+
+:root[data-theme="grimoire"] input[type="checkbox"]:checked { background-color: #2a1d10; border-color: var(--gold-hi); }
+:root[data-theme="grimoire"] input[type="checkbox"]:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+
+/* Knöpfe: dunkles Leder, Goldrand */
+:root[data-theme="grimoire"] button {
+    background: linear-gradient(180deg, #3a2a1c 0%, #261b13 100%);
+    color: var(--ink);
+    border: 1px solid #a8854a;
+    border-radius: 3px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: inset 0 1px 0 rgba(232, 199, 122, 0.16), 0 1px 3px rgba(0, 0, 0, 0.55);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease, color 0.2s ease;
+}
+
+:root[data-theme="grimoire"] button:hover {
+    background: linear-gradient(180deg, #4b3623 0%, #33241a 100%);
+    color: #f6e6bf;
+    border-color: var(--gold-hi);
+    box-shadow: inset 0 1px 0 rgba(232, 199, 122, 0.28), 0 0 12px rgba(232, 199, 122, 0.28), 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="grimoire"] button:active { transform: translateY(1px); }
+
+:root[data-theme="grimoire"] button:disabled,
+:root[data-theme="grimoire"] button:disabled:hover {
+    opacity: 0.4;
+    background: linear-gradient(180deg, #3a2a1c 0%, #261b13 100%);
+    color: var(--ink);
+    border-color: #a8854a;
+    box-shadow: inset 0 1px 0 rgba(232, 199, 122, 0.16);
+}
+
+/* Wachssiegel */
+:root[data-theme="grimoire"] .btn-primary,
+:root[data-theme="grimoire"] .btn-d20 {
+    background: var(--seal);
+    color: var(--on-fill);
+    border-color: #5e1117;
+    box-shadow: inset 0 1px 1px rgba(255, 205, 190, 0.45), inset 0 -3px 5px rgba(0, 0, 0, 0.4), 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="grimoire"] .btn-primary:hover,
+:root[data-theme="grimoire"] .btn-d20:hover {
+    background: radial-gradient(circle at 32% 22%, #e0525a 0%, #b52a32 52%, #861d24 100%);
+    color: #fff4de;
+    border-color: #7a1820;
+    box-shadow: inset 0 1px 1px rgba(255, 215, 200, 0.55), inset 0 -3px 5px rgba(0, 0, 0, 0.4), 0 0 14px rgba(215, 70, 75, 0.55), 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="grimoire"] .btn-primary:disabled:hover,
+:root[data-theme="grimoire"] .btn-d20:disabled:hover {
+    background: var(--seal);
+    color: var(--on-fill);
+    border-color: #5e1117;
+    box-shadow: inset 0 1px 1px rgba(255, 205, 190, 0.45), inset 0 -3px 5px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="grimoire"] .btn-secondary {
+    background: linear-gradient(180deg, #4a3520 0%, #2f2113 100%);
+    color: var(--gold-hi);
+    border-color: var(--gold);
+}
+
+:root[data-theme="grimoire"] .btn-secondary:hover {
+    background: linear-gradient(180deg, #5c4326 0%, #3a2918 100%);
+    color: #ffe9ad;
+    border-color: var(--gold-hi);
+}
+
+:root[data-theme="grimoire"] .btn-secondary:disabled:hover {
+    background: linear-gradient(180deg, #4a3520 0%, #2f2113 100%);
+    color: var(--gold-hi);
+    border-color: var(--gold);
+}
+
+:root[data-theme="grimoire"] .btn-demonic { color: var(--rubric); border-color: #a3242c; }
+:root[data-theme="grimoire"] .btn-demonic:hover {
+    background: var(--seal);
+    color: var(--on-fill);
+    border-color: #c4444a;
+    box-shadow: 0 0 12px rgba(215, 70, 75, 0.5), inset 0 1px 1px rgba(255, 205, 190, 0.4);
+}
+
+:root[data-theme="grimoire"] .btn-holy { color: var(--azure); border-color: #3f73bd; }
+:root[data-theme="grimoire"] .btn-holy:hover {
+    background: radial-gradient(circle at 32% 22%, #4f86d4 0%, #2d5da8 55%, #1f4580 100%);
+    color: #f2f7ff;
+    border-color: #8fb8f2;
+    box-shadow: 0 0 12px rgba(110, 165, 240, 0.55), inset 0 1px 1px rgba(220, 235, 255, 0.4);
+}
+
+:root[data-theme="grimoire"] .btn-del {
+    background: transparent;
+    color: var(--rubric);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+:root[data-theme="grimoire"] .btn-del:hover {
+    background: var(--seal);
+    color: var(--on-fill);
+    border-color: #7a1820;
+    box-shadow: 0 0 10px rgba(215, 70, 75, 0.45);
+}
+
+:root[data-theme="grimoire"] .btn-del:disabled:hover { background: transparent; color: var(--rubric); border-color: transparent; box-shadow: none; }
+
+:root[data-theme="grimoire"] .field-label {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+}
+
+/* KOPF & REITER =========================================================== */
+:root[data-theme="grimoire"] .top-bar {
+    background: linear-gradient(180deg, rgba(10, 6, 4, 0.55) 0%, rgba(26, 18, 13, 0.4) 100%);
+    border-bottom: 1px solid var(--gold);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="grimoire"] .top-bar::after {
+    bottom: -5px;
+    border-bottom: 1px solid rgba(201, 164, 92, 0.4);
+}
+
+:root[data-theme="grimoire"] .top-bar h1 {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 2.1rem;
+    letter-spacing: 0.1em;
+    filter: drop-shadow(0 0 10px rgba(232, 199, 122, 0.25));
+    background: linear-gradient(180deg, #f4dc9a 0%, #c9a45c 55%, #9c7a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--gold);
+    -webkit-text-fill-color: transparent;
+}
+
+:root[data-theme="grimoire"] .brand-mark { -webkit-text-fill-color: initial; }
+:root[data-theme="grimoire"] .brand-mark .mark-line { stroke: var(--gold); }
+:root[data-theme="grimoire"] .brand-mark .mark-solid { fill: var(--gold); }
+:root[data-theme="grimoire"] .brand-mark .mark-sand { fill: #c43a40; }
+
+:root[data-theme="grimoire"] #session-info {
+    border: 1px solid var(--gold);
+    outline: 1px solid rgba(201, 164, 92, 0.4);
+    outline-offset: 2px;
+    border-radius: 2px;
+    color: var(--gold-hi);
+    font-family: var(--font-head);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 8px rgba(201, 164, 92, 0.12);
+}
+
+:root[data-theme="grimoire"] .folder-tabs .tab-btn {
+    background: transparent;
+    color: var(--ink-2);
+    border: 0;
+    border-radius: 3px 3px 0 0;
+    box-shadow: none;
+    text-shadow: none;
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: 0.06em;
+}
+
+:root[data-theme="grimoire"] .tab-num {
+    border: 1px solid var(--gold-lo);
+    border-radius: 2px;
+    color: var(--gold);
+    font-family: var(--font-head);
+}
+
+:root[data-theme="grimoire"] .folder-tabs .tab-btn:hover {
+    background: linear-gradient(0deg, rgba(201, 164, 92, 0.14), transparent);
+    color: var(--gold-hi);
+    box-shadow: inset 0 -2px 0 var(--gold-lo);
+}
+
+:root[data-theme="grimoire"] .folder-tabs .tab-btn.active {
+    background: linear-gradient(0deg, rgba(201, 164, 92, 0.24), rgba(163, 36, 44, 0.12) 70%, transparent);
+    color: var(--gold-hi);
+    box-shadow: inset 0 -3px 0 var(--gold-hi), 0 4px 10px -4px rgba(232, 199, 122, 0.5);
+    text-shadow: 0 0 10px rgba(232, 199, 122, 0.45);
+}
+
+:root[data-theme="grimoire"] .folder-tabs .tab-btn.active .tab-num { color: var(--gold-hi); border-color: var(--gold-hi); }
+
+/* KARTEN ================================================================== */
+:root[data-theme="grimoire"] .card {
+    position: relative;
+    border: 1px solid var(--gold);
+    border-radius: 3px;
+    background: linear-gradient(180deg, #2c1f16 0%, #241912 100%);
+    box-shadow:
+        inset 0 0 0 3px #241912,
+        inset 0 0 0 4px rgba(201, 164, 92, 0.42),
+        inset 0 0 40px rgba(0, 0, 0, 0.28),
+        0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+/* Eckbeschläge */
+:root[data-theme="grimoire"] .card::before,
+:root[data-theme="grimoire"] .modal-card::before,
+:root[data-theme="grimoire"] .lobby-grid::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    pointer-events: none;
+    background:
+        linear-gradient(var(--gold), var(--gold)) top left / 12px 1px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) top left / 1px 12px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) top right / 12px 1px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) top right / 1px 12px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) bottom left / 12px 1px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) bottom left / 1px 12px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) bottom right / 12px 1px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) bottom right / 1px 12px no-repeat;
+}
+
+:root[data-theme="grimoire"] .card::after,
+:root[data-theme="grimoire"] .modal-card::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    margin-left: -3.5px;
+    background: var(--gold);
+    transform: rotate(45deg) scale(0.6);
+    box-shadow: 0 0 6px rgba(232, 199, 122, 0.5);
+    pointer-events: none;
+}
+
+:root[data-theme="grimoire"] .card .card {
+    border: 0;
+    border-radius: 2px;
+    background: #1d140e;
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.4);
+    margin-bottom: 0;
+}
+
+:root[data-theme="grimoire"] .card .card::before,
+:root[data-theme="grimoire"] .card .card::after { display: none; }
+
+:root[data-theme="grimoire"] .drop-zone {
+    background: #1a120d;
+    border: 1.5px dashed var(--gold-lo);
+    border-radius: 3px;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="grimoire"] .drop-zone:hover,
+:root[data-theme="grimoire"] .drop-zone.drag-over {
+    border-color: var(--gold-hi);
+    background: #20160f;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(232, 199, 122, 0.2);
+}
+
+:root[data-theme="grimoire"] .drop-zone.file-loaded { border-color: var(--verdigris); background: var(--verdigris-wash); }
+:root[data-theme="grimoire"] .drop-zone-prompt .icon { color: var(--gold-lo); }
+:root[data-theme="grimoire"] .drop-remove-btn { border-color: #a3242c; }
+
+/* LOBBY =================================================================== */
+:root[data-theme="grimoire"] .lobby-title {
+    font-family: "Cinzel Decorative", var(--font-head);
+    font-weight: 900;
+    font-size: clamp(2.5rem, 9.5vw, 6.2rem);
+    letter-spacing: 0.04em;
+    line-height: 1.05;
+    filter: drop-shadow(0 0 22px rgba(232, 199, 122, 0.3)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.7));
+    background: linear-gradient(180deg, #fbe6a6 0%, #d9b46a 45%, #9c7a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--gold);
+    -webkit-text-fill-color: transparent;
+}
+
+:root[data-theme="grimoire"] .lobby-title::first-letter { color: var(--gold-hi); }
+
+:root[data-theme="grimoire"] .lobby-rule {
+    font-family: var(--font-head);
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+}
+
+:root[data-theme="grimoire"] .lobby-rule::before,
+:root[data-theme="grimoire"] .lobby-rule::after {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(90deg, transparent, var(--gold));
+}
+
+:root[data-theme="grimoire"] .lobby-rule::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
+:root[data-theme="grimoire"] .lobby-grid {
+    position: relative;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: linear-gradient(180deg, #2c1f16 0%, #241912 100%);
+    box-shadow:
+        inset 0 0 0 4px #241912,
+        inset 0 0 0 5px rgba(201, 164, 92, 0.45),
+        inset 0 0 60px rgba(0, 0, 0, 0.35),
+        0 14px 40px rgba(0, 0, 0, 0.65);
+}
+
+:root[data-theme="grimoire"] .lobby-grid::before { inset: 9px; }
+
+:root[data-theme="grimoire"] .lobby-grid > .card {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+:root[data-theme="grimoire"] .lobby-grid > .card::before,
+:root[data-theme="grimoire"] .lobby-grid > .card::after { display: none; }
+
+:root[data-theme="grimoire"] .lobby-grid > .card:first-child {
+    background: linear-gradient(90deg, transparent 80%, rgba(0, 0, 0, 0.32) 100%);
+}
+
+:root[data-theme="grimoire"] .lobby-grid > .card + .card {
+    border-left: 1px solid var(--gold-lo);
+    background: linear-gradient(270deg, transparent 80%, rgba(0, 0, 0, 0.32) 100%);
+}
+
+:root[data-theme="grimoire"] .lobby-grid > .card > p::first-letter {
+    font-family: "Cinzel Decorative", var(--font-head);
+    font-weight: 900;
+    font-size: 3rem;
+    color: var(--gold-hi);
+    text-shadow: 0 0 12px rgba(232, 199, 122, 0.4);
+}
+
+:root[data-theme="grimoire"] .lobby-divider { color: var(--gold); font-family: var(--font-head); }
+:root[data-theme="grimoire"] .lobby-divider::before { border: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+:root[data-theme="grimoire"] .lobby-divider::after { border: 0; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
+
+/* WÜRFELBANK ============================================================== */
+:root[data-theme="grimoire"] .dice-bar-container {
+    background: linear-gradient(180deg, #150e0a 0%, #1d140e 100%);
+    border-bottom: 1px solid var(--gold-lo);
+    box-shadow: inset 0 1px 0 rgba(201, 164, 92, 0.2), 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="grimoire"] .quick-dice-btns button {
+    font-family: var(--font-head);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+:root[data-theme="grimoire"] .quick-dice-btns .btn-d20,
+:root[data-theme="grimoire"] .btn-d20 {
+    border-radius: 50%;
+    min-width: 2.7rem;
+    width: 2.7rem;
+    height: 2.7rem;
+    padding: 0;
+    font-size: 0.95rem;
+}
+
+/* Wurfzettel: Pergamentstreifen mit Goldrand */
+:root[data-theme="grimoire"] .roll-pill {
+    background: linear-gradient(180deg, #ecdcb4 0%, #d9c593 100%);
+    color: #2a1c10;
+    border: 1px solid var(--gold);
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(10, 6, 4, 0.7), 0 2px 5px rgba(0, 0, 0, 0.55), inset 0 0 12px rgba(120, 85, 30, 0.25);
+}
+
+:root[data-theme="grimoire"] .roll-who { color: #2a1c10; font-family: var(--font-head); font-size: 0.8rem; }
+:root[data-theme="grimoire"] .roll-what { color: #4f3b24; }
+
+:root[data-theme="grimoire"] .roll-total {
+    background: linear-gradient(180deg, #34261a, #1f150e);
+    color: var(--gold-hi);
+    font-family: var(--font-head);
+    font-weight: 800;
+    text-shadow: 0 0 8px rgba(232, 199, 122, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.55);
+}
+
+:root[data-theme="grimoire"] .roll-detail { color: #4f3b24; }
+:root[data-theme="grimoire"] .roll-kept { color: #1a100a; }
+:root[data-theme="grimoire"] .roll-dropped { color: #6b5638; }
+
+:root[data-theme="grimoire"] .roll-pill.roll-crit {
+    background: linear-gradient(180deg, #f8e3a0 0%, #e2bd62 100%);
+    border: 1px solid #fff0c0;
+    box-shadow: 0 0 0 1px #8a6d32, 0 0 16px rgba(255, 215, 120, 0.7), 0 0 4px rgba(255, 230, 160, 0.8);
+}
+
+:root[data-theme="grimoire"] .roll-pill.roll-crit .roll-detail,
+:root[data-theme="grimoire"] .roll-pill.roll-crit .roll-what,
+:root[data-theme="grimoire"] .roll-pill.roll-crit .roll-who { color: #2a1c10; }
+
+:root[data-theme="grimoire"] .roll-pill.roll-fumble { border-color: #a3242c; box-shadow: 0 0 0 1px #4a0f14, 0 0 10px rgba(163, 36, 44, 0.5); }
+:root[data-theme="grimoire"] .roll-pill.roll-fumble .roll-total { background: var(--seal); color: var(--on-fill); text-shadow: none; box-shadow: none; }
+:root[data-theme="grimoire"] .roll-pill.roll-fumble .roll-who { color: #8a1c24; }
+
+:root[data-theme="grimoire"] .roll-pill.roll-secret { border: 1px dashed #7a4aa6; box-shadow: 0 0 0 1px rgba(10, 6, 4, 0.7), 0 0 10px rgba(160, 110, 210, 0.35); }
+:root[data-theme="grimoire"] .roll-pill.roll-secret .roll-who { color: #5b2d84; }
+:root[data-theme="grimoire"] .roll-pill.roll-secret .roll-total { color: #dcbcf6; text-shadow: 0 0 8px rgba(190, 140, 240, 0.6); box-shadow: inset 0 0 0 1px rgba(160, 110, 210, 0.6); }
+
+/* CHARAKTERBOGEN ========================================================== */
+:root[data-theme="grimoire"] .morality-banner {
+    background: linear-gradient(180deg, #2c1f16 0%, #241912 100%);
+    border: 1px solid var(--gold);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 3px #241912, inset 0 0 0 4px rgba(201, 164, 92, 0.42), 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="grimoire"] .soul-scale .scale-line { stroke: var(--gold); }
+:root[data-theme="grimoire"] .soul-scale .scale-solid { fill: var(--gold); }
+:root[data-theme="grimoire"] .soul-scale .scale-pivot { fill: #241912; stroke: var(--gold-hi); }
+:root[data-theme="grimoire"] .soul-scale .scale-pan { stroke: var(--gold-hi); }
+:root[data-theme="grimoire"] .soul-scale .pan-demonic { fill: #a3242c; filter: drop-shadow(0 0 4px rgba(215, 70, 75, 0.6)); }
+:root[data-theme="grimoire"] .soul-scale .pan-holy { fill: #3a76c8; filter: drop-shadow(0 0 4px rgba(110, 165, 240, 0.65)); }
+
+:root[data-theme="grimoire"] .morality-subtitle { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.14em; color: var(--gold); }
+:root[data-theme="grimoire"] .morality-score-big { font-family: var(--font-head); font-weight: 800; color: var(--gold-hi); }
+:root[data-theme="grimoire"] .moral-is-demonic .morality-score-big { color: var(--rubric); text-shadow: 0 0 14px rgba(215, 70, 75, 0.55); }
+:root[data-theme="grimoire"] .moral-is-holy .morality-score-big { color: var(--azure); text-shadow: 0 0 14px rgba(110, 165, 240, 0.55); }
+
+:root[data-theme="grimoire"] .abilities-row-grid,
+:root[data-theme="grimoire"] .compact-stats-row,
+:root[data-theme="grimoire"] .currency-four-grid {
+    background: #6b552b;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px var(--gold), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="grimoire"] .ability-shield,
+:root[data-theme="grimoire"] .stat-shield-box,
+:root[data-theme="grimoire"] .coin-box {
+    background: linear-gradient(180deg, #2e2118 0%, #221810 100%);
+    outline: 0;
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="grimoire"] .ability-label,
+:root[data-theme="grimoire"] .stat-box-title {
+    font-family: var(--font-head);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+}
+
+:root[data-theme="grimoire"] .ability-mod-big {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    text-shadow: 0 0 10px rgba(232, 199, 122, 0.25);
+    font-family: var(--font-head);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+:root[data-theme="grimoire"] .ability-mod-big .icon { color: var(--rubric); }
+
+:root[data-theme="grimoire"] .ability-mod-big:hover {
+    background: radial-gradient(circle, rgba(232, 199, 122, 0.18), transparent 70%);
+    color: var(--gold-hi);
+    border: 0;
+    box-shadow: none;
+    text-shadow: 0 0 14px rgba(232, 199, 122, 0.7);
+}
+
+:root[data-theme="grimoire"] .ability-score-oval,
+:root[data-theme="grimoire"] .hp-big-input,
+:root[data-theme="grimoire"] .compact-num-input {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: transparent;
+    border-radius: 0;
+    font-family: var(--font-head);
+}
+
+:root[data-theme="grimoire"] .ability-score-oval,
+:root[data-theme="grimoire"] .hp-big-input { border-bottom-color: var(--gold-lo); }
+
+:root[data-theme="grimoire"] .ability-score-oval:hover,
+:root[data-theme="grimoire"] .hp-big-input:hover,
+:root[data-theme="grimoire"] .compact-num-input:hover { border-color: transparent; border-bottom-color: var(--gold); }
+
+:root[data-theme="grimoire"] .ability-score-oval:focus,
+:root[data-theme="grimoire"] .hp-big-input:focus,
+:root[data-theme="grimoire"] .compact-num-input:focus {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: transparent;
+    border-bottom-color: var(--gold-hi);
+    box-shadow: 0 4px 12px -3px rgba(232, 199, 122, 0.4);
+}
+
+:root[data-theme="grimoire"] #p-hp { color: var(--rubric); text-shadow: 0 0 12px rgba(215, 70, 75, 0.4); }
+:root[data-theme="grimoire"] .hp-slash { color: var(--gold-lo); font-family: var(--font-head); }
+
+/* Lebensader: Karmesinblut im goldgerahmten Glas */
+:root[data-theme="grimoire"] .life-vein {
+    height: 1rem;
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    padding: 2px;
+    background: #0e0806;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(10, 6, 4, 0.8);
+}
+
+:root[data-theme="grimoire"] .life-vein-fill {
+    border-radius: 999px;
+    background: linear-gradient(180deg, #e0565c 0%, #b32a32 38%, #8a1a22 100%);
+    box-shadow: 0 0 8px rgba(215, 60, 65, 0.55), inset 0 1px 0 rgba(255, 210, 200, 0.45);
+}
+
+:root[data-theme="grimoire"] .life-vein-fill.is-low {
+    background: repeating-linear-gradient(90deg, #b32a32 0 4px, #7a1a20 4px 7px);
+}
+
+:root[data-theme="grimoire"] .life-vein-fill.is-down { box-shadow: none; }
+
+:root[data-theme="grimoire"] .compact-num-input { color: var(--ink); }
+
+:root[data-theme="grimoire"] .skill-chip { border-bottom: 1px dotted var(--gold-lo); }
+:root[data-theme="grimoire"] .skill-chip:hover { color: var(--gold-hi); border-bottom: 1px solid var(--gold); }
+:root[data-theme="grimoire"] .skill-chip.is-known { color: var(--gold-hi); font-weight: 600; }
+
+:root[data-theme="grimoire"] .story-details label { color: var(--ink-2); }
+
+/* GELD & INVENTAR ========================================================= */
+:root[data-theme="grimoire"] .coin-cp { --coin: #e09a64; --coin-a: #f2b98c; --coin-b: #8a4a1f; }
+:root[data-theme="grimoire"] .coin-sp { --coin: #d6d1c6; --coin-a: #f4f4f6; --coin-b: #858592; }
+:root[data-theme="grimoire"] .coin-gp { --coin: #f0cd78; --coin-a: #fbe9a8; --coin-b: #a8791a; }
+:root[data-theme="grimoire"] .coin-pp { --coin: #a6c6f2; --coin-a: #e3efff; --coin-b: #5a82c4; }
+
+:root[data-theme="grimoire"] .coin-box span::before {
+    width: 0.95em;
+    height: 0.95em;
+    background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.85) 0 12%, transparent 38%),
+        linear-gradient(145deg, var(--coin-a, currentColor), var(--coin-b, currentColor));
+    box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), inset 0 0 0 3px rgba(255, 255, 255, 0.16), 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="grimoire"] .item-badge { border-bottom: 1px solid rgba(201, 164, 92, 0.25); }
+:root[data-theme="grimoire"] .item-badge small strong { color: var(--gold-hi); }
+:root[data-theme="grimoire"] .item-icon { border: 1px solid var(--gold); border-radius: 2px; box-shadow: 0 0 0 1px #0e0806; }
+
+:root[data-theme="grimoire"] .tag,
+:root[data-theme="grimoire"] .cat-tag,
+:root[data-theme="grimoire"] .packmass-pill,
+:root[data-theme="grimoire"] .exh-badge,
+:root[data-theme="grimoire"] .inline-item-pill {
+    border: 1px solid var(--gold-lo);
+    border-radius: 2px;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+}
+
+:root[data-theme="grimoire"] .tag { background: rgba(201, 164, 92, 0.16); color: var(--gold-hi); border-color: var(--gold); }
+:root[data-theme="grimoire"] .cat-tag { color: var(--ink-2); }
+:root[data-theme="grimoire"] .packmass-pill { color: var(--azure); border-color: #3f73bd; }
+:root[data-theme="grimoire"] .exh-badge { background: var(--ochre-wash); color: var(--gold-hi); border-color: var(--gold); }
+:root[data-theme="grimoire"] .inline-item-pill { background: #2e2118; color: var(--ink); }
+:root[data-theme="grimoire"] .inline-item-pill b:hover { background: var(--seal); color: var(--on-fill); }
+
+:root[data-theme="grimoire"] .player-creator-box {
+    background: #1d140e;
+    border-top: 3px double var(--gold-lo);
+    border-radius: 0 0 2px 2px;
+}
+
+:root[data-theme="grimoire"] .packmass-badge { border: 1px solid var(--gold); border-radius: 2px; color: var(--gold-hi); background: rgba(0, 0, 0, 0.2); }
+:root[data-theme="grimoire"] .packmass-badge.packmass-full { border-color: #a3242c; color: var(--rubric); background: rgba(163, 36, 44, 0.16); }
+
+:root[data-theme="grimoire"] .bag-progress-track {
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    padding: 2px;
+    background: #0e0806;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    height: 0.85rem;
+}
+
+:root[data-theme="grimoire"] .bag-progress-fill { border-radius: 999px; background: linear-gradient(180deg, #f0d48a, #c9a45c 50%, #8a6d32); box-shadow: 0 0 6px rgba(232, 199, 122, 0.4); }
+:root[data-theme="grimoire"] .bag-progress-fill.fill-full { background: linear-gradient(180deg, #e0565c, #a3242c 50%, #771a20); box-shadow: 0 0 6px rgba(215, 60, 65, 0.5); }
+
+/* DM ====================================================================== */
+:root[data-theme="grimoire"] .mini-avatar,
+:root[data-theme="grimoire"] .mini-avatar-placeholder {
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    background: #120c08;
+    color: var(--gold-hi);
+    font-family: var(--font-head);
+    box-shadow: 0 0 0 1px #0e0806;
+}
+
+:root[data-theme="grimoire"] .badge-hp,
+:root[data-theme="grimoire"] .badge-moral {
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(10, 6, 4, 0.7);
+}
+
+:root[data-theme="grimoire"] .badge-hp { background: var(--seal); color: var(--on-fill); border-color: #d9b46a; }
+:root[data-theme="grimoire"] .badge-moral { color: var(--ink-2); background: rgba(0, 0, 0, 0.25); border-color: var(--gold-lo); }
+
+:root[data-theme="grimoire"] .btn-death {
+    background-color: #4a1015;
+    background-image: none;
+    color: #f8ecd2;
+    border-color: #c4444a;
+    animation: grimoireGrave 3.2s ease-in-out infinite;
+}
+
+:root[data-theme="grimoire"] .btn-death:hover {
+    animation: none;
+    background-color: #b52a32;
+    background-image: none;
+    color: #fff4de;
+    border-color: #e8706e;
+    box-shadow: 0 0 16px rgba(230, 80, 85, 0.65);
+}
+
+:root[data-theme="grimoire"] .dm-moral-bar { border-top: 1px solid rgba(201, 164, 92, 0.28); border-bottom: 1px solid rgba(201, 164, 92, 0.28); }
+:root[data-theme="grimoire"] .dm-mini-stats { border-top: 1px solid var(--gold-lo); border-bottom: 1px solid var(--gold-lo); }
+:root[data-theme="grimoire"] .dm-attacks-editor { border-left: 2px solid var(--gold); }
+:root[data-theme="grimoire"] .atk-title { color: var(--gold-hi); }
+
+:root[data-theme="grimoire"] .npc-card,
+:root[data-theme="grimoire"] .lib-item-card {
+    background: linear-gradient(180deg, #33241a 0%, #281c13 100%);
+    border: 1px solid var(--gold-lo);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 2px #241912, inset 0 0 0 3px rgba(201, 164, 92, 0.22), 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="grimoire"] .npc-card { border-left: 5px solid #a3242c; }
+
+:root[data-theme="grimoire"] .npc-library-picker {
+    background: #1d140e;
+    border: 1px solid var(--gold-lo);
+    border-radius: 3px;
+}
+
+:root[data-theme="grimoire"] .npc-inventory-box { background: #1d140e; border: 1px dashed var(--gold-lo); border-radius: 2px; }
+:root[data-theme="grimoire"] .npc-desc-box { border-left: 2px solid #a3242c; }
+
+:root[data-theme="grimoire"] .cat-pill { border: 1px solid var(--gold-lo); border-radius: 999px; }
+:root[data-theme="grimoire"] .cat-pill.active {
+    background: linear-gradient(180deg, #f0d48a, #c9a45c);
+    color: #2a1c10;
+    border-color: #fff0c0;
+    text-shadow: none;
+    box-shadow: 0 0 10px rgba(232, 199, 122, 0.45);
+}
+
+/* KAMPF =================================================================== */
+:root[data-theme="grimoire"] .turn-active-card {
+    border-color: var(--gold) var(--gold) var(--gold) var(--team-c, var(--gold));
+    border-radius: 3px;
+    background: #1d140e;
+    box-shadow: 0 0 14px rgba(232, 199, 122, 0.18), inset 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="grimoire"] .turn-active-avatar,
+:root[data-theme="grimoire"] .turn-next-avatar { border: 1px solid var(--gold); border-radius: 2px; }
+
+:root[data-theme="grimoire"] .turn-avatar-placeholder { background: #120c08; color: var(--gold-hi); font-family: var(--font-head); }
+:root[data-theme="grimoire"] .turn-active-info strong { color: var(--gold-hi); font-family: var(--font-head); }
+:root[data-theme="grimoire"] .turn-arrow-sep { color: var(--gold-lo); }
+
+:root[data-theme="grimoire"] .turn-next-card {
+    border-color: var(--gold-lo) var(--gold-lo) var(--gold-lo) var(--team-c, var(--gold-lo));
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="grimoire"] .turn-ellipsis-badge { border-color: var(--gold-lo); color: var(--ink-2); }
+
+:root[data-theme="grimoire"] .turn-indicator-pill {
+    background: var(--seal);
+    border-radius: 2px;
+    font-family: var(--font-head);
+    box-shadow: inset 0 1px 1px rgba(255, 205, 190, 0.4);
+}
+
+:root[data-theme="grimoire"] .round-badge {
+    border: 1px solid var(--gold);
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 0 2px #241912, inset 0 0 0 3px var(--gold-lo);
+}
+
+:root[data-theme="grimoire"] .round-badge span { font-family: var(--font-head); color: var(--gold); }
+:root[data-theme="grimoire"] .round-badge strong { font-family: var(--font-head); color: var(--gold-hi); text-shadow: 0 0 10px rgba(232, 199, 122, 0.45); }
+
+:root[data-theme="grimoire"] .battlemap-vis-toggle { border: 1px solid var(--gold-lo); border-radius: 3px; }
+:root[data-theme="grimoire"] .battlemap-vis-toggle.vis-on { border-color: var(--verdigris); color: var(--verdigris); background: var(--verdigris-wash); box-shadow: 0 0 8px rgba(98, 203, 162, 0.25); }
+:root[data-theme="grimoire"] .battlemap-vis-toggle.vis-on:hover { background: #1f4838; border-color: #8fe3c0; }
+:root[data-theme="grimoire"] .battlemap-vis-toggle.vis-off { color: var(--ink-2); border-style: dashed; }
+
+:root[data-theme="grimoire"] .mode-status-pill { border-radius: 999px; font-family: var(--font-head); font-size: 0.74rem; letter-spacing: 0.05em; }
+:root[data-theme="grimoire"] .mode-pill-move { color: var(--verdigris); }
+:root[data-theme="grimoire"] .mode-pill-build { background: var(--azure-fill); color: var(--on-fill); border-color: #8fb8f2; }
+:root[data-theme="grimoire"] .mode-pill-build:hover { background: var(--seal); border-color: #e8706e; }
+
+:root[data-theme="grimoire"] .side-card-divider { border-top: 1px solid rgba(201, 164, 92, 0.35); }
+
+:root[data-theme="grimoire"] .team-group-header { font-family: var(--font-head); color: var(--gold-hi); border-bottom-width: 2px; }
+
+:root[data-theme="grimoire"] .team-color-dot { border: 1px solid var(--gold-hi); box-shadow: 0 0 6px rgba(0, 0, 0, 0.6); }
+
+:root[data-theme="grimoire"] .team-combatant-item {
+    background: #1d140e;
+    border-color: rgba(201, 164, 92, 0.35) rgba(201, 164, 92, 0.35) rgba(201, 164, 92, 0.35) var(--team-c, var(--gold-lo));
+    border-radius: 2px;
+}
+
+:root[data-theme="grimoire"] .active-turn-row {
+    box-shadow: 0 0 0 1px var(--gold-hi), 0 0 14px rgba(232, 199, 122, 0.4);
+    border-color: var(--gold-hi) var(--gold-hi) var(--gold-hi) var(--team-c, var(--gold-hi));
+}
+
+:root[data-theme="grimoire"] .combatant-down { background: #130d09; opacity: 0.85; }
+:root[data-theme="grimoire"] .team-quick-add-select { border-style: dashed; border-bottom-style: solid; }
+
+/* KAMPFFELD =============================================================== */
+:root[data-theme="grimoire"] .battlemap-template-bar { border-top: 1px solid rgba(201, 164, 92, 0.3); border-bottom: 1px solid rgba(201, 164, 92, 0.3); }
+
+/* Alte Landkarte: dunkles Pergament, Tintenraster, verbrannte Ränder */
+:root[data-theme="grimoire"] .battlemap-stage-wrapper {
+    border: 2px solid var(--gold-lo);
+    border-radius: 3px;
+    background-color: #2b2117;
+    background-image:
+        linear-gradient(rgba(201, 164, 92, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 164, 92, 0.1) 1px, transparent 1px),
+        radial-gradient(ellipse at 50% 45%, #3a2d1e 0%, #2b2117 55%, #1b130d 100%);
+    background-size: 26px 26px, 26px 26px, 100% 100%;
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(10, 6, 4, 0.8);
+}
+
+:root[data-theme="grimoire"] .battlemap-stage-wrapper.stage-mode-build {
+    border-color: var(--azure);
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.7), inset 0 0 0 2px var(--azure), 0 0 14px rgba(110, 165, 240, 0.35);
+}
+
+:root[data-theme="grimoire"] .battlemap-cell { border: 1px solid var(--block-ink); border-radius: 1px; }
+:root[data-theme="grimoire"] .cell-drop-hover { outline: 3px solid var(--gold-hi); }
+
+:root[data-theme="grimoire"] .battlemap-palette-card .palette-creator-popover { background: #1d140e; border: 1px dashed var(--gold-lo); border-radius: 2px; }
+:root[data-theme="grimoire"] .palette-remove-btn { border-color: #a3242c; }
+:root[data-theme="grimoire"] .palette-block-entry { border-bottom: 1px solid rgba(201, 164, 92, 0.2); }
+:root[data-theme="grimoire"] .palette-block-entry:hover { background: rgba(201, 164, 92, 0.08); }
+
+:root[data-theme="grimoire"] .palette-block-entry.palette-block-active {
+    background: linear-gradient(90deg, rgba(201, 164, 92, 0.24), rgba(201, 164, 92, 0.06));
+    color: var(--gold-hi);
+    border-bottom-color: var(--gold-lo);
+    box-shadow: inset 3px 0 0 var(--gold-hi);
+}
+
+:root[data-theme="grimoire"] .palette-color-swatch { border: 1px solid var(--block-ink); box-shadow: 0 0 0 1px var(--gold); border-radius: 2px; }
+
+:root[data-theme="grimoire"] .battlemap-token {
+    border-radius: 3px;
+    outline: 1px solid var(--block-ink);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="grimoire"] .battlemap-token.token-active-turn {
+    outline: 2px solid var(--gold-hi);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(10, 6, 4, 0.65), 0 0 16px rgba(232, 199, 122, 0.8);
+}
+
+:root[data-theme="grimoire"] .token-initials { font-family: var(--font-head); font-weight: 700; }
+:root[data-theme="grimoire"] .token-hp-text { color: #f7b5a2; }
+:root[data-theme="grimoire"] .token-drag-floating-ghost { box-shadow: 6px 8px 14px rgba(0, 0, 0, 0.6); }
+
+/* CHAT & MODAL ============================================================ */
+:root[data-theme="grimoire"] .chat-widget {
+    padding: 0;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: #241912;
+    box-shadow: inset 0 0 0 2px #241912, inset 0 0 0 3px rgba(201, 164, 92, 0.4), 0 10px 30px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+:root[data-theme="grimoire"] .chat-header {
+    padding: 0.5rem 0.85rem;
+    background: linear-gradient(180deg, #5a1a20 0%, #3a1015 100%);
+    color: var(--gold-hi);
+    font-family: var(--font-head);
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--gold);
+    text-shadow: 0 0 8px rgba(232, 199, 122, 0.35);
+}
+
+:root[data-theme="grimoire"] .chat-header-right { color: var(--ink); }
+
+:root[data-theme="grimoire"] .chat-unread-badge {
+    background: var(--seal);
+    border-radius: 999px;
+    border: 1px solid #d9b46a;
+    color: var(--on-fill);
+}
+
+:root[data-theme="grimoire"] .chat-messages-list {
+    background: linear-gradient(180deg, #1a120d, #20160f);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="grimoire"] .chat-msg { border-bottom: 1px dotted rgba(201, 164, 92, 0.3); }
+:root[data-theme="grimoire"] .chat-msg.chat-whisper { border-left: 3px solid #9a6bc6; }
+:root[data-theme="grimoire"] .chat-msg-sender { font-family: var(--font-head); font-size: 0.78rem; letter-spacing: 0.04em; color: var(--rubric); }
+:root[data-theme="grimoire"] .chat-whisper .chat-msg-sender { color: var(--violet); }
+:root[data-theme="grimoire"] .chat-controls { border-top: 1px solid var(--gold-lo); background: #241912; }
+
+:root[data-theme="grimoire"] .modal-backdrop { background: rgba(8, 4, 3, 0.8); }
+
+:root[data-theme="grimoire"] .modal-card {
+    position: relative;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: linear-gradient(180deg, #33241a 0%, #241912 100%);
+    box-shadow:
+        inset 0 0 0 4px #241912,
+        inset 0 0 0 5px rgba(201, 164, 92, 0.5),
+        inset 0 0 50px rgba(0, 0, 0, 0.35),
+        0 18px 50px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(232, 199, 122, 0.08);
+}
+
+:root[data-theme="grimoire"] .modal-card h3 {
+    font-family: "Cinzel Decorative", var(--font-head);
+    font-weight: 700;
+    font-size: 1.7rem;
+    background: linear-gradient(180deg, #f4dc9a 0%, #c9a45c 60%, #9c7a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--gold);
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(232, 199, 122, 0.25));
+}
+
+:root[data-theme="grimoire"] .modal-card h3::first-letter { color: var(--gold-hi); }
+:root[data-theme="grimoire"] .modal-card .muted { color: var(--ink); }
+
+:root[data-theme="grimoire"] .modal-actions .btn-del {
+    background: var(--seal);
+    color: var(--on-fill);
+    border-color: #5e1117;
+    box-shadow: inset 0 1px 1px rgba(255, 205, 190, 0.45), inset 0 -3px 5px rgba(0, 0, 0, 0.4), 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="grimoire"] .modal-actions .btn-del:hover {
+    background: radial-gradient(circle at 32% 22%, #e0525a 0%, #b52a32 52%, #861d24 100%);
+    color: #fff4de;
+    border-color: #7a1820;
+    box-shadow: inset 0 1px 1px rgba(255, 215, 200, 0.55), 0 0 14px rgba(215, 70, 75, 0.55);
+}
+
+/* THEMA-WÄHLER ============================================================ */
+:root[data-theme="grimoire"] .theme-picker { position: relative; display: inline-flex; }
+:root[data-theme="grimoire"] .theme-menu[hidden] { display: none; }
+
+:root[data-theme="grimoire"] .theme-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 1500;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 0.45rem;
+    width: 28rem;
+    max-width: calc(100vw - 24px);
+    max-height: min(75vh, 42rem);
+    overflow-y: auto;
+    padding: 0.7rem 0.6rem 0.6rem;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: linear-gradient(180deg, #33241a 0%, #241912 100%);
+    box-shadow: inset 0 0 0 3px #241912, inset 0 0 0 4px rgba(201, 164, 92, 0.42), 0 14px 36px rgba(0, 0, 0, 0.75);
+    text-align: left;
+}
+
+:root[data-theme="grimoire"] .theme-menu-title {
+    grid-column: 1 / -1;
+    padding: 0 0.4rem 0.45rem;
+    margin-bottom: 0.2rem;
+    font-family: var(--font-head);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--gold), rgba(201, 164, 92, 0.05)) 1;
+}
+
+:root[data-theme="grimoire"] .theme-option {
+    justify-content: flex-start;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    white-space: normal;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    text-shadow: none;
+    font-weight: 500;
+}
+
+:root[data-theme="grimoire"] .theme-option:hover {
+    background: rgba(201, 164, 92, 0.1);
+    border-color: var(--gold-lo);
+    box-shadow: none;
+    color: var(--ink);
+}
+
+:root[data-theme="grimoire"] .theme-option.is-active {
+    background: linear-gradient(90deg, rgba(201, 164, 92, 0.2), rgba(201, 164, 92, 0.05));
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(232, 199, 122, 0.15);
+}
+
+:root[data-theme="grimoire"] .theme-option-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+:root[data-theme="grimoire"] .theme-option-text strong { font-family: var(--font-head); font-size: 0.92rem; font-weight: 600; letter-spacing: 0.04em; color: var(--gold-hi); }
+:root[data-theme="grimoire"] .theme-option-text small { font-size: 0.82rem; color: var(--ink-2); font-weight: 400; }
+
+
+/* RESPONSIVE ============================================================== */
+@media (max-width: 860px) {
+    :root[data-theme="grimoire"] .lobby-grid > .card:first-child { background: none; }
+    :root[data-theme="grimoire"] .lobby-grid > .card + .card {
+        border-left: 0;
+        border-top: 1px solid var(--gold-lo);
+        background: none;
+    }
+}
+
+@media (max-width: 640px) {
+    :root[data-theme="grimoire"] .theme-menu { right: auto; left: 0; }
+}
+
+@media (max-width: 520px) {
+    :root[data-theme="grimoire"] .top-bar h1 { font-size: 1.6rem; }
+    :root[data-theme="grimoire"] body { font-size: 1.04rem; }
+}

@@ -1,0 +1,77 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e33]:
+      - heading "Afterlife" [level=1] [ref=f1e34]
+      - navigation [ref=f1e39]:
+        - button "Gameplay" [ref=f1e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e41]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [ref=f1e42] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e43]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=f1e44] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e45]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=f1e46] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e47]: "4"
+          - text: DM-Notizen
+    - generic [ref=f1e3]:
+      - button "Session speichern" [ref=f1e48] [cursor=pointer]
+      - status [ref=f1e4]: "DM | Raum-Code: 1087 | 0 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=f1e6] [cursor=pointer]
+  - generic [ref=f1e52]:
+    - generic [ref=f1e53]:
+      - generic [ref=f1e54]:
+        - button "d4" [ref=f1e55] [cursor=pointer]
+        - button "d6" [ref=f1e56] [cursor=pointer]
+        - button "d8" [ref=f1e57] [cursor=pointer]
+        - button "d10" [ref=f1e58] [cursor=pointer]
+        - button "d12" [ref=f1e59] [cursor=pointer]
+        - button "d20" [ref=f1e60] [cursor=pointer]
+        - button "d100" [ref=f1e61] [cursor=pointer]
+      - generic [ref=f1e62]:
+        - textbox "Würfelformel" [ref=f1e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=f1e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=f1e65] [cursor=pointer]
+      - generic [ref=f1e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=f1e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=f1e70]: Noch keine Würfe. Klicke oben auf d20 oder auf ein Attribut/Attacke!
+  - main [ref=f1e72]:
+    - generic [ref=f1e73]:
+      - generic [ref=f1e74]:
+        - generic [ref=f1e75]:
+          - generic [ref=f1e76]:
+            - heading "DM Schnell-Notizen (Live-Session)" [level=3] [ref=f1e77]
+            - text: Wird automatisch mit deinem großen Notizbuch (Tab 4) und der Session-Datei gespeichert.
+          - button "Großes DM-Notizbuch öffnen (Tab 4)" [ref=f1e80] [cursor=pointer]
+        - textbox "Schnelle Notizen für die laufende Runde (Initiativen-Ideen, erfundene NPC-Namen, Status, Loot, Geheimnisse)..." [ref=f1e83]
+      - generic [ref=f1e84]:
+        - generic [ref=f1e85]:
+          - heading "Spieler im Spiel (Live)" [level=2] [ref=f1e86]
+          - paragraph [ref=f1e89]: Noch keine Spieler im Raum.
+        - generic [ref=f1e90]:
+          - generic [ref=f1e91]:
+            - heading "Monster & NPCs im Spiel" [level=2] [ref=f1e92]
+            - generic [ref=f1e93]:
+              - combobox [ref=f1e94] [cursor=pointer]:
+                - option "-- Vorlage zum Spawnen wählen (0) --" [selected]
+              - button "+ Spawnen" [ref=f1e95] [cursor=pointer]
+          - paragraph [ref=f1e98]: Keine aktiven Monster oder NPCs im Spiel.
+  - complementary [ref=f1e99]:
+    - generic [ref=f1e100] [cursor=pointer]:
+      - generic [ref=f1e101]: Session-Chat
+      - generic [ref=f1e104]: ▼
+    - generic [ref=f1e106]:
+      - paragraph [ref=f1e108]: Noch keine Nachrichten.
+      - generic [ref=f1e109]:
+        - combobox "Empfänger" [ref=f1e110] [cursor=pointer]:
+          - 'option "An: Alle" [selected]'
+        - generic [ref=f1e111]:
+          - textbox "Nachricht" [ref=f1e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=f1e113] [cursor=pointer]

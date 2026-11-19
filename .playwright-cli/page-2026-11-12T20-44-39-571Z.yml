@@ -1,0 +1,320 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e33]:
+      - heading "Afterlife" [level=1] [ref=e34]
+      - navigation [ref=e39]:
+        - button "Gameplay" [ref=e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e41]: "1"
+          - text: Gameplay
+        - button "Vorlagen & Bibliothek" [active] [ref=e42] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e43]: "2"
+          - text: Vorlagen & Bibliothek
+        - button "Kampfsystem" [ref=e44] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e45]: "3"
+          - text: Kampfsystem
+        - button "DM-Notizen" [ref=e46] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e47]: "4"
+          - text: DM-Notizen
+    - generic [ref=e3]:
+      - button "Session speichern" [ref=e48] [cursor=pointer]
+      - status [ref=e4]: "DM | Raum-Code: 7195 | 1 Spieler online"
+      - button "Erscheinungsbild wählen" [ref=e6] [cursor=pointer]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - button "d4" [ref=e55] [cursor=pointer]
+        - button "d6" [ref=e56] [cursor=pointer]
+        - button "d8" [ref=e57] [cursor=pointer]
+        - button "d10" [ref=e58] [cursor=pointer]
+        - button "d12" [ref=e59] [cursor=pointer]
+        - button "d20" [ref=e60] [cursor=pointer]
+        - button "d100" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - textbox "Würfelformel" [ref=e63]:
+          - /placeholder: Formel (z.B. 2d6+3 oder 1d20+4)
+        - combobox "Wurfmodus" [ref=e64] [cursor=pointer]:
+          - option "Normal" [selected]
+          - option "Vorteil"
+          - option "Nachteil"
+        - button "Würfeln" [ref=e65] [cursor=pointer]
+      - generic [ref=e68] [cursor=pointer]:
+        - checkbox "Verdeckt (Nur DM)" [ref=e69]
+        - text: Verdeckt (Nur DM)
+    - generic [ref=e70]:
+      - generic [ref=e335]:
+        - generic [ref=e336]: DM
+        - generic [ref=e337]: "Würfel d20:"
+        - strong [ref=e338]: "15"
+        - generic [ref=e339]: "[15]"
+      - generic [ref=e340]:
+        - generic [ref=e341]: DM
+        - generic [ref=e342]: "Würfel d20:"
+        - strong [ref=e343]: "4"
+        - generic [ref=e344]: "[4]"
+        - text: ✦
+      - generic [ref=e345]:
+        - generic [ref=e346]: DM
+        - generic [ref=e347]: "Würfel d20:"
+        - strong [ref=e348]: "17"
+        - generic [ref=e349]: "[17]"
+      - generic [ref=e350]:
+        - generic [ref=e351]: DM
+        - generic [ref=e352]: "Würfel d20:"
+        - strong [ref=e353]: "16"
+        - generic [ref=e354]: "[16]"
+      - generic [ref=e355]:
+        - generic [ref=e356]: DM
+        - generic [ref=e357]: "Würfel d20:"
+        - strong [ref=e358]: "10"
+        - generic [ref=e359]: "[10]"
+      - generic [ref=e360]:
+        - generic [ref=e361]: DM
+        - generic [ref=e362]: "Würfel d20:"
+        - strong [ref=e363]: "17"
+        - generic [ref=e364]: "[17]"
+  - main [ref=e72]:
+    - generic [ref=e1932]:
+      - heading "Vorlagen erstellen & bearbeiten" [level=2] [ref=e1933]
+      - generic [ref=e1934]:
+        - generic [ref=e1935]:
+          - heading "1. Monster / NPC Vorlage" [level=3] [ref=e1936]
+          - combobox [ref=e1937] [cursor=pointer]:
+            - option "-- Neu erstellen (oder Vorlage zum Bearbeiten wählen) --" [selected]
+        - generic [ref=e1938]:
+          - generic [ref=e1939] [cursor=pointer]:
+            - generic:
+              - strong: Monster/NPC Bild
+              - generic: Hierher ziehen oder klicken
+          - generic [ref=e1940]:
+            - generic [ref=e1941]:
+              - generic [ref=e1942]:
+                - text: NAME
+                - textbox "NAME" [ref=e1943]:
+                  - /placeholder: z.B. Gefallener Paladin
+              - generic [ref=e1944]:
+                - text: KATEGORIEN (MIT KOMMA TRENNEN)
+                - textbox "KATEGORIEN (MIT KOMMA TRENNEN)" [ref=e1945]:
+                  - /placeholder: z.B. Monster, Ritter, Boss
+            - generic [ref=e1946]:
+              - text: BESCHREIBUNG & VERHALTEN
+              - textbox "BESCHREIBUNG & VERHALTEN" [ref=e1947]:
+                - /placeholder: Beschreibung, Verhalten, Hintergrund...
+            - generic [ref=e1948]:
+              - generic [ref=e1949]:
+                - text: MAX HP
+                - spinbutton "MAX HP" [ref=e1950]: "30"
+              - generic [ref=e1951]:
+                - text: ARMOR CLASS
+                - spinbutton "ARMOR CLASS" [ref=e1952]: "14"
+              - generic [ref=e1953]:
+                - text: INITIATIVE
+                - spinbutton "INITIATIVE" [ref=e1954]: "0"
+              - generic [ref=e1955]:
+                - text: MORAL
+                - spinbutton "MORAL" [ref=e1956]: "0"
+              - generic [ref=e1957]:
+                - text: GELD IN KUPFER (CP)
+                - spinbutton "GELD IN KUPFER (CP)" [ref=e1958]: "0"
+            - generic [ref=e1959]:
+              - generic [ref=e1960]:
+                - text: STR
+                - spinbutton "STR" [ref=e1961]: "10"
+              - generic [ref=e1962]:
+                - text: DEX
+                - spinbutton "DEX" [ref=e1963]: "10"
+              - generic [ref=e1964]:
+                - text: CON
+                - spinbutton "CON" [ref=e1965]: "10"
+              - generic [ref=e1966]:
+                - text: INT
+                - spinbutton "INT" [ref=e1967]: "10"
+              - generic [ref=e1968]:
+                - text: WIS
+                - spinbutton "WIS" [ref=e1969]: "10"
+              - generic [ref=e1970]:
+                - text: CHA
+                - spinbutton "CHA" [ref=e1971]: "10"
+        - generic [ref=e1972]:
+          - generic [ref=e1973]:
+            - generic [ref=e1974]:
+              - combobox [ref=e1975] [cursor=pointer]:
+                - option "-- Gegenstand (0) --" [selected]
+              - button "+ Item" [ref=e1976] [cursor=pointer]
+            - generic [ref=e1977]:
+              - combobox [ref=e1978] [cursor=pointer]:
+                - option "-- Attacke (0) --" [selected]
+              - button "+ Attacke" [ref=e1979] [cursor=pointer]
+            - generic [ref=e1980]:
+              - combobox [ref=e1981] [cursor=pointer]:
+                - option "-- Zauber (0) --" [selected]
+              - button "+ Zauber" [ref=e1982] [cursor=pointer]
+            - generic [ref=e1983]:
+              - combobox [ref=e1984] [cursor=pointer]:
+                - option "-- Merkmal (0) --" [selected]
+              - button "+ Merkmal" [ref=e1985] [cursor=pointer]
+          - generic [ref=e1986]:
+            - generic [ref=e1987]:
+              - strong [ref=e1988]: "Gegenstände:"
+              - text: Keine
+            - generic [ref=e1989]:
+              - strong [ref=e1990]: "Attacken:"
+              - text: Keine
+            - generic [ref=e1991]:
+              - strong [ref=e1992]: "Zauber:"
+              - text: Keine
+            - generic [ref=e1993]:
+              - strong [ref=e1994]: "Merkmale:"
+              - text: Keine
+        - generic [ref=e1995]:
+          - button "Als neue Vorlage speichern" [ref=e1996] [cursor=pointer]
+          - button "Speichern & Direkt spawnen" [ref=e1997] [cursor=pointer]
+      - generic [ref=e1998]:
+        - generic [ref=e1999]:
+          - generic [ref=e2000]:
+            - heading "2. Gegenstände" [level=3] [ref=e2001]
+            - combobox [ref=e2002] [cursor=pointer]:
+              - option "-- Neu / Bearbeiten --" [selected]
+          - generic [ref=e2003] [cursor=pointer]:
+            - generic:
+              - strong: Bild (Gegenstand)
+              - generic: Drag & Drop oder Klick
+          - generic [ref=e2004]:
+            - generic [ref=e2005]:
+              - text: NAME
+              - textbox "NAME" [ref=e2006]:
+                - /placeholder: z.B. Schwarze Klinge
+            - generic [ref=e2007]:
+              - text: PACKMASS (1–10)
+              - spinbutton "PACKMASS (1–10)" [ref=e2008]: "1"
+          - generic [ref=e2009]:
+            - text: KATEGORIEN (KOMMAGETRENNT)
+            - textbox "KATEGORIEN (KOMMAGETRENNT)" [ref=e2010]:
+              - /placeholder: z.B. Waffe, Schwert, Rüstung
+          - generic [ref=e2011]:
+            - text: ANFORDERUNG
+            - textbox "ANFORDERUNG" [ref=e2012]:
+              - /placeholder: z.B. STR 14, Moral -2
+          - generic [ref=e2013]:
+            - text: AKTION
+            - textbox "AKTION" [ref=e2014]:
+              - /placeholder: z.B. 1d8 Schnitt / +2 AC
+          - button "Gegenstand speichern" [ref=e2016] [cursor=pointer]
+        - generic [ref=e2017]:
+          - generic [ref=e2018]:
+            - heading "3. Attacken" [level=3] [ref=e2019]
+            - combobox [ref=e2020] [cursor=pointer]:
+              - option "-- Neu / Bearbeiten --" [selected]
+          - generic [ref=e2021] [cursor=pointer]:
+            - generic:
+              - strong: Bild (Attacke)
+              - generic: Drag & Drop oder Klick
+          - generic [ref=e2022]:
+            - text: NAME
+            - textbox "NAME" [ref=e2023]:
+              - /placeholder: z.B. Schwerthieb / Sturmangriff
+          - generic [ref=e2024]:
+            - text: KATEGORIEN (KOMMAGETRENNT)
+            - textbox "KATEGORIEN (KOMMAGETRENNT)" [ref=e2025]:
+              - /placeholder: z.B. Nahkampf, Physisch
+          - generic [ref=e2026]:
+            - text: AKTION
+            - textbox "AKTION" [ref=e2027]:
+              - /placeholder: z.B. 2d6+3 Schaden
+          - generic [ref=e2028] [cursor=pointer]:
+            - checkbox "Verbraucht Exhaustion Point" [ref=e2029]
+            - text: Verbraucht Exhaustion Point
+          - button "Attacke speichern" [ref=e2031] [cursor=pointer]
+        - generic [ref=e2032]:
+          - generic [ref=e2033]:
+            - heading "4. Zauber" [level=3] [ref=e2034]
+            - combobox [ref=e2035] [cursor=pointer]:
+              - option "-- Neu / Bearbeiten --" [selected]
+          - generic [ref=e2036] [cursor=pointer]:
+            - generic:
+              - strong: Bild (Zauber)
+              - generic: Drag & Drop oder Klick
+          - generic [ref=e2037]:
+            - text: NAME
+            - textbox "NAME" [ref=e2038]:
+              - /placeholder: z.B. Höllenfeuer / Lichtspeer
+          - generic [ref=e2039]:
+            - text: KATEGORIEN (KOMMAGETRENNT)
+            - textbox "KATEGORIEN (KOMMAGETRENNT)" [ref=e2040]:
+              - /placeholder: z.B. Feuer, Heilig, Dämonisch
+          - generic [ref=e2041]:
+            - text: ANFORDERUNG
+            - textbox "ANFORDERUNG" [ref=e2042]:
+              - /placeholder: z.B. INT 14, Moral -3
+          - generic [ref=e2043]:
+            - text: AKTION
+            - textbox "AKTION" [ref=e2044]:
+              - /placeholder: z.B. 3d6 Feuerschaden / +4 Heilung
+          - generic [ref=e2045] [cursor=pointer]:
+            - checkbox "Verbraucht Exhaustion Point" [ref=e2046]
+            - text: Verbraucht Exhaustion Point
+          - button "Zauber speichern" [ref=e2048] [cursor=pointer]
+        - generic [ref=e2049]:
+          - generic [ref=e2050]:
+            - heading "5. Merkmale" [level=3] [ref=e2051]
+            - combobox [ref=e2052] [cursor=pointer]:
+              - option "-- Neu / Bearbeiten --" [selected]
+          - generic [ref=e2053] [cursor=pointer]:
+            - generic:
+              - strong: Bild (Merkmal)
+              - generic: Drag & Drop oder Klick
+          - generic [ref=e2054]:
+            - text: NAME
+            - textbox "NAME" [ref=e2055]:
+              - /placeholder: z.B. Paranoia / Dämonenflügel
+          - generic [ref=e2056]:
+            - text: KATEGORIEN (KOMMAGETRENNT)
+            - textbox "KATEGORIEN (KOMMAGETRENNT)" [ref=e2057]:
+              - /placeholder: z.B. Psychose, Mutation, Segen
+          - generic [ref=e2058]:
+            - text: EFFEKT
+            - textbox "EFFEKT" [ref=e2059]:
+              - /placeholder: z.B. +2 Initiative, -2 WIS
+          - button "Merkmal speichern" [ref=e2061] [cursor=pointer]
+      - heading "Bibliothek (Alle erstellten Vorlagen)" [level=2] [ref=e2062]
+      - generic [ref=e2063]:
+        - generic [ref=e2064]:
+          - textbox "Nach Name suchen..." [ref=e2065]
+          - combobox [ref=e2066] [cursor=pointer]:
+            - option "Alle Typen" [selected]
+            - option "Monster & NPCs"
+            - option "Gegenstände"
+            - option "Attacken"
+            - option "Zauber"
+            - option "Merkmale"
+          - combobox [ref=e2067] [cursor=pointer]:
+            - 'option "Sortieren: Name (A-Z)" [selected]'
+            - 'option "Sortieren: Kategorie"'
+            - 'option "Sortieren: Typ"'
+        - generic [ref=e2068]:
+          - text: "Nach deinen Kategorien filtern:"
+          - button "Alle Kategorien" [ref=e2070] [cursor=pointer]
+        - paragraph [ref=e2072]: Keine Vorlagen in der Bibliothek gefunden.
+  - complementary [ref=e99]:
+    - generic [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]: Session-Chat
+      - generic [ref=e104]: ▼
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e1254]:
+          - generic [ref=e1255]:
+            - generic [ref=e1256]: Dungeon Master → Musashi
+            - generic [ref=e1257]: 21:44
+          - generic [ref=e1258]: Psst, die Tür ist verflucht.
+        - generic [ref=e1259]:
+          - generic [ref=e1260]:
+            - generic [ref=e1261]: Dungeon Master → Musashi
+            - generic [ref=e1262]: 21:44
+          - generic [ref=e1263]: Hallo an alle
+      - generic [ref=e109]:
+        - combobox "Empfänger" [ref=e110] [cursor=pointer]:
+          - 'option "An: Alle"'
+          - 'option "Privat an: Musashi" [selected]'
+        - generic [ref=e111]:
+          - textbox "Nachricht" [ref=e112]:
+            - /placeholder: Nachricht schreiben...
+          - button "Senden" [ref=e113] [cursor=pointer]
